@@ -1,4 +1,3 @@
-
 export const TITLE_ART = `
  ____                   __        __
 |  _ \\ _ __ _   _  __ _ \\ \\      / /_ _ _ __ ___
@@ -10,14 +9,17 @@ export const TITLE_ART = `
 
 export const HELP_TEXT = `
 Commands:
-(B)uy [drug] [quantity] - Buy drugs
-(S)ell [drug] [quantity] - Sell drugs
-(T)ravel [location] - Travel to a new location
-(R)epay [amount] - Repay your debt
-(H)elp - Display this help message
-(Q)uit - Quit the game
+Buy - Purchase drugs
+Sell - Sell drugs from your inventory
+Travel - Move to a new location
+Repay - Repay your debt
+Help - Display this help message
+Quit - Exit the game
 
 Goal: Make as much money as possible in 30 days!
+Use the arrow keys to navigate menus and adjust quantities.
+Press Enter to confirm your selection.
+Press Esc to return to the main menu.
 `;
 
 export const locations = [

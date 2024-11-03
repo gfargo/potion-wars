@@ -2567,6 +2567,15 @@ ini@^1.3.4, ini@~1.3.0:
   resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.8.tgz#a29da425b48806f34767a4efce397269af28432c"
   integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
 
+ink-select-input@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/ink-select-input/-/ink-select-input-6.0.0.tgz#b6192ee6c397a7e8b5cfdcafcd833885cf100579"
+  integrity sha512-2mCbn1b9xeguA3qJiaf8Sx8W4MM005wACcLKwHWWJmJ8BapjsahmQPuY2U2qyGc817IdWFjNk/K41Vn39UlO4Q==
+  dependencies:
+    figures "^6.1.0"
+    lodash.isequal "^4.5.0"
+    to-rotated "^1.0.0"
+
 ink-testing-library@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/ink-testing-library/-/ink-testing-library-4.0.0.tgz#7071dac9a3d783e7bab2ee05fdf1d01a2cd3bb0d"
@@ -3230,6 +3239,11 @@ lodash.escaperegexp@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/lodash.escaperegexp/-/lodash.escaperegexp-4.1.2.tgz#64762c48618082518ac3df4ccf5d5886dae20347"
   integrity sha512-TM9YBvyC84ZxE3rgfefxUWiQKLilstD6k7PTGt6wfbtXF8ixIJLOL3VYyV/z+ZiPLsVxAsKAFVwWlWeb2Y8Yyw==
+
+lodash.isequal@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
+  integrity sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==
 
 lodash.isplainobject@^4.0.6:
   version "4.0.6"
@@ -4733,6 +4747,11 @@ to-regex-range@^5.0.1:
   integrity sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==
   dependencies:
     is-number "^7.0.0"
+
+to-rotated@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/to-rotated/-/to-rotated-1.0.0.tgz#cdf13ece5203e72384a79020508ae1dc80d3b48f"
+  integrity sha512-KsEID8AfgUy+pxVRLsWp0VzCa69wxzUDZnzGbyIST/bcgcrMvTYoFBX/QORH4YApoD89EDuUovx4BTdpOn319Q==
 
 tr46@~0.0.3:
   version "0.0.3"
