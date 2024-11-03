@@ -1,29 +1,29 @@
-import { Box, Text, useInput } from 'ink'
 import React from 'react'
-import { HELP_TEXT, TITLE_ART } from '../constants.js'
+import { Box, Text, useInput } from 'ink'
+import { TITLE_ART, HELP_TEXT } from '../constants.js'
+import { useUI } from '../contexts/UIContext.js'
+import { useGame } from '../contexts/GameContext.js'
 
-interface MainMenuProps {
-  onAction: (action: string) => void
-  showHelp: boolean
-}
+const MainMenu: React.FC = () => {
+  const { showHelp, toggleHelp, setScreen, setQuitConfirmation } = useUI()
+  const { handleAction } = useGame()
 
-const MainMenu: React.FC<MainMenuProps> = ({ onAction, showHelp }) => {
   useInput((input, key) => {
-    if (key.return) {
-      onAction('startGame')
-    }
-    
     if (showHelp) {
       if (key.escape || input.toLowerCase() === 'h') {
-        onAction('toggleHelp')
+        toggleHelp()
       }
     } else {
       switch (input.toLowerCase()) {
         case 'h':
-          onAction('toggleHelp')
+          toggleHelp()
           break
         case 'q':
-          onAction('quit')
+          setQuitConfirmation(true)
+          break
+        case 's':
+          setScreen('game')
+          handleAction('startGame')
           break
       }
     }
@@ -36,7 +36,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onAction, showHelp }) => {
         <Text>{HELP_TEXT}</Text>
       ) : (
         <Text>
-          Press (Enter) to Start, Press (H) for help, (Q) to quit
+          Press (S) to start game, (H) for help, (Q) to quit
         </Text>
       )}
     </Box>

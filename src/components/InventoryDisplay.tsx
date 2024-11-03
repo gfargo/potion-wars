@@ -1,12 +1,10 @@
 import { Box, Text } from 'ink'
 import React from 'react'
+import { useGame } from '../contexts/GameContext.js'
 
-interface InventoryDisplayProps {
-  inventory: { [key: string]: number }
-}
-
-const InventoryDisplay: React.FC<InventoryDisplayProps> = ({ inventory }) => {
-  const inventoryEntries = Object.entries(inventory)
+const InventoryDisplay: React.FC = () => {
+  const { gameState } = useGame()
+  const inventoryEntries = Object.entries(gameState.inventory)
 
   return (
     <Box flexDirection="column" marginY={1}>
@@ -27,3 +25,4 @@ const InventoryDisplay: React.FC<InventoryDisplayProps> = ({ inventory }) => {
 }
 
 export default InventoryDisplay
+

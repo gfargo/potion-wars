@@ -1,15 +1,14 @@
 import { Box, Text } from 'ink'
 import React from 'react'
+import { useGame } from '../contexts/GameContext.js'
 
-interface PriceListProps {
-  prices: { [key: string]: number }
-}
+const PriceList: React.FC = () => {
+  const { gameState } = useGame()
 
-const PriceList: React.FC<PriceListProps> = ({ prices }) => {
   return (
     <Box flexDirection="column" marginY={1}>
       <Text bold italic>Prices:</Text>
-      {Object.entries(prices).map(([drug, price]) => (
+      {Object.entries(gameState.prices).map(([drug, price]) => (
         <Text key={drug}>
           {drug}: ${price}
         </Text>
@@ -19,3 +18,4 @@ const PriceList: React.FC<PriceListProps> = ({ prices }) => {
 }
 
 export default PriceList
+

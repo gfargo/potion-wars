@@ -1,14 +1,17 @@
+import React, { useState } from 'react'
 import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
-import React, { useState } from 'react'
+import { useUI } from '../contexts/UIContext.js'
+import { useGame } from '../contexts/GameContext.js'
 
 interface ActionMenuProps {
-  onAction: (action: string, params?: any) => void
   drugs: string[]
   locations: string[]
 }
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) => {
+const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
+  const { setQuitConfirmation } = useUI()
+  const { handleAction } = useGame()
   const [currentMenu, setCurrentMenu] = useState<'main' | 'buy' | 'sell' | 'travel' | 'repay'>('main')
   const [selectedDrug, setSelectedDrug] = useState<string | null>(null)
   const [quantity, setQuantity] = useState<number>(0)
@@ -19,12 +22,13 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) =
     { label: 'Sell (S)', value: 'sell' },
     { label: 'Travel (T)', value: 'travel' },
     { label: 'Repay Debt (R)', value: 'repay' },
+    { label: 'Quit (Q)', value: 'quit' },
   ]
 
   const handleSelect = (item: { value: string }) => {
     setCurrentMenu(item.value as 'main' | 'buy' | 'sell' | 'travel' | 'repay')
-    if (item.value === 'help' || item.value === 'quit') {
-      onAction(item.value)
+    if (item.value === 'quit') {
+      setQuitConfirmation(true)
     }
   }
 
@@ -50,6 +54,9 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) =
         case 'r':
           setCurrentMenu('repay')
           break
+        case 'q':
+          setQuitConfirmation(true)
+          break
       }
     } else if (selectedDrug || currentMenu === 'repay') {
       if (key.upArrow) {
@@ -66,9 +73,9 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) =
         }
       } else if (key.return) {
         if (currentMenu === 'repay') {
-          onAction('repay', { amount: repayAmount })
+          handleAction('repay', { amount: repayAmount })
         } else {
-          onAction(currentMenu, { drug: selectedDrug, quantity })
+          handleAction(currentMenu, { drug: selectedDrug, quantity })
         }
         setCurrentMenu('main')
         setSelectedDrug(null)
@@ -93,7 +100,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) =
           <SelectInput items={drugs.map(drug => ({ label: drug, value: drug }))} onSelect={({ value }) => setSelectedDrug(value)} />
         )
       case 'travel':
-        return <SelectInput items={locations.map(location => ({ label: location, value: location }))} onSelect={({ value }) => onAction('travel', value)} />
+        return <SelectInput items={locations.map(location => ({ label: location, value: location }))} onSelect={({ value }) => handleAction('travel', value)} />
       case 'repay':
         return (
           <Box flexDirection="column">
