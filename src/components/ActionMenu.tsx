@@ -15,42 +15,43 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) =
   const [repayAmount, setRepayAmount] = useState<number>(0)
 
   const mainItems = [
-    { label: 'Buy', value: 'buy' },
-    { label: 'Sell', value: 'sell' },
-    { label: 'Travel', value: 'travel' },
-    { label: 'Repay Debt', value: 'repay' },
-    { label: 'Help', value: 'help' },
-    { label: 'Quit', value: 'quit' },
+    { label: 'Buy (B)', value: 'buy' },
+    { label: 'Sell (S)', value: 'sell' },
+    { label: 'Travel (T)', value: 'travel' },
+    { label: 'Repay Debt (R)', value: 'repay' },
   ]
 
   const handleSelect = (item: { value: string }) => {
-    switch (currentMenu) {
-      case 'main':
-        if (item.value === 'buy' || item.value === 'sell' || item.value === 'travel' || item.value === 'repay') {
-          setCurrentMenu(item.value)
-        } else {
-          onAction(item.value)
-        }
-        break
-      case 'buy':
-      case 'sell':
-        setSelectedDrug(item.value)
-        break
-      case 'travel':
-        onAction('travel', item.value)
-        setCurrentMenu('main')
-        break
+    setCurrentMenu(item.value as 'main' | 'buy' | 'sell' | 'travel' | 'repay')
+    if (item.value === 'help' || item.value === 'quit') {
+      onAction(item.value)
     }
   }
 
-  useInput((_, key) => {
+  useInput((input, key) => {
     if (key.escape) {
       setCurrentMenu('main')
       setSelectedDrug(null)
       setQuantity(0)
       setRepayAmount(0)
     }
-    if (selectedDrug || currentMenu === 'repay') {
+
+    if (currentMenu === 'main') {
+      switch (input.toLowerCase()) {
+        case 'b':
+          setCurrentMenu('buy')
+          break
+        case 's':
+          setCurrentMenu('sell')
+          break
+        case 't':
+          setCurrentMenu('travel')
+          break
+        case 'r':
+          setCurrentMenu('repay')
+          break
+      }
+    } else if (selectedDrug || currentMenu === 'repay') {
       if (key.upArrow) {
         if (currentMenu === 'repay') {
           setRepayAmount(prev => Math.min(prev + 100, 999999))
@@ -89,10 +90,10 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ onAction, drugs, locations }) =
             <Text>Quantity: {quantity} (Use ↑↓ to change, Enter to confirm)</Text>
           </Box>
         ) : (
-          <SelectInput items={drugs.map(drug => ({ label: drug, value: drug }))} onSelect={handleSelect} />
+          <SelectInput items={drugs.map(drug => ({ label: drug, value: drug }))} onSelect={({ value }) => setSelectedDrug(value)} />
         )
       case 'travel':
-        return <SelectInput items={locations.map(location => ({ label: location, value: location }))} onSelect={handleSelect} />
+        return <SelectInput items={locations.map(location => ({ label: location, value: location }))} onSelect={({ value }) => onAction('travel', value)} />
       case 'repay':
         return (
           <Box flexDirection="column">
