@@ -2,11 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { locations } from '../constants.js'
 import { generatePrices } from '../gameData.js'
 import {
-  buyDrug,
+  brewPotion,
   type GameState,
   isGameOver,
   repayDebt,
-  sellDrug,
+  sellPotion,
   travel,
 } from '../gameLogic.js'
 import { useUI } from './UIContext.js'
@@ -27,13 +27,13 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     cash: 2000,
     debt: 5500,
     health: 100,
-    location: locations[0]!, // Start in the Bronx
+    location: locations[0]!, // Start in the Alchemist's Quarter
     inventory: {},
     prices: {},
   })
 
   const [message, setMessage] = useState(
-    'Welcome to Dope Wars! Select an action to begin.'
+    'Welcome to Potion Wars! Select an action to begin.'
   )
   const { setScreen, setCombatResult } = useUI()
 
@@ -46,21 +46,21 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
 
   const handleAction = (action: string, parameters?: any) => {
     switch (action) {
-      case 'buy': {
-        const [newBuyState, buyMessage] = buyDrug(
+      case 'brew': {
+        const [newBrewState, brewMessage] = brewPotion(
           gameState,
-          parameters.drug,
+          parameters.potion,
           parameters.quantity
         )
-        setGameState(newBuyState)
-        setMessage(buyMessage)
+        setGameState(newBrewState)
+        setMessage(brewMessage)
         break
       }
 
       case 'sell': {
-        const [newSellState, sellMessage] = sellDrug(
+        const [newSellState, sellMessage] = sellPotion(
           gameState,
-          parameters.drug,
+          parameters.potion,
           parameters.quantity
         )
         setGameState(newSellState)
@@ -100,8 +100,6 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     }
 
     if (isGameOver(gameState)) {
-      const finalScore = gameState.cash - gameState.debt
-      setMessage(`Game Over! Final score: $${finalScore}`)
       setScreen('game-over')
     }
   }
@@ -127,3 +125,4 @@ export const useGame = () => {
 
   return context
 }
+

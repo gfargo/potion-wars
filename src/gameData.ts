@@ -1,9 +1,9 @@
-import { drugs, type Location } from './constants.js'
+import { potions, type Location } from './constants.js'
 
 export const generatePrices = (): Record<string, number> => {
-  return drugs.reduce((accumulator: Record<string, number>, drug) => {
-    accumulator[drug.name] = Math.floor(
-      Math.random() * (drug.maxPrice - drug.minPrice + 1) + drug.minPrice
+  return potions.reduce((accumulator: Record<string, number>, potion) => {
+    accumulator[potion.name] = Math.floor(
+      Math.random() * (potion.maxPrice - potion.minPrice + 1) + potion.minPrice
     )
     return accumulator
   }, {})
@@ -18,12 +18,12 @@ type Event = {
 
 export const events: Event[] = [
   {
-    name: 'Police Raid',
-    description: 'The police raid your stash! You lose half of your inventory.',
+    name: 'Royal Inspection',
+    description: 'The royal guards inspect your potions! You lose half of your inventory.',
     effect(state: { inventory: Record<string, unknown> | ArrayLike<unknown> }) {
       const newInventory = Object.fromEntries(
-        Object.entries(state.inventory).map(([drug, amount]) => [
-          drug,
+        Object.entries(state.inventory).map(([potion, amount]) => [
+          potion,
           Math.floor((amount as number) / 2),
         ])
       )
@@ -31,12 +31,12 @@ export const events: Event[] = [
     },
   },
   {
-    name: 'Price Spike',
-    description: "There's a shortage of drugs! Prices double for the day.",
+    name: 'Ingredient Shortage',
+    description: "There's a shortage of potion ingredients! Prices double for the day.",
     effect(state: { prices: ArrayLike<unknown> | Record<string, unknown> }) {
       const newPrices = Object.fromEntries(
-        Object.entries(state.prices).map(([drug, price]) => [
-          drug,
+        Object.entries(state.prices).map(([potion, price]) => [
+          potion,
           (price as number) * 2,
         ])
       )
@@ -45,21 +45,21 @@ export const events: Event[] = [
   },
   {
     name: 'Lucky Find',
-    description: 'You found a hidden stash! Gain $1000.',
+    description: 'You found a rare ingredient! Gain 1000 gold.',
     effect: (state: { cash: number }) => ({
       ...state,
       cash: state.cash + 1000,
     }),
   },
   {
-    name: 'Gang War',
+    name: 'Alchemist Rivalry',
     description:
-      'A gang war breaks out! Prices are volatile and danger increases.',
+      'A rivalry between alchemists breaks out! Prices are volatile and danger increases.',
     effect(state: { prices: Record<string, number>; location: Location }) {
       const newPrices = { ...state.prices }
-      for (const drug of Object.keys(newPrices)) {
-        if (newPrices[drug] !== undefined) {
-          newPrices[drug] *= Math.random() < 0.5 ? 0.5 : 1.5
+      for (const potion of Object.keys(newPrices)) {
+        if (newPrices[potion] !== undefined) {
+          newPrices[potion] *= Math.random() < 0.5 ? 0.5 : 1.5
         }
       }
 
@@ -72,23 +72,23 @@ export const events: Event[] = [
         },
       }
     },
-    locationSpecific: ['Bronx', 'Brooklyn'],
+    locationSpecific: ['Alchemist\'s Quarter', 'Merchant\'s District'],
   },
   {
-    name: 'Stock Market Crash',
+    name: 'Royal Decree',
     description:
-      'The stock market crashes! Rich clients are desperate for drugs.',
+      'A royal decree increases demand for potions! Nobles are desperate for your concoctions.',
     effect(state: { prices: Record<string, number> }) {
       const newPrices = { ...state.prices }
-      for (const drug of Object.keys(newPrices)) {
-        if (newPrices[drug] !== undefined) {
-          newPrices[drug] *= 2
+      for (const potion of Object.keys(newPrices)) {
+        if (newPrices[potion] !== undefined) {
+          newPrices[potion] *= 2
         }
       }
 
       return { ...state, prices: newPrices }
     },
-    locationSpecific: ['Manhattan'],
+    locationSpecific: ['Royal Castle'],
   },
 ]
 

@@ -20,10 +20,11 @@ export function GameOver({ finalScore }: GameOverProperties) {
       <Text bold color="red">
         Game Over!
       </Text>
-      <Text>Final score: ${finalScore}</Text>
+      <Text>Final score: {finalScore} gold</Text>
       <Text>Press &apos;Enter&apos; to return to the main menu</Text>
     </Box>
   )
 }
 
 export default GameOver
+

@@ -13,9 +13,9 @@ function PlayerStatus() {
       paddingX={1}
       marginX={3}
     >
-      <Text>Cash: ${gameState.cash}</Text>
+      <Text>Gold: {gameState.cash}</Text>
       <Text>{` | `}</Text>
-      <Text>Debt: ${gameState.debt}</Text>
+      <Text>Debt: {gameState.debt} gold</Text>
       <Text>{` | `}</Text>
       <Text>Health: {gameState.health}%</Text>
     </Box>
@@ -23,3 +23,4 @@ function PlayerStatus() {
 }
 
 export default PlayerStatus
+

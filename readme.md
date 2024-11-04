@@ -1,21 +1,39 @@
-# Terminal Drug Wars 💊💼
+# Terminal Potion Wars 🧪🏰
 
-Welcome to **Terminal Drug Wars**! A text-based strategy game built with React and Ink, bringing the classic Drug Wars experience right to your command line. 💻🎮
+Welcome to **Terminal Potion Wars**! A text-based strategy game built with React and Ink, bringing a magical potion-peddling experience right to your command line. 💻🎮
 
 ## Overview 🌟
 
-Terminal Drug Wars is an open-source project that recreates the infamous Drug Wars game in a terminal environment. It's perfect for strategy game enthusiasts and developers who want to enjoy a quick game break without leaving their terminal. Buy low, sell high, and become the ultimate entrepreneur while avoiding the dangers of the streets! 💰🏙️
+Terminal Potion Wars is an open-source project that puts you in the shoes of a medieval potion peddler in a fantastical kingdom. It's perfect for strategy game enthusiasts and developers who want to enjoy a quick game break without leaving their terminal. Brew low, sell high, and become the ultimate potion entrepreneur while avoiding the dangers of the realm! 🧪💰
 
 ## Features ✨
 
-- **Terminal-based Gameplay**: Enjoy Drug Wars directly in your terminal.
-- **Strategic Trading**: Buy and sell various substances to maximize profits.
-- **Location-based Events**: Travel between different areas, each with unique opportunities and risks.
-- **Combat System**: Engage in turn-based encounters with rival gangs and law enforcement.
+- **Terminal-based Gameplay**: Enjoy Potion Wars directly in your terminal.
+- **Strategic Trading**: Brew and sell various potions to maximize profits.
+- **Location-based Events**: Travel between different areas of the kingdom, each with unique opportunities and risks.
+- **Combat System**: Engage in turn-based encounters with rival alchemists and royal guards.
 - **Debt Management**: Balance your finances and repay your debts to stay in the game.
 - **Health System**: Manage your health while navigating dangerous situations.
 
+## Game Mechanics 🎮
+
+- **Brewing Potions**: Use your gold to brew different types of potions.
+- **Selling Potions**: Sell your brewed potions for profit in various locations.
+- **Traveling**: Move between different areas of the kingdom, each with its own market prices and danger levels.
+- **Managing Finances**: Keep an eye on your gold and debt levels.
+- **Avoiding Dangers**: Watch out for royal guards and rival alchemists who might try to steal your potions or gold.
+
 ## Quick Start 🚀
 
-You can start playing Terminal Drug Wars right away using the following command:
+To start playing Terminal Potion Wars, follow these steps:
+
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Run the game using `npm start`
+
+Enjoy your adventures in the magical world of potion brewing and trading!
+
+## Development 🛠️
+
+This game is built using React, Ink, and TypeScript. Feel free to contribute to the project by submitting pull requests or reporting issues.
 

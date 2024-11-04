@@ -46,7 +46,7 @@ function MainMenu() {
       justifyContent="center"
       alignItems="center"
     >
-      <Gradient name="retro">
+      <Gradient name="pastel">
         <Text>{TITLE_ART}</Text>
       </Gradient>
       {showHelp ? (
@@ -59,3 +59,4 @@ function MainMenu() {
 }
 
 export default MainMenu
+

@@ -8,7 +8,7 @@ import Location from '../components/Location.js'
 import Message from '../components/Message.js'
 import PlayerStatus from '../components/PlayerStatus.js'
 import PriceList from '../components/PriceList.js'
-import { HELP_TEXT, drugs, locations } from '../constants.js'
+import { HELP_TEXT, potions, locations } from '../constants.js'
 import { useUI } from '../contexts/UIContext.js'
 
 function GameScreen() {
@@ -24,9 +24,9 @@ function GameScreen() {
       >
         <Box alignItems="center">
           <Box marginRight={3}>
-            <Gradient name="retro">
+            <Gradient name="pastel">
               <Text bold dimColor>
-                Dope Wars
+                Potion Wars
               </Text>
             </Gradient>
           </Box>
@@ -48,7 +48,7 @@ function GameScreen() {
             <Box flexDirection="column" justifyContent="flex-end" minHeight={9}>
               <Box>
                 <ActionMenu
-                  drugs={drugs.map((drug) => drug.name)}
+                  potions={potions.map((potion) => potion.name)}
                   locations={locations}
                 />
               </Box>
@@ -61,3 +61,4 @@ function GameScreen() {
 }
 
 export default GameScreen
+

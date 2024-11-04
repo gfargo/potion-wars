@@ -6,43 +6,45 @@ import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
 type ActionMenuProperties = {
-  readonly drugs: string[]
+  readonly potions: string[]
   readonly locations: Location[]
 }
 
-function ActionMenu({ drugs, locations }: ActionMenuProperties) {
+function ActionMenu({ potions, locations }: ActionMenuProperties) {
   const { setQuitConfirmation } = useUI()
   const { gameState, handleAction } = useGame()
   const [currentMenu, setCurrentMenu] = useState<
-    'main' | 'buy' | 'sell' | 'travel' | 'repay'
+    'main' | 'brew' | 'sell' | 'travel' | 'repay'
   >('main')
   const [travelLocationPreview, setTravelLocationPreview] = useState<
     string | undefined
   >((locations[0] as Location).name)
-  const [selectedDrug, setSelectedDrug] = useState<string | undefined>(
+  const [selectedPotion, setSelectedPotion] = useState<string | undefined>(
     undefined
   )
   const [quantity, setQuantity] = useState<number>(0)
   const [repayAmount, setRepayAmount] = useState<number>(0)
 
-  const affordableDrugs = useMemo(() => {
-    return drugs.filter((drug) =>
-      gameState.prices[drug] ? gameState.prices[drug] <= gameState.cash : false
+  const affordablePotions = useMemo(() => {
+    return potions.filter((potion) =>
+      gameState.prices[potion]
+        ? gameState.prices[potion] <= gameState.cash
+        : false
     )
-  }, [drugs, gameState.prices, gameState.cash])
+  }, [potions, gameState.prices, gameState.cash])
 
   const maxAffordableQuantity = useMemo(() => {
-    if (selectedDrug) {
-      return gameState.prices[selectedDrug]
-        ? Math.floor(gameState.cash / gameState.prices[selectedDrug])
+    if (selectedPotion) {
+      return gameState.prices[selectedPotion]
+        ? Math.floor(gameState.cash / gameState.prices[selectedPotion])
         : 0
     }
 
     return 0
-  }, [selectedDrug, gameState.cash, gameState.prices])
+  }, [selectedPotion, gameState.cash, gameState.prices])
 
   const mainItems = [
-    { label: 'Buy (B)', value: 'buy' },
+    { label: 'Brew (B)', value: 'brew' },
     { label: 'Sell (S)', value: 'sell' },
     { label: 'Travel (T)', value: 'travel' },
     { label: 'Repay Debt (R)', value: 'repay' },
@@ -50,7 +52,7 @@ function ActionMenu({ drugs, locations }: ActionMenuProperties) {
   ]
 
   const handleSelect = (item: { value: string }) => {
-    setCurrentMenu(item.value as 'main' | 'buy' | 'sell' | 'travel' | 'repay')
+    setCurrentMenu(item.value as 'main' | 'brew' | 'sell' | 'travel' | 'repay')
     if (item.value === 'quit') {
       setQuitConfirmation(true)
     }
@@ -59,7 +61,7 @@ function ActionMenu({ drugs, locations }: ActionMenuProperties) {
   useInput((input, key) => {
     if (key.escape) {
       setCurrentMenu('main')
-      setSelectedDrug(undefined)
+      setSelectedPotion(undefined)
       setQuantity(0)
       setRepayAmount(0)
     }
@@ -67,7 +69,7 @@ function ActionMenu({ drugs, locations }: ActionMenuProperties) {
     if (currentMenu === 'main') {
       switch (input.toLowerCase()) {
         case 'b': {
-          setCurrentMenu('buy')
+          setCurrentMenu('brew')
           break
         }
 
@@ -91,7 +93,7 @@ function ActionMenu({ drugs, locations }: ActionMenuProperties) {
           break
         }
       }
-    } else if (selectedDrug || currentMenu === 'repay') {
+    } else if (selectedPotion || currentMenu === 'repay') {
       if (key.upArrow) {
         if (currentMenu === 'repay') {
           setRepayAmount((previous) => Math.min(previous + 100, gameState.cash))
@@ -107,14 +109,15 @@ function ActionMenu({ drugs, locations }: ActionMenuProperties) {
           setQuantity((previous) => Math.max(previous - 1, 0))
         }
       } else if (key.return) {
-        if (currentMenu === 'repay') {
-          handleAction('repay', { amount: repayAmount })
-        } else {
-          handleAction(currentMenu, { drug: selectedDrug, quantity })
+        if (currentMenu === 'brew') {
+          handleAction('brew', { potion: selectedPotion, quantity })
+        } else if (currentMenu === 'sell') {
+          handleAction('sell', { potion: selectedPotion, quantity })
+        } else if (currentMenu === 'repay') {
+          handleAction('repay', repayAmount)
         }
-
         setCurrentMenu('main')
-        setSelectedDrug(undefined)
+        setSelectedPotion(undefined)
         setQuantity(0)
         setRepayAmount(0)
       }
@@ -127,63 +130,65 @@ function ActionMenu({ drugs, locations }: ActionMenuProperties) {
         return <SelectInput items={mainItems} onSelect={handleSelect} />
       }
 
-      case 'buy': {
-        return selectedDrug ? (
+      case 'brew': {
+        return selectedPotion ? (
           <Box flexDirection="column">
-            <Text>Selected: {selectedDrug}</Text>
-            <Text>Price: ${gameState.prices[selectedDrug]}</Text>
+            <Text>Selected: {selectedPotion}</Text>
+            <Text>Price: ${gameState.prices[selectedPotion]}</Text>
             <Text>
               Quantity: {quantity} (Use ↑↓ to change, Enter to confirm)
             </Text>
             <Text>
               Total Cost: $
               {quantity *
-                (selectedDrug && gameState.prices[selectedDrug]
-                  ? gameState.prices[selectedDrug]
+                (selectedPotion && gameState.prices[selectedPotion]
+                  ? gameState.prices[selectedPotion]
                   : 0)}
             </Text>
             <Text>Max Affordable: {maxAffordableQuantity}</Text>
           </Box>
         ) : (
           <SelectInput
-            items={affordableDrugs.map((drug) => ({
-              label: `${drug} - $${gameState.prices[drug]}`,
-              value: drug,
+            items={affordablePotions.map((potion) => ({
+              label: `${potion} - $${gameState.prices[potion]}`,
+              value: potion,
             }))}
             onSelect={({ value }) => {
-              setSelectedDrug(value)
+              setSelectedPotion(value)
             }}
           />
         )
       }
 
       case 'sell': {
-        return selectedDrug ? (
+        return selectedPotion ? (
           <Box flexDirection="column">
-            <Text>Selected: {selectedDrug}</Text>
-            <Text>Price: ${gameState.prices[selectedDrug]}</Text>
+            <Text>Selected: {selectedPotion}</Text>
+            <Text>Price: ${gameState.prices[selectedPotion]}</Text>
             <Text>
               Quantity: {quantity} (Use ↑↓ to change, Enter to confirm)
             </Text>
             <Text>
               Total Value: $
               {quantity *
-                (selectedDrug && gameState.prices[selectedDrug]
-                  ? gameState.prices[selectedDrug]
+                (selectedPotion && gameState.prices[selectedPotion]
+                  ? gameState.prices[selectedPotion]
                   : 0)}
             </Text>
-            <Text>Max Sellable: {gameState.inventory[selectedDrug] || 0}</Text>
+            <Text>
+              Max Sellable: {gameState.inventory[selectedPotion] || 0}
+            </Text>
           </Box>
         ) : (
           <SelectInput
             items={Object.entries(gameState.inventory)
               .filter(([_, amount]) => amount > 0)
-              .map(([drug, amount]) => ({
-                label: `${drug} - ${amount} units`,
-                value: drug,
+              .map(([potion, amount]) => ({
+                label: `${potion} - ${amount} units`,
+                value: potion,
               }))}
             onSelect={({ value }) => {
-              setSelectedDrug(value)
+              setSelectedPotion(value)
             }}
           />
         )

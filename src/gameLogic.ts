@@ -18,20 +18,20 @@ export type CombatResult = {
   message: string
 }
 
-export const buyDrug = (
+export const brewPotion = (
   state: GameState,
-  drugName: string,
+  potionName: string,
   quantity: number
 ): [GameState, string] => {
-  const price = state.prices[drugName]
+  const price = state.prices[potionName]
   if (price === undefined) {
-    return [state, 'Price is not available for this drug!']
+    return [state, 'Price is not available for this potion!']
   }
 
   const totalCost = price * quantity
 
   if (totalCost > state.cash) {
-    return [state, "You don't have enough cash!"]
+    return [state, "You don't have enough gold!"]
   }
 
   const newState = {
@@ -39,24 +39,24 @@ export const buyDrug = (
     cash: state.cash - totalCost,
     inventory: {
       ...state.inventory,
-      [drugName]: (state.inventory[drugName] || 0) + quantity,
+      [potionName]: (state.inventory[potionName] || 0) + quantity,
     },
   }
-  return [newState, `Bought ${quantity} ${drugName} for $${totalCost}`]
+  return [newState, `Brewed ${quantity} ${potionName} for ${totalCost} gold`]
 }
 
-export const sellDrug = (
+export const sellPotion = (
   state: GameState,
-  drugName: string,
+  potionName: string,
   quantity: number
 ): [GameState, string] => {
-  if (!state.inventory[drugName] || state.inventory[drugName] < quantity) {
+  if (!state.inventory[potionName] || state.inventory[potionName] < quantity) {
     return [state, "You don't have enough to sell!"]
   }
 
-  const price = state.prices[drugName]
+  const price = state.prices[potionName]
   if (price === undefined) {
-    return [state, 'Price is not available for this drug!']
+    return [state, 'Price is not available for this potion!']
   }
 
   const totalEarned = price * quantity
@@ -66,15 +66,15 @@ export const sellDrug = (
     cash: state.cash + totalEarned,
     inventory: {
       ...state.inventory,
-      [drugName]: state.inventory[drugName] - quantity,
+      [potionName]: state.inventory[potionName] - quantity,
     },
   }
-  return [newState, `Sold ${quantity} ${drugName} for $${totalEarned}`]
+  return [newState, `Sold ${quantity} ${potionName} for ${totalEarned} gold`]
 }
 
 export const handleCombat = (state: GameState): CombatResult => {
-  const isPolice = Math.random() < 0.6 // 60% chance of police encounter, 40% chance of gang encounter
-  const enemyName = isPolice ? 'Police' : 'Rival Gang'
+  const isRoyalGuard = Math.random() < 0.6 // 60% chance of royal guard encounter, 40% chance of rival alchemist encounter
+  const enemyName = isRoyalGuard ? 'Royal Guard' : 'Rival Alchemist'
   const playerStrength = Math.floor(Math.random() * 10) + 1 // Player's strength (1-10)
   const enemyStrength = Math.floor(Math.random() * 10) + 1 // Enemy's strength (1-10)
 
@@ -90,22 +90,22 @@ export const handleCombat = (state: GameState): CombatResult => {
     }
   }
 
-  const cashLost = Math.floor(state.cash * 0.2) // Lose 20% of cash
+  const cashLost = Math.floor(state.cash * 0.2) // Lose 20% of gold
   const inventoryLost: Record<string, number> = {}
 
-  for (const [drug, quantity] of Object.entries(state.inventory)) {
-    inventoryLost[drug] = Math.floor(quantity * 0.3) // Lose 30% of each drug
+  for (const [potion, quantity] of Object.entries(state.inventory)) {
+    inventoryLost[potion] = Math.floor(quantity * 0.3) // Lose 30% of each potion
   }
 
-  message += `You were caught! Lost $${cashLost} and some inventory.`
+  message += `You were caught! Lost ${cashLost} gold and some potions.`
 
   return {
     health: state.health - Math.floor(Math.random() * 20),
     cash: state.cash - cashLost,
     inventory: Object.fromEntries(
-      Object.entries(state.inventory).map(([drug, quantity]) => [
-        drug,
-        quantity - (inventoryLost[drug] || 0),
+      Object.entries(state.inventory).map(([potion, quantity]) => [
+        potion,
+        quantity - (inventoryLost[potion] || 0),
       ])
     ),
     message,
@@ -162,11 +162,11 @@ export const repayDebt = (
   amount: number
 ): [GameState, string] => {
   if (amount > state.cash) {
-    return [state, "You don't have enough cash to repay that much!"]
+    return [state, "You don't have enough gold to repay that much!"]
   }
 
   if (amount > state.debt) {
-    return [state, "You're repaying more than you owe!"]
+    return [state, "You're trying to repay more than you owe!"]
   }
 
   const newState = {
@@ -174,7 +174,38 @@ export const repayDebt = (
     cash: state.cash - amount,
     debt: state.debt - amount,
   }
-  return [newState, `Repaid $${amount} of debt.`]
+
+  return [newState, `Repaid ${amount} gold of debt.`]
+}
+
+export const initializeGame = (): GameState => {
+  const initialLocation = locations[Math.floor(Math.random() * locations.length)]
+  return {
+    day: 1,
+    cash: 2000,
+    debt: 5000,
+    health: 100,
+    location: initialLocation,
+    inventory: {},
+    prices: generatePrices(),
+  }
+}
+
+export const advanceDay = (state: GameState): [GameState, string] => {
+  const newDay = state.day + 1
+  const [newPrices, eventMessage] = triggerRandomEvent(generatePrices())
+
+  // Apply daily interest to debt
+  const newDebt = Math.floor(state.debt * 1.1) // 10% daily interest
+
+  const newState = {
+    ...state,
+    day: newDay,
+    prices: newPrices,
+    debt: newDebt,
+  }
+
+  return [newState, `Day ${newDay}: ${eventMessage}`]
 }
 
 export const isGameOver = (state: GameState): boolean => {

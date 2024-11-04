@@ -14,11 +14,11 @@ function PriceList() {
       minWidth={22}
     >
       <Text bold italic>
-        Prices:
+        Potion Prices:
       </Text>
-      {Object.entries(gameState.prices).map(([drug, price]) => (
-        <Text key={drug}>
-          {drug}: ${price}
+      {Object.entries(gameState.prices).map(([potion, price]) => (
+        <Text key={potion}>
+          {potion}: {price} gold
         </Text>
       ))}
     </Box>
@@ -26,3 +26,4 @@ function PriceList() {
 }
 
 export default PriceList
+

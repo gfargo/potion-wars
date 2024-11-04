@@ -15,12 +15,12 @@ function InventoryDisplay() {
       minWidth={16}
     >
       <Text bold italic>
-        Inventory:
+        Potion Inventory:
       </Text>
       {inventoryEntries.length > 0 ? (
-        inventoryEntries.map(([drug, quantity]) => (
-          <Text key={drug}>
-            {drug}: {quantity}
+        inventoryEntries.map(([potion, quantity]) => (
+          <Text key={potion}>
+            {potion}: {quantity}
           </Text>
         ))
       ) : (
@@ -31,3 +31,4 @@ function InventoryDisplay() {
 }
 
 export default InventoryDisplay
+
