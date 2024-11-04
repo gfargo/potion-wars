@@ -13,9 +13,7 @@ function PriceList() {
       borderStyle="singleDouble"
       minWidth={40}
     >
-      <Text bold>
-        Prices 🧪
-      </Text>
+      <Text bold>Prices 🧪</Text>
       {Object.entries(gameState.prices).map(([potion, price]) => (
         <Text key={potion}>
           {potion}: {price}g

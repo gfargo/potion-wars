@@ -19,7 +19,8 @@ type Event = {
 export const events: Event[] = [
   {
     name: 'Royal Inspection',
-    description: 'The royal guards inspect your potions! You lose half of your inventory.',
+    description:
+      'The royal guards inspect your potions! You lose half of your inventory.',
     effect(state: { inventory: Record<string, unknown> | ArrayLike<unknown> }) {
       const newInventory = Object.fromEntries(
         Object.entries(state.inventory).map(([potion, amount]) => [
@@ -32,7 +33,8 @@ export const events: Event[] = [
   },
   {
     name: 'Ingredient Shortage',
-    description: "There's a shortage of potion ingredients! Prices double for the day.",
+    description:
+      "There's a shortage of potion ingredients! Prices double for the day.",
     effect(state: { prices: ArrayLike<unknown> | Record<string, unknown> }) {
       const newPrices = Object.fromEntries(
         Object.entries(state.prices).map(([potion, price]) => [
@@ -72,7 +74,7 @@ export const events: Event[] = [
         },
       }
     },
-    locationSpecific: ['Alchemist\'s Quarter', 'Merchant\'s District'],
+    locationSpecific: ["Alchemist's Quarter", "Merchant's District"],
   },
   {
     name: 'Royal Decree',

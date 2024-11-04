@@ -1,14 +1,19 @@
 import React, { createContext, useContext, useState } from 'react'
 
-export type MessageType = 'combat' | 'sale' | 'purchase' | 'random_event' | 'info'
+export type MessageType =
+  | 'combat'
+  | 'sale'
+  | 'purchase'
+  | 'random_event'
+  | 'info'
 
-export interface Message {
+export type Message = {
   type: MessageType
   content: string
   timestamp: number
 }
 
-interface MessageContextType {
+type MessageContextType = {
   messages: Message[]
   addMessage: (type: MessageType, content: string) => void
   clearMessages: () => void
@@ -16,14 +21,17 @@ interface MessageContextType {
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined)
 
-export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const MessageProvider: React.FC<{
+  readonly children: React.ReactNode
+}> = ({ children }) => {
   const [messages, setMessages] = useState<Message[]>([])
 
   const addMessage = (type: MessageType, content: string) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { type, content, timestamp: Date.now() },
-    ].slice(-100)) // Keep only the last 100 messages
+    setMessages((previousMessages) =>
+      [...previousMessages, { type, content, timestamp: Date.now() }].slice(
+        -100
+      )
+    ) // Keep only the last 100 messages
   }
 
   const clearMessages = () => {
@@ -42,5 +50,6 @@ export const useMessage = () => {
   if (context === undefined) {
     throw new Error('useMessage must be used within a MessageProvider')
   }
+
   return context
 }

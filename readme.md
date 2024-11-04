@@ -36,4 +36,3 @@ Enjoy your adventures in the magical world of potion brewing and trading!
 ## Development 🛠️
 
 This game is built using React, Ink, and TypeScript. Feel free to contribute to the project by submitting pull requests or reporting issues.
-

@@ -32,7 +32,7 @@ export type Location = {
 
 export const locations: Location[] = [
   {
-    name: 'Alchemist\'s Quarter',
+    name: "Alchemist's Quarter",
     description:
       'A bustling area filled with potion shops and ingredient markets. Great for brewing and selling, but watch out for rival alchemists.',
     dangerLevel: 7,
@@ -44,7 +44,7 @@ export const locations: Location[] = [
     dangerLevel: 5,
   },
   {
-    name: 'Merchant\'s District',
+    name: "Merchant's District",
     description:
       'A diverse area with a mix of wealthy traders and common folk. Good for mid-level operations.',
     dangerLevel: 6,
@@ -65,10 +65,9 @@ export const locations: Location[] = [
 
 export const potions = [
   { name: 'Elixir of Immortality', minPrice: 15_000, maxPrice: 29_000 },
-  { name: 'Dragon\'s Breath Potion', minPrice: 5000, maxPrice: 13_000 },
+  { name: "Dragon's Breath Potion", minPrice: 5000, maxPrice: 13_000 },
   { name: 'Invisibility Brew', minPrice: 1000, maxPrice: 4400 },
   { name: 'Love Potion', minPrice: 300, maxPrice: 900 },
   { name: 'Strength Tonic', minPrice: 70, maxPrice: 250 },
   { name: 'Wisdom Draught', minPrice: 10, maxPrice: 60 },
 ]
-

@@ -123,13 +123,13 @@ export const travel = (
 
   const newPrices = generatePrices()
 
-  let newState = {
+  const newState = {
     ...state,
     location: newLocation,
     prices: newPrices,
   } as GameState
 
-  let message = `Traveled to ${newLocation.name}. ${newLocation.description}`
+  const message = `Traveled to ${newLocation.name}. ${newLocation.description}`
   return [newState, message]
 }
 
@@ -139,18 +139,18 @@ export const travelCombat = (
   if (Math.random() < state.location.dangerLevel / 20) {
     const combatResult = handleCombat(state)
 
-    let newState = {
+    const newState = {
       ...state,
       health: combatResult.health,
       cash: combatResult.cash,
       inventory: combatResult.inventory,
     } as GameState
 
-    let message = `${combatResult.message}`
+    const message = `${combatResult.message}`
     return [newState, message]
-  } else {
-    return [state, undefined]
   }
+
+  return [state, undefined]
 }
 
 export const repayDebt = (
@@ -175,9 +175,8 @@ export const repayDebt = (
 }
 
 export const initializeGame = (): GameState => {
-  const initialLocation = locations[
-    Math.floor(Math.random() * locations.length)
-  ] as Location
+  const initialLocation =
+    locations[Math.floor(Math.random() * locations.length)]!
   const initialState = {
     day: 0,
     cash: 2000,
@@ -195,14 +194,14 @@ export const initializeGame = (): GameState => {
 
 export const advanceDay = (
   state: GameState,
-  params?: {
+  parameters?: {
     triggerEvent?: boolean
     triggerDebt?: boolean
   }
 ): [GameState, string] => {
   const newDay = state.day + 1
 
-  const eventResult = params?.triggerEvent
+  const eventResult = parameters?.triggerEvent
     ? triggerRandomEvent({
         ...state,
       })
@@ -214,7 +213,7 @@ export const advanceDay = (
       }
 
   // Apply 10% daily interest to debt
-  const newDebt = params?.triggerDebt
+  const newDebt = parameters?.triggerDebt
     ? Math.floor(state.debt * 1.1)
     : state.debt
 
@@ -231,7 +230,7 @@ export const advanceDay = (
   const message = `Day ${newDay}: ${
     eventResult.message || 'A new day begins.'
   } ${
-    params?.triggerDebt
+    parameters?.triggerDebt
       ? `Your debt has increased to ${newDebt} gold due to interest.`
       : ''
   }`

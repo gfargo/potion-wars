@@ -27,4 +27,3 @@ export function GameOver({ finalScore }: GameOverProperties) {
 }
 
 export default GameOver
-

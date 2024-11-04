@@ -18,7 +18,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
   >('main')
   const [travelLocationPreview, setTravelLocationPreview] = useState<
     string | undefined
-  >((locations[0] as Location).name)
+  >(locations[0]!.name)
   const [selectedPotion, setSelectedPotion] = useState<string | undefined>(
     undefined
   )
@@ -109,13 +109,27 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
           setQuantity((previous) => Math.max(previous - 1, 0))
         }
       } else if (key.return) {
-        if (currentMenu === 'brew') {
-          handleAction('brew', { potion: selectedPotion, quantity })
-        } else if (currentMenu === 'sell') {
-          handleAction('sell', { potion: selectedPotion, quantity })
-        } else if (currentMenu === 'repay') {
-          handleAction('repay', repayAmount)
+        switch (currentMenu) {
+          case 'brew': {
+            handleAction('brew', { potion: selectedPotion, quantity })
+
+            break
+          }
+
+          case 'sell': {
+            handleAction('sell', { potion: selectedPotion, quantity })
+
+            break
+          }
+
+          case 'repay': {
+            handleAction('repay', repayAmount)
+
+            break
+          }
+          // No default
         }
+
         setCurrentMenu('main')
         setSelectedPotion(undefined)
         setQuantity(0)
@@ -198,7 +212,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
         return (
           <Box flexDirection="column">
             <SelectInput
-              key={'selectLocation'}
+              key="selectLocation"
               items={locations.map((location) => ({
                 label: location.name,
                 value: location,
