@@ -125,5 +125,7 @@ export const triggerRandomEvent = (state: {
   return {
     ...newState,
     message: `${event.name}: ${event.description}`,
+    location: newState.location || state.location,
   }
 }
+
