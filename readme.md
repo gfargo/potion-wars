@@ -1,10 +1,10 @@
 # Potion Wars 🧪🏰
 
-Welcome to **Potion Wars**! A text-based strategy game built with React and Ink, bringing a magical potion-peddling experience right to your command line. 💻🎮
+Welcome to **Potion Wars**! A text-based strategy game built with React and Ink, bringing a magical potion-peddling experience right to your command line.
 
 ## Overview 🌟
 
-Potion Wars is an RPG text adventure game that puts you in the shoes of a medieval potion peddler in a fantastical kingdom. Brew low, sell high, and become the ultimate potion entrepreneur while avoiding the dangers of the realm! 🧪💰
+Potion Wars is an RPG text adventure game that puts you in the shoes of a medieval door-to-door potion peddler in a fantastical kingdom. Brew low, sell high, and become the ultimate potion pusher while dodging the dangers of the realm! ⚔️💰
 
 ## Features ✨
 
@@ -36,3 +36,15 @@ Enjoy your adventures in the magical world of potion brewing and trading!
 ## Development 🛠️
 
 This game is built using React, Ink, and TypeScript. Feel free to contribute to the project by submitting pull requests or reporting issues.
+
+## Contributing 🤝
+
+We welcome contributions from the community! Feel free to fork the repository, make changes, and submit a pull request. Check out our [contributing guidelines](CONTRIBUTING.md) for more information.
+
+## License 📜
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact 📧
+
+For questions or feedback, feel free to reach out to us via [GitHub Issues](https://github.com/gfargo/potion-wars/issues).
