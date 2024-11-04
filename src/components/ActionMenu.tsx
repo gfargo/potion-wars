@@ -10,7 +10,7 @@ type ActionMenuProperties = {
   readonly locations: Location[]
 }
 
-const ActionMenu: React.FC<ActionMenuProperties> = ({ drugs, locations }) => {
+function ActionMenu({ drugs, locations }: ActionMenuProperties) {
   const { setQuitConfirmation } = useUI()
   const { gameState, handleAction } = useGame()
   const [currentMenu, setCurrentMenu] = useState<
@@ -18,7 +18,7 @@ const ActionMenu: React.FC<ActionMenuProperties> = ({ drugs, locations }) => {
   >('main')
   const [travelLocationPreview, setTravelLocationPreview] = useState<
     string | undefined
-  >(undefined)
+  >((locations[0] as Location).name)
   const [selectedDrug, setSelectedDrug] = useState<string | undefined>(
     undefined
   )
@@ -202,14 +202,15 @@ const ActionMenu: React.FC<ActionMenuProperties> = ({ drugs, locations }) => {
               }}
               onSelect={({ value }) => {
                 handleAction('travel', value.name)
+                setTravelLocationPreview(undefined)
                 setCurrentMenu('main')
               }}
             />
 
             {travelLocationPreview && (
               <Box
+                key="currentLocation"
                 marginBottom={1}
-                key={'currentLocation'}
                 flexDirection="column"
               >
                 <Text dimColor>

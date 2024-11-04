@@ -11,7 +11,7 @@ import PriceList from '../components/PriceList.js'
 import { HELP_TEXT, drugs, locations } from '../constants.js'
 import { useUI } from '../contexts/UIContext.js'
 
-const GameScreen: React.FC = () => {
+function GameScreen() {
   const { showHelp, quitConfirmation } = useUI()
 
   return (

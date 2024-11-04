@@ -4,7 +4,7 @@ import React from 'react'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
-const Message: React.FC = () => {
+function Message() {
   const { message } = useGame()
   const { combatResult } = useUI()
 

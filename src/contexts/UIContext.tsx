@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useMemo, useState } from 'react'
 
 type Screen = 'main-menu' | 'game' | 'game-over'
 
@@ -15,13 +15,17 @@ type UIContextType = {
 
 const UIContext = createContext<UIContextType | undefined>(undefined)
 
-export const UIProvider: React.FC<{ readonly children: React.ReactNode }> = ({
+export function UIProvider({
   children,
-}) => {
+}: {
+  readonly children: React.ReactNode
+}) {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main-menu')
   const [showHelp, setShowHelp] = useState(false)
   const [quitConfirmation, setQuitConfirmation] = useState(false)
-  const [combatResult, setCombatResult] = useState<string | undefined>(undefined)
+  const [combatResult, setCombatResult] = useState<string | undefined>(
+    undefined
+  )
 
   const setScreen = (screen: Screen) => {
     setCurrentScreen(screen)
@@ -31,21 +35,22 @@ export const UIProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     setShowHelp((previous) => !previous)
   }
 
+  const uiContextValue = useMemo(
+    () => ({
+      currentScreen,
+      showHelp,
+      quitConfirmation,
+      combatResult,
+      setScreen,
+      toggleHelp,
+      setQuitConfirmation,
+      setCombatResult,
+    }),
+    [currentScreen, showHelp, quitConfirmation, combatResult]
+  )
+
   return (
-    <UIContext.Provider
-      value={{
-        currentScreen,
-        showHelp,
-        quitConfirmation,
-        combatResult,
-        setScreen,
-        toggleHelp,
-        setQuitConfirmation,
-        setCombatResult,
-      }}
-    >
-      {children}
-    </UIContext.Provider>
+    <UIContext.Provider value={uiContextValue}>{children}</UIContext.Provider>
   )
 }
 

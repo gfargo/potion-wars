@@ -5,7 +5,7 @@ import { HELP_TEXT, TITLE_ART } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
-const MainMenu: React.FC = () => {
+function MainMenu() {
   const { showHelp, toggleHelp, setScreen, setQuitConfirmation } = useUI()
   const { handleAction } = useGame()
 
@@ -29,6 +29,10 @@ const MainMenu: React.FC = () => {
         case 's': {
           setScreen('game')
           handleAction('startGame')
+          break
+        }
+
+        default: {
           break
         }
       }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { Location, locations } from '../constants.js'
+import { locations } from '../constants.js'
 import { generatePrices } from '../gameData.js'
 import {
   buyDrug,
@@ -27,7 +27,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     cash: 2000,
     debt: 5500,
     health: 100,
-    location: locations[0] as Location, // Start in the Bronx
+    location: locations[0]!, // Start in the Bronx
     inventory: {},
     prices: {},
   })

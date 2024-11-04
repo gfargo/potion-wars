@@ -7,7 +7,7 @@ import GameOver from './screens/GameOver.js'
 import GameScreen from './screens/GameScreen.js'
 import MainMenu from './screens/MainMenu.js'
 
-const AppContent: React.FC = () => {
+function AppContent() {
   const { currentScreen } = useUI()
   const { gameState } = useGame()
 

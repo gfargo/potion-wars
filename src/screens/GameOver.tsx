@@ -6,7 +6,7 @@ type GameOverProperties = {
   readonly finalScore: number
 }
 
-export const GameOver: React.FC<GameOverProperties> = ({ finalScore }) => {
+export function GameOver({ finalScore }: GameOverProperties) {
   const { setScreen } = useUI()
 
   useInput((_, key) => {
@@ -21,7 +21,7 @@ export const GameOver: React.FC<GameOverProperties> = ({ finalScore }) => {
         Game Over!
       </Text>
       <Text>Final score: ${finalScore}</Text>
-      <Text>Press 'Enter' to return to the main menu</Text>
+      <Text>Press &apos;Enter&apos; to return to the main menu</Text>
     </Box>
   )
 }

@@ -3,16 +3,16 @@ import { Box, Newline, Text } from 'ink'
 import React from 'react'
 import { useGame } from '../contexts/GameContext.js'
 
-const Location: React.FC = () => {
+function Location() {
   const { gameState } = useGame()
 
   return (
-    <Box 
-      width={"100%"}
+    <Box
+      borderDimColor
+      width="100%"
       flexDirection="column"
       borderStyle="singleDouble"
       paddingX={1}
-      borderDimColor
     >
       <Box
         width="100%"
@@ -21,9 +21,9 @@ const Location: React.FC = () => {
         marginBottom={1}
       >
         <Text bold>
-          {chalk.hex('#5a55ae')(`Location: ${gameState.location.name}`)} 
+          {chalk.hex('#5a55ae')(`Location: ${gameState.location.name}`)}
         </Text>
-        <Text color="red" dimColor>
+        <Text dimColor color="red">
           Danger Level: {gameState.location.dangerLevel}
         </Text>
       </Box>
