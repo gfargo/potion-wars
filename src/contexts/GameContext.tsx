@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState } from 'react'
+import { type Location } from '../constants.js'
 import {
   advanceDay,
   brewPotion,
-  type GameState,
   initializeGame,
   isGameOver,
   repayDebt,
@@ -12,6 +12,19 @@ import {
 } from '../gameLogic.js'
 import { useMessage } from './MessageContext.js'
 import { useUI } from './UIContext.js'
+
+export type GameState = {
+  day: number
+  cash: number
+  debt: number
+  health: number
+  strength: number
+  agility: number
+  intelligence: number
+  location: Location
+  inventory: Record<string, number>
+  prices: Record<string, number>
+}
 
 type GameContextType = {
   gameState: GameState
