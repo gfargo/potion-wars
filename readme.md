@@ -1,9 +1,21 @@
-# tDopeWars
+# Terminal Drug Wars 💊💼
 
-Today we are working on creating a new video game in the terminal using React and [Ink](https://github.com/vadimdemedes/ink). The game we are building is a remake of the classic game "Drug Wars" (aka DopeWars) game.
+Welcome to **Terminal Drug Wars**! A text-based strategy game built with React and Ink, bringing the classic Drug Wars experience right to your command line. 💻🎮
 
-You can read more about the game on [Wikipedia](<https://en.wikipedia.org/wiki/Drug_Wars_(video_game)>).
+## Overview 🌟
 
-Please refer to the `original-game-code.txt` file for the original code of the game.
+Terminal Drug Wars is an open-source project that recreates the infamous Drug Wars game in a terminal environment. It's perfect for strategy game enthusiasts and developers who want to enjoy a quick game break without leaving their terminal. Buy low, sell high, and become the ultimate entrepreneur while avoiding the dangers of the streets! 💰🏙️
 
-Once you have looked at both the Wikipedia page and the original code, let's start
+## Features ✨
+
+- **Terminal-based Gameplay**: Enjoy Drug Wars directly in your terminal.
+- **Strategic Trading**: Buy and sell various substances to maximize profits.
+- **Location-based Events**: Travel between different areas, each with unique opportunities and risks.
+- **Combat System**: Engage in turn-based encounters with rival gangs and law enforcement.
+- **Debt Management**: Balance your finances and repay your debts to stay in the game.
+- **Health System**: Manage your health while navigating dangerous situations.
+
+## Quick Start 🚀
+
+You can start playing Terminal Drug Wars right away using the following command:
+

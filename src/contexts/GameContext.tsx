@@ -33,7 +33,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   })
 
   const [message, setMessage] = useState(
-    'Welcome to Drug Wars! Select an action to begin.'
+    'Welcome to Dope Wars! Select an action to begin.'
   )
   const { setScreen, setCombatResult } = useUI()
 
