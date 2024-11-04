@@ -1,19 +1,20 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { locations } from '../constants.js'
-import { generatePrices } from '../gameData.js'
+import React, { createContext, useContext, useState } from 'react'
 import {
+  advanceDay,
   brewPotion,
   type GameState,
+  initializeGame,
   isGameOver,
   repayDebt,
   sellPotion,
   travel,
+  travelCombat,
 } from '../gameLogic.js'
+import { useMessage } from './MessageContext.js'
 import { useUI } from './UIContext.js'
 
 type GameContextType = {
   gameState: GameState
-  message: string
   handleAction: (action: string, parameters?: any) => void
 }
 
@@ -22,27 +23,9 @@ const GameContext = createContext<GameContextType | undefined>(undefined)
 export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   children,
 }) => {
-  const [gameState, setGameState] = useState<GameState>({
-    day: 1,
-    cash: 2000,
-    debt: 5500,
-    health: 100,
-    location: locations[0]!, // Start in the Alchemist's Quarter
-    inventory: {},
-    prices: {},
-  })
-
-  const [message, setMessage] = useState(
-    'Welcome to Potion Wars! Select an action to begin.'
-  )
+  const [gameState, setGameState] = useState<GameState>(initializeGame())
   const { setScreen, setCombatResult } = useUI()
-
-  useEffect(() => {
-    setGameState((previousState) => ({
-      ...previousState,
-      prices: generatePrices(),
-    }))
-  }, [])
+  const { addMessage } = useMessage()
 
   const handleAction = (action: string, parameters?: any) => {
     switch (action) {
@@ -53,7 +36,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           parameters.quantity
         )
         setGameState(newBrewState)
-        setMessage(brewMessage)
+        addMessage('purchase', brewMessage)
         break
       }
 
@@ -64,19 +47,35 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           parameters.quantity
         )
         setGameState(newSellState)
-        setMessage(sellMessage)
+        addMessage('sale', sellMessage)
         break
       }
 
       case 'travel': {
+        // Travel to new location, changes prices
         const [newTravelState, travelMessage] = travel(gameState, parameters)
-        setGameState(newTravelState)
-        setMessage(travelMessage)
+        const [travelCombatState, travelCombatMessage] =
+          travelCombat(newTravelState)
+        // Advance day, adds debt, triggers random events
+        const [newState, newDayMessage] = advanceDay(travelCombatState, {
+          triggerEvent: true,
+          triggerDebt: true,
+        })
+
+        setGameState(newState)
+        if (travelCombatMessage) {
+          addMessage('combat', travelCombatMessage)
+        }
+
+        addMessage('info', travelMessage)
+        addMessage('info', newDayMessage)
+
         if (
-          travelMessage.includes("You've encountered") ||
-          travelMessage.includes('You were caught')
+          newDayMessage.includes("You've encountered") ||
+          newDayMessage.includes('You were caught')
         ) {
-          setCombatResult(travelMessage)
+          setCombatResult(newDayMessage)
+          addMessage('combat', newDayMessage)
         } else {
           setCombatResult(undefined)
         }
@@ -90,12 +89,21 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           parameters.amount
         )
         setGameState(newRepayState)
-        setMessage(repayMessage)
+        addMessage('info', repayMessage)
+        break
+      }
+
+      case 'startGame': {
+        const initialState = initializeGame()
+        const [newState, newDayMessage] = advanceDay(initialState)
+
+        setGameState(newState)
+        addMessage('info', newDayMessage)
         break
       }
 
       default: {
-        setMessage('Invalid action')
+        addMessage('info', 'Invalid action')
       }
     }
 
@@ -105,13 +113,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   }
 
   return (
-    <GameContext.Provider
-      value={{
-        gameState,
-        message,
-        handleAction,
-      }}
-    >
+    <GameContext.Provider value={{ gameState, handleAction }}>
       {children}
     </GameContext.Provider>
   )
@@ -122,7 +124,5 @@ export const useGame = () => {
   if (context === undefined) {
     throw new Error('useGame must be used within a GameProvider')
   }
-
   return context
 }
-

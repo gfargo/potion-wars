@@ -3,6 +3,7 @@ import React from 'react'
 import { GAME_SCREEN_HEIGHT } from './constants.js'
 import { GameProvider, useGame } from './contexts/GameContext.js'
 import { UIProvider, useUI } from './contexts/UIContext.js'
+import { MessageProvider } from './contexts/MessageContext.js'
 import GameOver from './screens/GameOver.js'
 import GameScreen from './screens/GameScreen.js'
 import MainMenu from './screens/MainMenu.js'
@@ -25,9 +26,11 @@ function AppContent() {
 export default function App() {
   return (
     <UIProvider>
-      <GameProvider>
-        <AppContent />
-      </GameProvider>
+      <MessageProvider>
+        <GameProvider>
+          <AppContent />
+        </GameProvider>
+      </MessageProvider>
     </UIProvider>
   )
 }

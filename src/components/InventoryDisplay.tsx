@@ -11,11 +11,11 @@ function InventoryDisplay() {
       borderDimColor
       flexDirection="column"
       paddingX={1}
-      borderStyle="singleDouble"
-      minWidth={16}
+      borderStyle="bold"
+      minWidth={20}
     >
-      <Text bold italic>
-        Potion Inventory:
+      <Text bold>
+        Inventory 🎒
       </Text>
       {inventoryEntries.length > 0 ? (
         inventoryEntries.map(([potion, quantity]) => (

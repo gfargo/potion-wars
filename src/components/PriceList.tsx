@@ -11,14 +11,14 @@ function PriceList() {
       flexDirection="column"
       paddingX={1}
       borderStyle="singleDouble"
-      minWidth={22}
+      minWidth={40}
     >
-      <Text bold italic>
-        Potion Prices:
+      <Text bold>
+        Prices 🧪
       </Text>
       {Object.entries(gameState.prices).map(([potion, price]) => (
         <Text key={potion}>
-          {potion}: {price} gold
+          {potion}: {price}g
         </Text>
       ))}
     </Box>
@@ -26,4 +26,3 @@ function PriceList() {
 }
 
 export default PriceList
-

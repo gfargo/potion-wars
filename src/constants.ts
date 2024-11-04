@@ -1,4 +1,4 @@
-export const GAME_SCREEN_HEIGHT = 30
+export const GAME_SCREEN_HEIGHT = 28
 
 export const TITLE_ART = `
  ____       _   _             __        __
@@ -20,6 +20,7 @@ Quit - Exit the game
 Goal: Make as much money as possible in 30 days!
 Use the arrow keys to navigate menus and adjust quantities.
 Press Enter to confirm your selection.
+
 Press Esc to return to the main menu.
 `
 

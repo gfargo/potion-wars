@@ -198,6 +198,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
         return (
           <Box flexDirection="column">
             <SelectInput
+              key={'selectLocation'}
               items={locations.map((location) => ({
                 label: location.name,
                 value: location,
@@ -213,13 +214,8 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
             />
 
             {travelLocationPreview && (
-              <Box
-                key="currentLocation"
-                marginBottom={1}
-                flexDirection="column"
-              >
+              <Box key="currentLocation" flexDirection="column">
                 <Text dimColor>
-                  Description:{' '}
                   {
                     locations.find((loc) => loc.name === travelLocationPreview)
                       ?.description
