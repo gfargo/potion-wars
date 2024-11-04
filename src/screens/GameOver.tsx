@@ -2,11 +2,11 @@ import { Box, Text, useInput } from 'ink'
 import React from 'react'
 import { useUI } from '../contexts/UIContext.js'
 
-interface GameOverProps {
-  finalScore: number
+type GameOverProperties = {
+  readonly finalScore: number
 }
 
-export const GameOver: React.FC<GameOverProps> = ({ finalScore }) => {
+export const GameOver: React.FC<GameOverProperties> = ({ finalScore }) => {
   const { setScreen } = useUI()
 
   useInput((_, key) => {

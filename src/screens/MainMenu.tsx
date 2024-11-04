@@ -1,8 +1,9 @@
-import React from 'react'
 import { Box, Text, useInput } from 'ink'
-import { TITLE_ART, HELP_TEXT } from '../constants.js'
-import { useUI } from '../contexts/UIContext.js'
+import Gradient from 'ink-gradient'
+import React from 'react'
+import { HELP_TEXT, TITLE_ART } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
+import { useUI } from '../contexts/UIContext.js'
 
 const MainMenu: React.FC = () => {
   const { showHelp, toggleHelp, setScreen, setQuitConfirmation } = useUI()
@@ -15,29 +16,39 @@ const MainMenu: React.FC = () => {
       }
     } else {
       switch (input.toLowerCase()) {
-        case 'h':
+        case 'h': {
           toggleHelp()
           break
-        case 'q':
+        }
+
+        case 'q': {
           setQuitConfirmation(true)
           break
-        case 's':
+        }
+
+        case 's': {
           setScreen('game')
           handleAction('startGame')
           break
+        }
       }
     }
   })
 
   return (
-    <Box flexDirection="column">
-      <Text>{TITLE_ART}</Text>
+    <Box
+      flexDirection="column"
+      height="100%"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <Gradient name="retro">
+        <Text>{TITLE_ART}</Text>
+      </Gradient>
       {showHelp ? (
         <Text>{HELP_TEXT}</Text>
       ) : (
-        <Text>
-          Press (S) to start game, (H) for help, (Q) to quit
-        </Text>
+        <Text>Press (S) to start game, (H) for help, (Q) to quit</Text>
       )}
     </Box>
   )

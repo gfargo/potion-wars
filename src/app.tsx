@@ -1,5 +1,6 @@
 import { Box } from 'ink'
 import React from 'react'
+import { GAME_SCREEN_HEIGHT } from './constants.js'
 import { GameProvider, useGame } from './contexts/GameContext.js'
 import { UIProvider, useUI } from './contexts/UIContext.js'
 import GameOver from './screens/GameOver.js'
@@ -11,7 +12,7 @@ const AppContent: React.FC = () => {
   const { gameState } = useGame()
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box flexDirection="column" padding={1} minHeight={GAME_SCREEN_HEIGHT}>
       {currentScreen === 'main-menu' && <MainMenu />}
       {currentScreen === 'game' && <GameScreen />}
       {currentScreen === 'game-over' && (
@@ -30,4 +31,3 @@ export default function App() {
     </UIProvider>
   )
 }
-

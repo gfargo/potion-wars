@@ -1,21 +1,27 @@
 import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
 import React, { useMemo, useState } from 'react'
+import { type Location } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
-interface ActionMenuProps {
-  drugs: string[]
-  locations: string[]
+type ActionMenuProperties = {
+  readonly drugs: string[]
+  readonly locations: Location[]
 }
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
+const ActionMenu: React.FC<ActionMenuProperties> = ({ drugs, locations }) => {
   const { setQuitConfirmation } = useUI()
   const { gameState, handleAction } = useGame()
   const [currentMenu, setCurrentMenu] = useState<
     'main' | 'buy' | 'sell' | 'travel' | 'repay'
   >('main')
-  const [selectedDrug, setSelectedDrug] = useState<string | null>(null)
+  const [travelLocationPreview, setTravelLocationPreview] = useState<
+    string | undefined
+  >(undefined)
+  const [selectedDrug, setSelectedDrug] = useState<string | undefined>(
+    undefined
+  )
   const [quantity, setQuantity] = useState<number>(0)
   const [repayAmount, setRepayAmount] = useState<number>(0)
 
@@ -31,10 +37,9 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
         ? Math.floor(gameState.cash / gameState.prices[selectedDrug])
         : 0
     }
+
     return 0
   }, [selectedDrug, gameState.cash, gameState.prices])
-
-
 
   const mainItems = [
     { label: 'Buy (B)', value: 'buy' },
@@ -54,41 +59,52 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
   useInput((input, key) => {
     if (key.escape) {
       setCurrentMenu('main')
-      setSelectedDrug(null)
+      setSelectedDrug(undefined)
       setQuantity(0)
       setRepayAmount(0)
     }
 
     if (currentMenu === 'main') {
       switch (input.toLowerCase()) {
-        case 'b':
+        case 'b': {
           setCurrentMenu('buy')
           break
-        case 's':
+        }
+
+        case 's': {
           setCurrentMenu('sell')
           break
-        case 't':
+        }
+
+        case 't': {
           setCurrentMenu('travel')
           break
-        case 'r':
+        }
+
+        case 'r': {
           setCurrentMenu('repay')
           break
-        case 'q':
+        }
+
+        case 'q': {
           setQuitConfirmation(true)
           break
+        }
       }
     } else if (selectedDrug || currentMenu === 'repay') {
       if (key.upArrow) {
         if (currentMenu === 'repay') {
-          setRepayAmount((prev) => Math.min(prev + 100, gameState.cash))
+          setRepayAmount((previous) => Math.min(previous + 100, gameState.cash))
         } else {
-          setQuantity((prev) => Math.min(prev + 1, maxAffordableQuantity))
+          setQuantity((previous) =>
+            Math.min(previous + 1, maxAffordableQuantity)
+          )
         }
       } else if (key.downArrow) {
         if (currentMenu === 'repay') {
-          setRepayAmount((prev) => Math.max(prev - 100, 0))
+          setRepayAmount((previous) => Math.max(previous - 100, 0))
         } else {
-          setQuantity((prev) => Math.max(prev - 1, 0))
+          setQuantity((previous) => Math.max(previous - 1, 0))
         }
       } else if (key.return) {
         if (currentMenu === 'repay') {
@@ -96,8 +112,9 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
         } else {
           handleAction(currentMenu, { drug: selectedDrug, quantity })
         }
+
         setCurrentMenu('main')
-        setSelectedDrug(null)
+        setSelectedDrug(undefined)
         setQuantity(0)
         setRepayAmount(0)
       }
@@ -106,9 +123,11 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
 
   const renderMenu = () => {
     switch (currentMenu) {
-      case 'main':
+      case 'main': {
         return <SelectInput items={mainItems} onSelect={handleSelect} />
-      case 'buy':
+      }
+
+      case 'buy': {
         return selectedDrug ? (
           <Box flexDirection="column">
             <Text>Selected: {selectedDrug}</Text>
@@ -131,10 +150,14 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
               label: `${drug} - $${gameState.prices[drug]}`,
               value: drug,
             }))}
-            onSelect={({ value }) => setSelectedDrug(value)}
+            onSelect={({ value }) => {
+              setSelectedDrug(value)
+            }}
           />
         )
-      case 'sell':
+      }
+
+      case 'sell': {
         return selectedDrug ? (
           <Box flexDirection="column">
             <Text>Selected: {selectedDrug}</Text>
@@ -159,20 +182,50 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
                 label: `${drug} - ${amount} units`,
                 value: drug,
               }))}
-            onSelect={({ value }) => setSelectedDrug(value)}
+            onSelect={({ value }) => {
+              setSelectedDrug(value)
+            }}
           />
         )
-      case 'travel':
+      }
+
+      case 'travel': {
         return (
-          <SelectInput
-            items={locations.map((location) => ({
-              label: location,
-              value: location,
-            }))}
-            onSelect={({ value }) => handleAction('travel', value)}
-          />
+          <Box flexDirection="column">
+            <SelectInput
+              items={locations.map((location) => ({
+                label: location.name,
+                value: location,
+              }))}
+              onHighlight={({ value }) => {
+                setTravelLocationPreview(value.name)
+              }}
+              onSelect={({ value }) => {
+                handleAction('travel', value.name)
+                setCurrentMenu('main')
+              }}
+            />
+
+            {travelLocationPreview && (
+              <Box
+                marginBottom={1}
+                key={'currentLocation'}
+                flexDirection="column"
+              >
+                <Text dimColor>
+                  Description:{' '}
+                  {
+                    locations.find((loc) => loc.name === travelLocationPreview)
+                      ?.description
+                  }
+                </Text>
+              </Box>
+            )}
+          </Box>
         )
-      case 'repay':
+      }
+
+      case 'repay': {
         return (
           <Box flexDirection="column">
             <Text>
@@ -183,6 +236,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ drugs, locations }) => {
             </Text>
           </Box>
         )
+      }
     }
   }
 

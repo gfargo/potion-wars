@@ -7,7 +7,7 @@ const InventoryDisplay: React.FC = () => {
   const inventoryEntries = Object.entries(gameState.inventory)
 
   return (
-    <Box flexDirection="column" marginY={1}>
+    <Box flexDirection="column" paddingX={1} borderStyle="singleDouble" borderDimColor minWidth={16}>
       <Text bold italic>
         Inventory:
       </Text>
@@ -25,4 +25,3 @@ const InventoryDisplay: React.FC = () => {
 }
 
 export default InventoryDisplay
-

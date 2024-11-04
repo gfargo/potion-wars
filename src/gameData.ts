@@ -1,21 +1,26 @@
-import { drugs } from "./constants.js"
+import { drugs, type Location } from './constants.js'
 
-export const generatePrices = (): { [key: string]: number } => {
-  return drugs.reduce((acc: { [key: string]: number }, drug) => {
-    acc[drug.name] = Math.floor(
+export const generatePrices = (): Record<string, number> => {
+  return drugs.reduce((accumulator: Record<string, number>, drug) => {
+    accumulator[drug.name] = Math.floor(
       Math.random() * (drug.maxPrice - drug.minPrice + 1) + drug.minPrice
     )
-    return acc
+    return accumulator
   }, {})
 }
 
-export const randomEvents = [
+type Event = {
+  name: string
+  description: string
+  effect: (state: any) => any
+  locationSpecific?: string[]
+}
+
+export const events: Event[] = [
   {
     name: 'Police Raid',
     description: 'The police raid your stash! You lose half of your inventory.',
-    effect: (state: {
-      inventory: { [s: string]: unknown } | ArrayLike<unknown>
-    }) => {
+    effect(state: { inventory: Record<string, unknown> | ArrayLike<unknown> }) {
       const newInventory = Object.fromEntries(
         Object.entries(state.inventory).map(([drug, amount]) => [
           drug,
@@ -28,9 +33,7 @@ export const randomEvents = [
   {
     name: 'Price Spike',
     description: "There's a shortage of drugs! Prices double for the day.",
-    effect: (state: {
-      prices: ArrayLike<unknown> | { [s: string]: unknown }
-    }) => {
+    effect(state: { prices: ArrayLike<unknown> | Record<string, unknown> }) {
       const newPrices = Object.fromEntries(
         Object.entries(state.prices).map(([drug, price]) => [
           drug,
@@ -48,29 +51,77 @@ export const randomEvents = [
       cash: state.cash + 1000,
     }),
   },
+  {
+    name: 'Gang War',
+    description:
+      'A gang war breaks out! Prices are volatile and danger increases.',
+    effect(state: { prices: Record<string, number>; location: Location }) {
+      const newPrices = { ...state.prices }
+      for (const drug of Object.keys(newPrices)) {
+        if (newPrices[drug] !== undefined) {
+          newPrices[drug] *= Math.random() < 0.5 ? 0.5 : 1.5
+        }
+      }
+
+      return {
+        ...state,
+        prices: newPrices,
+        location: {
+          ...state.location,
+          dangerLevel: Math.min(state.location.dangerLevel + 2, 10),
+        },
+      }
+    },
+    locationSpecific: ['Bronx', 'Brooklyn'],
+  },
+  {
+    name: 'Stock Market Crash',
+    description:
+      'The stock market crashes! Rich clients are desperate for drugs.',
+    effect(state: { prices: Record<string, number> }) {
+      const newPrices = { ...state.prices }
+      for (const drug of Object.keys(newPrices)) {
+        if (newPrices[drug] !== undefined) {
+          newPrices[drug] *= 2
+        }
+      }
+
+      return { ...state, prices: newPrices }
+    },
+    locationSpecific: ['Manhattan'],
+  },
 ]
 
 type RandomEventResponse = {
   message?: string
-  inventory: { [key: string]: number }
+  inventory: Record<string, number>
   cash: number
+  prices: Record<string, number>
+  location: Location
 }
 
 export const triggerRandomEvent = (state: {
-  inventory: { [key: string]: number }
-  prices: { [key: string]: number }
+  inventory: Record<string, number>
+  prices: Record<string, number>
   cash: number
+  location: Location
 }): RandomEventResponse => {
-  const event = randomEvents[Math.floor(Math.random() * randomEvents.length)]
-  
+  const locationEvents = events.filter(
+    (event) =>
+      !event.locationSpecific ||
+      event.locationSpecific.includes(state.location.name)
+  )
+  const event =
+    locationEvents[Math.floor(Math.random() * locationEvents.length)]
+
   if (!event) {
     return state
   }
-  
+
+  const newState = event.effect(state)
+
   return {
-    inventory: state.inventory,
-    cash: state.cash,
-    ...event.effect(state),
+    ...newState,
     message: `${event.name}: ${event.description}`,
   }
 }

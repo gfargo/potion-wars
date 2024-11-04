@@ -1,70 +1,110 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { generatePrices } from '../gameData.js';
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { Location, locations } from '../constants.js'
+import { generatePrices } from '../gameData.js'
 import {
-  GameState,
   buyDrug,
+  type GameState,
   isGameOver,
   repayDebt,
   sellDrug,
   travel,
-} from '../gameLogic.js';
+} from '../gameLogic.js'
+import { useUI } from './UIContext.js'
 
-interface GameContextType {
-  gameState: GameState;
-  message: string;
-  handleAction: (action: string, params?: any) => void;
+type GameContextType = {
+  gameState: GameState
+  message: string
+  handleAction: (action: string, parameters?: any) => void
 }
 
-const GameContext = createContext<GameContextType | undefined>(undefined);
+const GameContext = createContext<GameContextType | undefined>(undefined)
 
-export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
+  children,
+}) => {
   const [gameState, setGameState] = useState<GameState>({
     day: 1,
     cash: 2000,
     debt: 5500,
     health: 100,
-    location: 'Bronx',
+    location: locations[0] as Location, // Start in the Bronx
     inventory: {},
     prices: {},
-  });
+  })
 
-  const [message, setMessage] = useState('Welcome to Drug Wars! Select an action to begin.');
+  const [message, setMessage] = useState(
+    'Welcome to Drug Wars! Select an action to begin.'
+  )
+  const { setScreen, setCombatResult } = useUI()
 
   useEffect(() => {
-    setGameState((prevState) => ({ ...prevState, prices: generatePrices() }));
-  }, []);
+    setGameState((previousState) => ({
+      ...previousState,
+      prices: generatePrices(),
+    }))
+  }, [])
 
-  const handleAction = (action: string, params?: any) => {
+  const handleAction = (action: string, parameters?: any) => {
     switch (action) {
-      case 'buy':
-        const [newBuyState, buyMessage] = buyDrug(gameState, params.drug, params.quantity);
-        setGameState(newBuyState);
-        setMessage(buyMessage);
-        break;
-      case 'sell':
-        const [newSellState, sellMessage] = sellDrug(gameState, params.drug, params.quantity);
-        setGameState(newSellState);
-        setMessage(sellMessage);
-        break;
-      case 'travel':
-        const [newTravelState, travelMessage] = travel(gameState, params);
-        setGameState(newTravelState);
-        setMessage(travelMessage);
-        break;
-      case 'repay':
-        const [newRepayState, repayMessage] = repayDebt(gameState, params.amount);
-        setGameState(newRepayState);
-        setMessage(repayMessage);
-        break;
-      default:
-        setMessage('Invalid action');
+      case 'buy': {
+        const [newBuyState, buyMessage] = buyDrug(
+          gameState,
+          parameters.drug,
+          parameters.quantity
+        )
+        setGameState(newBuyState)
+        setMessage(buyMessage)
+        break
+      }
+
+      case 'sell': {
+        const [newSellState, sellMessage] = sellDrug(
+          gameState,
+          parameters.drug,
+          parameters.quantity
+        )
+        setGameState(newSellState)
+        setMessage(sellMessage)
+        break
+      }
+
+      case 'travel': {
+        const [newTravelState, travelMessage] = travel(gameState, parameters)
+        setGameState(newTravelState)
+        setMessage(travelMessage)
+        if (
+          travelMessage.includes("You've encountered") ||
+          travelMessage.includes('You were caught')
+        ) {
+          setCombatResult(travelMessage)
+        } else {
+          setCombatResult(undefined)
+        }
+
+        break
+      }
+
+      case 'repay': {
+        const [newRepayState, repayMessage] = repayDebt(
+          gameState,
+          parameters.amount
+        )
+        setGameState(newRepayState)
+        setMessage(repayMessage)
+        break
+      }
+
+      default: {
+        setMessage('Invalid action')
+      }
     }
 
     if (isGameOver(gameState)) {
-      const finalScore = gameState.cash - gameState.debt;
-      setMessage(`Game Over! Final score: $${finalScore}`);
+      const finalScore = gameState.cash - gameState.debt
+      setMessage(`Game Over! Final score: $${finalScore}`)
+      setScreen('game-over')
     }
-  };
+  }
 
   return (
     <GameContext.Provider
@@ -76,13 +116,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     >
       {children}
     </GameContext.Provider>
-  );
-};
+  )
+}
 
 export const useGame = () => {
-  const context = useContext(GameContext);
+  const context = useContext(GameContext)
   if (context === undefined) {
-    throw new Error('useGame must be used within a GameProvider');
+    throw new Error('useGame must be used within a GameProvider')
   }
-  return context;
-};
+
+  return context
+}

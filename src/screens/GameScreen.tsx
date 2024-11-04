@@ -1,37 +1,59 @@
 import { Box, Text } from 'ink'
+import Gradient from 'ink-gradient'
 import React from 'react'
 import ActionMenu from '../components/ActionMenu.js'
+import Day from '../components/Day.js'
 import InventoryDisplay from '../components/InventoryDisplay.js'
+import Location from '../components/Location.js'
+import Message from '../components/Message.js'
+import PlayerStatus from '../components/PlayerStatus.js'
 import PriceList from '../components/PriceList.js'
 import { HELP_TEXT, drugs, locations } from '../constants.js'
-import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
 const GameScreen: React.FC = () => {
   const { showHelp, quitConfirmation } = useUI()
-  const { gameState, message } = useGame()
 
   return (
-    <Box flexDirection="column">
-      <Text bold>Drug Wars</Text>
-      <Text>
-        Day: {gameState.day}/30 | Cash: ${gameState.cash} | Debt: $
-        {gameState.debt} | Health: {gameState.health}%
-      </Text>
-      <Text>Location: {gameState.location}</Text>
-      <Text>Message: {message}</Text>
+    <Box flexDirection="column" height="100%">
+      <Box
+        marginTop={1}
+        alignItems="center"
+        width="100%"
+        justifyContent="space-between"
+      >
+        <Box alignItems="center">
+          <Box marginRight={3}>
+            <Gradient name="retro">
+              <Text bold dimColor>
+                Dope Wars
+              </Text>
+            </Gradient>
+          </Box>
+          <Day />
+          <PlayerStatus />
+        </Box>
+      </Box>
       {showHelp ? (
         <Text>{HELP_TEXT}</Text>
       ) : (
         !quitConfirmation && (
-          <>
-            <InventoryDisplay />
-            <PriceList />
-            <ActionMenu
-              drugs={drugs.map((drug) => drug.name)}
-              locations={locations}
-            />
-          </>
+          <Box marginY={1} flexDirection="column">
+            <Box>
+              <InventoryDisplay />
+              <PriceList />
+              <Location />
+            </Box>
+            <Message />
+            <Box flexDirection="column" justifyContent="flex-end" minHeight={9}>
+              <Box>
+                <ActionMenu
+                  drugs={drugs.map((drug) => drug.name)}
+                  locations={locations}
+                />
+              </Box>
+            </Box>
+          </Box>
         )
       )}
     </Box>
