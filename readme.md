@@ -1,10 +1,10 @@
-# Terminal Potion Wars 🧪🏰
+# Potion Wars 🧪🏰
 
-Welcome to **Terminal Potion Wars**! A text-based strategy game built with React and Ink, bringing a magical potion-peddling experience right to your command line. 💻🎮
+Welcome to **Potion Wars**! A text-based strategy game built with React and Ink, bringing a magical potion-peddling experience right to your command line. 💻🎮
 
 ## Overview 🌟
 
-Terminal Potion Wars is an open-source project that puts you in the shoes of a medieval potion peddler in a fantastical kingdom. It's perfect for strategy game enthusiasts and developers who want to enjoy a quick game break without leaving their terminal. Brew low, sell high, and become the ultimate potion entrepreneur while avoiding the dangers of the realm! 🧪💰
+Potion Wars is an RPG text adventure game that puts you in the shoes of a medieval potion peddler in a fantastical kingdom. Brew low, sell high, and become the ultimate potion entrepreneur while avoiding the dangers of the realm! 🧪💰
 
 ## Features ✨
 
@@ -25,11 +25,11 @@ Terminal Potion Wars is an open-source project that puts you in the shoes of a m
 
 ## Quick Start 🚀
 
-To start playing Terminal Potion Wars, follow these steps:
+Play Potion Wars in your terminal with the following steps:
 
-1. Clone the repository
-2. Install dependencies with `npm install`
-3. Run the game using `npm start`
+```
+npx potion-wars
+```
 
 Enjoy your adventures in the magical world of potion brewing and trading!
 
