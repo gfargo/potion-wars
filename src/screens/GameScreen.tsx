@@ -8,15 +8,19 @@ import Location from '../components/Location.js'
 import Message from '../components/Message.js'
 import PlayerStatus from '../components/PlayerStatus.js'
 import PriceList from '../components/PriceList.js'
+import Weather from '../components/Weather.js'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useUI } from '../contexts/UIContext.js'
+import { useGame } from '../contexts/GameContext.js'
 
 function GameScreen() {
   const { showHelp, quitConfirmation } = useUI()
+  const { gameState, handleEventChoice } = useGame()
 
   return (
-    <Box flexDirection="column" height="100%" justifyContent="space-between">
+    <Box flexDirection="column" height="100%">
       <Box
+        marginTop={1}
         alignItems="center"
         width="100%"
         justifyContent="space-between"
@@ -31,6 +35,7 @@ function GameScreen() {
           </Box>
           <Day />
           <PlayerStatus />
+          <Weather />
         </Box>
       </Box>
       {showHelp ? (
