@@ -1,22 +1,7 @@
-import { type Location, locations } from './constants.js'
-import { generatePrices, triggerRandomEvent } from './gameData.js'
-
-export type GameState = {
-  day: number
-  cash: number
-  debt: number
-  health: number
-  location: Location
-  inventory: Record<string, number>
-  prices: Record<string, number>
-}
-
-export type CombatResult = {
-  health: number
-  cash: number
-  inventory: Record<string, number>
-  message: string
-}
+import { handleCombat } from './combat.js'
+import { type Location, locations, potions } from './constants.js'
+import { type GameState } from './contexts/GameContext.js'
+import { triggerRandomEvent } from './events.js'
 
 export const brewPotion = (
   state: GameState,
@@ -72,46 +57,6 @@ export const sellPotion = (
   return [newState, `Sold ${quantity} ${potionName} for ${totalEarned} gold`]
 }
 
-export const handleCombat = (state: GameState): CombatResult => {
-  const isRoyalGuard = Math.random() < 0.6 // 60% chance of royal guard encounter, 40% chance of rival alchemist encounter
-  const enemyName = isRoyalGuard ? 'Royal Guard' : 'Rival Alchemist'
-  const playerStrength = Math.floor(Math.random() * 10) + 1 // Player's strength (1-10)
-  const enemyStrength = Math.floor(Math.random() * 10) + 1 // Enemy's strength (1-10)
-
-  let message = `You've encountered ${enemyName}! `
-
-  if (playerStrength > enemyStrength) {
-    message += `You managed to escape!`
-    return {
-      health: state.health - Math.floor(Math.random() * 10),
-      cash: state.cash,
-      inventory: state.inventory,
-      message,
-    }
-  }
-
-  const cashLost = Math.floor(state.cash * 0.2) // Lose 20% of gold
-  const inventoryLost: Record<string, number> = {}
-
-  for (const [potion, quantity] of Object.entries(state.inventory)) {
-    inventoryLost[potion] = Math.floor(quantity * 0.3) // Lose 30% of each potion
-  }
-
-  message += `You were caught! Lost ${cashLost} gold and some potions.`
-
-  return {
-    health: state.health - Math.floor(Math.random() * 20),
-    cash: state.cash - cashLost,
-    inventory: Object.fromEntries(
-      Object.entries(state.inventory).map(([potion, quantity]) => [
-        potion,
-        quantity - (inventoryLost[potion] || 0),
-      ])
-    ),
-    message,
-  }
-}
-
 export const travel = (
   state: GameState,
   newLocationName: string
@@ -122,34 +67,43 @@ export const travel = (
   }
 
   const newPrices = generatePrices()
+  const eventResult = triggerRandomEvent({
+    inventory: state.inventory,
+    prices: newPrices,
+    cash: state.cash,
+    location: newLocation,
+  })
 
   const newState = {
     ...state,
     location: newLocation,
-    prices: newPrices,
-  } as GameState
+    prices: eventResult.prices,
+    inventory: eventResult.inventory,
+    cash: eventResult.cash,
+  }
 
-  const message = `Traveled to ${newLocation.name}. ${newLocation.description}`
+  let message = `Traveled to ${newLocation.name}. ${newLocation.description}`
+  if (eventResult.message) {
+    message += ` ${eventResult.message}`
+  }
+
   return [newState, message]
 }
 
 export const travelCombat = (
   state: GameState
 ): [GameState, string | undefined] => {
+  // Chance of combat encounter during travel based on location danger level
   if (Math.random() < state.location.dangerLevel / 20) {
     const combatResult = handleCombat(state)
-
     const newState = {
       ...state,
       health: combatResult.health,
       cash: combatResult.cash,
       inventory: combatResult.inventory,
-    } as GameState
-
-    const message = `${combatResult.message}`
-    return [newState, message]
+    }
+    return [newState, combatResult.message]
   }
-
   return [state, undefined]
 }
 
@@ -175,65 +129,51 @@ export const repayDebt = (
 }
 
 export const initializeGame = (): GameState => {
-  const initialLocation =
-    locations[Math.floor(Math.random() * locations.length)]!
-  const initialState = {
-    day: 0,
+  const initialLocation = locations[
+    Math.floor(Math.random() * locations.length)
+  ] as Location
+  return {
+    day: 1,
     cash: 2000,
     debt: 5000,
     health: 100,
+    strength: Math.floor(Math.random() * 5) + 5,
+    agility: Math.floor(Math.random() * 5) + 5,
+    intelligence: Math.floor(Math.random() * 5) + 5,
     location: initialLocation,
     inventory: {},
     prices: generatePrices(),
-  }
-
-  return {
-    ...initialState,
   }
 }
 
 export const advanceDay = (
   state: GameState,
-  parameters?: {
-    triggerEvent?: boolean
-    triggerDebt?: boolean
+  options: { triggerEvent: boolean; triggerDebt: boolean } = {
+    triggerEvent: true,
+    triggerDebt: true,
   }
 ): [GameState, string] => {
-  const newDay = state.day + 1
+  let newState = { ...state, day: state.day + 1 }
+  let message = `Day ${newState.day}: `
 
-  const eventResult = parameters?.triggerEvent
-    ? triggerRandomEvent({
-        ...state,
-      })
-    : {
-        prices: state.prices,
-        inventory: state.inventory,
-        cash: state.cash,
-        location: state.location,
-      }
-
-  // Apply 10% daily interest to debt
-  const newDebt = parameters?.triggerDebt
-    ? Math.floor(state.debt * 1.1)
-    : state.debt
-
-  const newState = {
-    ...state,
-    day: newDay,
-    prices: eventResult.prices,
-    inventory: eventResult.inventory,
-    cash: eventResult.cash,
-    debt: newDebt,
-    location: eventResult.location,
+  if (options.triggerEvent) {
+    const eventResult = triggerRandomEvent(newState)
+    newState = {
+      ...newState,
+      inventory: eventResult.inventory,
+      prices: eventResult.prices,
+      cash: eventResult.cash,
+      location: eventResult.location,
+    }
+    message += eventResult.message || ''
   }
 
-  const message = `Day ${newDay}: ${
-    eventResult.message || 'A new day begins.'
-  } ${
-    parameters?.triggerDebt
-      ? `Your debt has increased to ${newDebt} gold due to interest.`
-      : ''
-  }`
+  if (options.triggerDebt) {
+    // Apply daily interest to debt
+    const newDebt = Math.floor(newState.debt * 1.1) // 10% daily interest
+    newState.debt = newDebt
+    message += ` Your debt has increased to ${newDebt} gold due to interest.`
+  }
 
   return [newState, message]
 }
@@ -244,4 +184,13 @@ export const isGameOver = (state: GameState): boolean => {
     state.health <= 0 ||
     (state.cash <= 0 && Object.values(state.inventory).every((v) => v === 0))
   )
+}
+
+export const generatePrices = (): Record<string, number> => {
+  return potions.reduce((accumulator: Record<string, number>, potion) => {
+    accumulator[potion.name] = Math.floor(
+      Math.random() * (potion.maxPrice - potion.minPrice + 1) + potion.minPrice
+    )
+    return accumulator
+  }, {})
 }

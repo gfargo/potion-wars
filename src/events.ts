@@ -1,13 +1,4 @@
-import { potions, type Location } from './constants.js'
-
-export const generatePrices = (): Record<string, number> => {
-  return potions.reduce((accumulator: Record<string, number>, potion) => {
-    accumulator[potion.name] = Math.floor(
-      Math.random() * (potion.maxPrice - potion.minPrice + 1) + potion.minPrice
-    )
-    return accumulator
-  }, {})
-}
+import { type Location } from './constants.js'
 
 type Event = {
   name: string
@@ -125,5 +116,6 @@ export const triggerRandomEvent = (state: {
   return {
     ...newState,
     message: `${event.name}: ${event.description}`,
+    location: newState.location || state.location,
   }
 }
