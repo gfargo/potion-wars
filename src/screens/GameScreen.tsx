@@ -17,7 +17,6 @@ function GameScreen() {
   return (
     <Box flexDirection="column" height="100%" justifyContent="space-between">
       <Box
-        marginTop={1}
         alignItems="center"
         width="100%"
         justifyContent="space-between"

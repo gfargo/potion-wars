@@ -210,7 +210,17 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
 
       case 'travel': {
         return (
-          <Box flexDirection="column">
+          <Box flexDirection="column" key={"travel"}>
+            <Box key="currentLocation" flexDirection="column" minHeight={1}>
+              {travelLocationPreview && (
+                <Text dimColor>
+                  {
+                    locations.find((loc) => loc.name === travelLocationPreview)
+                      ?.description || ''
+                  }
+                </Text>
+              )}
+            </Box>
             <SelectInput
               key="selectLocation"
               items={locations.map((location) => ({
@@ -226,24 +236,13 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
                 setCurrentMenu('main')
               }}
             />
-
-            <Box key="currentLocation" flexDirection="column" minHeight={1}>
-              {travelLocationPreview && (
-                <Text dimColor>
-                  {
-                    locations.find((loc) => loc.name === travelLocationPreview)
-                      ?.description || ''
-                  }
-                </Text>
-              )}
-            </Box>
           </Box>
         )
       }
 
       case 'repay': {
         return (
-          <Box flexDirection="column">
+          <Box flexDirection="column" key={"repay"}>
             <Text>
               Repay Amount: ${repayAmount} (Use ↑↓ to change, Enter to confirm)
             </Text>
