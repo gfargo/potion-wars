@@ -1,4 +1,4 @@
-export const GAME_SCREEN_HEIGHT = 28
+export const GAME_SCREEN_HEIGHT = 26
 
 export const TITLE_ART = `
  ____       _   _             __        __

@@ -227,16 +227,16 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
               }}
             />
 
-            {travelLocationPreview && (
-              <Box key="currentLocation" flexDirection="column">
+            <Box key="currentLocation" flexDirection="column" minHeight={1}>
+              {travelLocationPreview && (
                 <Text dimColor>
                   {
                     locations.find((loc) => loc.name === travelLocationPreview)
-                      ?.description
+                      ?.description || ''
                   }
                 </Text>
-              </Box>
-            )}
+              )}
+            </Box>
           </Box>
         )
       }
