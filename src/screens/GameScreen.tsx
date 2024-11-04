@@ -42,24 +42,33 @@ function GameScreen() {
         <Text>{HELP_TEXT}</Text>
       ) : (
         !quitConfirmation && (
-          <>
-            <Box flexDirection="column">
-              <Box>
-                <InventoryDisplay />
-                <PriceList />
-                <Location />
-              </Box>
-              <Message />
+          <Box marginY={1} flexDirection="column">
+            <Box>
+              <InventoryDisplay />
+              <PriceList />
+              <Location />
             </Box>
-            <Box flexDirection="column" justifyContent="flex-end" minHeight={9}>
-              <Box>
-                <ActionMenu
-                  potions={potions.map((potion) => potion.name)}
-                  locations={locations}
-                />
+            <Message />
+            {gameState.currentEvent ? (
+              <Box flexDirection="column" marginY={1}>
+                <Text>{gameState.currentEvent.steps[gameState.currentStep].description}</Text>
+                {gameState.currentEvent.steps[gameState.currentStep].choices.map((choice, index) => (
+                  <Text key={index} onPress={() => handleEventChoice(index)}>
+                    {index + 1}. {choice.text}
+                  </Text>
+                ))}
               </Box>
-            </Box>
-          </>
+            ) : (
+              <Box flexDirection="column" justifyContent="flex-end" minHeight={9}>
+                <Box>
+                  <ActionMenu
+                    potions={potions.map((potion) => potion.name)}
+                    locations={locations}
+                  />
+                </Box>
+              </Box>
+            )}
+          </Box>
         )
       )}
     </Box>
@@ -67,3 +76,4 @@ function GameScreen() {
 }
 
 export default GameScreen
+

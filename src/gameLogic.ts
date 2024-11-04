@@ -1,7 +1,24 @@
-import { handleCombat } from './combat.js'
+import { handleCombat, type CombatResult } from './combat.js'
 import { type Location, locations, potions } from './constants.js'
-import { type GameState } from './contexts/GameContext.js'
 import { triggerRandomEvent } from './events.js'
+import { generatePrices } from './gameData.js'
+import { type MultiStepEvent } from './events.js'
+
+export type GameState = {
+  day: number
+  cash: number
+  debt: number
+  health: number
+  strength: number
+  agility: number
+  intelligence: number
+  location: Location
+  inventory: Record<string, number>
+  prices: Record<string, number>
+  weather: string
+  currentEvent?: MultiStepEvent
+  currentStep?: number
+}
 
 export const brewPotion = (
   state: GameState,
@@ -129,9 +146,7 @@ export const repayDebt = (
 }
 
 export const initializeGame = (): GameState => {
-  const initialLocation = locations[
-    Math.floor(Math.random() * locations.length)
-  ] as Location
+  const initialLocation = locations[Math.floor(Math.random() * locations.length)]
   return {
     day: 1,
     cash: 2000,
@@ -143,6 +158,7 @@ export const initializeGame = (): GameState => {
     location: initialLocation,
     inventory: {},
     prices: generatePrices(),
+    weather: 'sunny',
   }
 }
 
@@ -160,10 +176,7 @@ export const advanceDay = (
     const eventResult = triggerRandomEvent(newState)
     newState = {
       ...newState,
-      inventory: eventResult.inventory,
-      prices: eventResult.prices,
-      cash: eventResult.cash,
-      location: eventResult.location,
+      ...eventResult,
     }
     message += eventResult.message || ''
   }
@@ -194,3 +207,4 @@ export const generatePrices = (): Record<string, number> => {
     return accumulator
   }, {})
 }
+
