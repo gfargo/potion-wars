@@ -16,7 +16,7 @@ function AppContent() {
       {currentScreen === 'main-menu' && <MainMenu />}
       {currentScreen === 'game' && <GameScreen />}
       {currentScreen === 'game-over' && (
-        <GameOver finalScore={(gameState.cash - gameState.debt) * 2} />
+        <GameOver finalScore={gameState.cash - gameState.debt + Object.values(gameState.inventory).reduce((sum, count) => sum + count, 0) * 100} />
       )}
     </Box>
   )
@@ -31,3 +31,4 @@ export default function App() {
     </UIProvider>
   )
 }
+

@@ -1,7 +1,7 @@
 {
-  "name": "tdopewars",
+  "name": "potionwars",
   "version": "0.0.0",
-  "description": "A text-based game inspired by the classic Dope Wars game",
+  "description": "A text-based RPG inspired by a classic TI-83+ game",
   "author": "gfargo <ghfargo@gmail.com>",
   "license": "MIT",
   "bin": "dist/cli.js",
