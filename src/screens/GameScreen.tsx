@@ -28,14 +28,10 @@ function GameScreen() {
         width="100%"
         justifyContent="space-between"
       >
-        <Box alignItems="center">
-          <Box marginRight={3}>
-            <Gradient name="pastel">
-              <Text bold dimColor>
-                Potion Wars
-              </Text>
-            </Gradient>
-          </Box>
+        <Box alignItems="center" gap={3}>
+          <Text bold dimColor>
+            <Gradient name="pastel">Potion Wars</Gradient>
+          </Text>
           <Day />
           <PlayerStatus />
           <Weather />

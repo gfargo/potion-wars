@@ -168,18 +168,18 @@ export const advanceDay = (
     }
     message += eventResult.message || ''
   } else {
-    const dailyCloser =
+    const dailyIntroCloser =
       phrases.newDayClosers[
         Math.floor(Math.random() * phrases.newDayClosers.length)
       ]
-    message += `Another beautifully ${newState.weather} day here in the ${newState.location.name}.\n...${dailyCloser}`
+    message += `Another ${newState.weather} day here in the ${newState.location.name}... ${dailyIntroCloser}`
   }
 
   if (options.triggerDebt) {
     // Apply daily interest to debt
     const newDebt = Math.floor(newState.debt * 1.1) // 10% daily interest
     newState.debt = newDebt
-    message += ` Your debt has increased to ${newDebt} gold due to interest.`
+    message += ` Your debt has increased to ${newDebt}g due to interest.`
   }
 
   return [newState, message]

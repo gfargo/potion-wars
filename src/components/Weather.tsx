@@ -1,5 +1,5 @@
-import React from 'react'
 import { Text } from 'ink'
+import React from 'react'
 import { useGame } from '../contexts/GameContext.js'
 
 const Weather: React.FC = () => {
@@ -10,21 +10,35 @@ const Weather: React.FC = () => {
       case 'sunny':
         return '☀️'
       case 'rainy':
-        return '🌧️'
+        return '🌧️ '
       case 'stormy':
-        return '⛈️'
+        return '⛈️ '
       case 'windy':
         return '💨'
       case 'foggy':
-        return '🌫️'
+        return '🌁'
       default:
         return '❓'
     }
   }
 
   return (
-    <Text>
-      Weather: {getWeatherIcon(gameState.weather)} {gameState.weather}
+    <Text
+      color={
+        gameState.weather === 'sunny'
+          ? 'yellow'
+          : gameState.weather === 'rainy'
+          ? 'blue'
+          : gameState.weather === 'stormy'
+          ? 'grey'
+          : gameState.weather === 'windy'
+          ? 'cyan'
+          : gameState.weather === 'foggy'
+          ? 'grey'
+          : 'white'
+      }
+    >
+      {getWeatherIcon(gameState.weather)} {gameState.weather}
     </Text>
   )
 }
