@@ -1,4 +1,4 @@
-import { Box, Text, useInput } from 'ink'
+import { Box, Text, useApp, useInput } from 'ink'
 import Gradient from 'ink-gradient'
 import React from 'react'
 import { HELP_TEXT, TITLE_ART } from '../constants.js'
@@ -6,8 +6,9 @@ import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
 function MainMenu() {
-  const { showHelp, toggleHelp, setScreen, setQuitConfirmation } = useUI()
+  const { showHelp, toggleHelp, setScreen } = useUI()
   const { handleAction } = useGame()
+  const { exit } = useApp()
 
   useInput((input, key) => {
     if (showHelp) {
@@ -22,7 +23,7 @@ function MainMenu() {
         }
 
         case 'q': {
-          setQuitConfirmation(true)
+          exit()
           break
         }
 
