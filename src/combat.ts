@@ -1,4 +1,4 @@
-import { GameState } from './contexts/GameContext.js'
+import { GameState } from './gameLogic.js'
 
 export type Enemy = {
   name: string
@@ -151,14 +151,14 @@ export const handleCombat = (state: GameState): CombatResult => {
     const inventoryLost: Record<string, number> = {}
 
     for (const [potion, quantity] of Object.entries(currentState.inventory)) {
-      inventoryLost[potion] = Math.floor(quantity * 0.3)
+      inventoryLost[potion] = Math.floor((quantity as number) * 0.3)
     }
 
     currentState.cash -= cashLost
     currentState.inventory = Object.fromEntries(
       Object.entries(currentState.inventory).map(([potion, quantity]) => [
         potion,
-        quantity - (inventoryLost[potion] || 0),
+        (quantity as number) - (inventoryLost[potion] || 0),
       ])
     )
 

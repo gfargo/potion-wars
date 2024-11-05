@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
-import { locations, type Location } from '../constants.js'
-import { generatePrices } from '../gameData.js'
+import { handleMultiStepEventChoice, triggerRandomEvent } from '../events.js'
 import {
   advanceDay,
   brewPotion,
@@ -11,8 +10,7 @@ import {
   travel,
   type GameState,
 } from '../gameLogic.js'
-import { triggerRandomEvent, handleEventChoice } from '../events.js'
-import { updateWeather, currentWeather } from '../weather.js'
+import { updateWeather } from '../weather.js'
 import { useMessage } from './MessageContext.js'
 import { useUI } from './UIContext.js'
 
@@ -70,14 +68,17 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
         })
 
         setGameState({
-          ...eventResult,
+          ...eventResult as GameState,
           weather,
         })
 
         addMessage('info', travelMessage)
         addMessage('info', newDayMessage)
         if (eventResult.message) {
-          addMessage(eventResult.currentEvent ? 'random_event' : 'info', eventResult.message)
+          addMessage(
+            eventResult.currentEvent ? 'random_event' : 'info',
+            eventResult.message
+          )
         }
 
         break
@@ -113,15 +114,17 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   }
 
   const handleEventChoice = (choiceIndex: number) => {
-    const eventResult = handleEventChoice(gameState, choiceIndex)
-    setGameState(eventResult)
+    const eventResult = handleMultiStepEventChoice(gameState, choiceIndex)
+    setGameState({ ...gameState, ...(eventResult as GameState) })
     if (eventResult.message) {
       addMessage('random_event', eventResult.message)
     }
   }
 
   return (
-    <GameContext.Provider value={{ gameState, handleAction, handleEventChoice }}>
+    <GameContext.Provider
+      value={{ gameState, handleAction, handleEventChoice }}
+    >
       {children}
     </GameContext.Provider>
   )
@@ -134,4 +137,3 @@ export const useGame = () => {
   }
   return context
 }
-

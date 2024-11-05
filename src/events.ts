@@ -1,9 +1,9 @@
 import { type Location } from './constants.js'
-import { weatherEvents, updateWeather, currentWeather } from './weather.js'
+import { Weather, weatherEvents } from './weather.js'
 
 type EventEffect = (state: any) => any
 
-type Event = {
+export type Event = {
   name: string
   description: string
   effect: EventEffect
@@ -18,7 +18,7 @@ type Choice = {
   effect: EventEffect
 }
 
-type MultiStepEvent = {
+export type MultiStepEvent = {
   name: string
   description: string
   steps: {
@@ -119,7 +119,8 @@ export const events: (Event | MultiStepEvent)[] = [
   },
   {
     name: 'Potion Brewing Contest',
-    description: 'The local alchemist guild is hosting a potion brewing contest!',
+    description:
+      'The local alchemist guild is hosting a potion brewing contest!',
     effect: (state: any) => {
       const reward = Math.floor(Math.random() * 500) + 500
       return { ...state, cash: state.cash + reward }
@@ -147,7 +148,8 @@ export const events: (Event | MultiStepEvent)[] = [
     description: 'A cloaked figure approaches you with an intriguing offer...',
     steps: [
       {
-        description: 'The stranger offers to teach you a rare potion recipe for 1000 gold. Do you accept?',
+        description:
+          'The stranger offers to teach you a rare potion recipe for 1000 gold. Do you accept?',
         choices: [
           {
             text: 'Accept the offer',
@@ -158,17 +160,23 @@ export const events: (Event | MultiStepEvent)[] = [
               return {
                 ...state,
                 cash: state.cash - 1000,
-                inventory: { ...state.inventory, 'Rare Potion': (state.inventory['Rare Potion'] || 0) + 1 },
-                message: 'You learned how to brew a Rare Potion!'
+                inventory: {
+                  ...state.inventory,
+                  'Rare Potion': (state.inventory['Rare Potion'] || 0) + 1,
+                },
+                message: 'You learned how to brew a Rare Potion!',
               }
-            }
+            },
           },
           {
             text: 'Decline the offer',
-            effect: (state: any) => ({ ...state, message: 'You politely decline the offer.' })
-          }
-        ]
-      }
+            effect: (state: any) => ({
+              ...state,
+              message: 'You politely decline the offer.',
+            }),
+          },
+        ],
+      },
     ],
     probability: 0.1,
     type: 'neutral',
@@ -181,7 +189,11 @@ export const events: (Event | MultiStepEvent)[] = [
       for (const potion of Object.keys(newPrices)) {
         newPrices[potion] *= 1.5
       }
-      return { ...state, prices: newPrices, message: 'Potion prices have increased due to high demand!' }
+      return {
+        ...state,
+        prices: newPrices,
+        message: 'Potion prices have increased due to high demand!',
+      }
     },
     probability: 0.05,
     type: 'positive',
@@ -197,7 +209,7 @@ export const events: (Event | MultiStepEvent)[] = [
         ...state,
         cash: state.cash - lostGold,
         health: Math.max(state.health - 10, 0),
-        message: `Your potion exploded! You lost ${lostGold} gold and 10 health.`
+        message: `Your potion exploded! You lost ${lostGold} gold and 10 health.`,
       }
     },
     probability: 0.1,
@@ -208,26 +220,39 @@ export const events: (Event | MultiStepEvent)[] = [
     description: 'The annual Alchemist Convention is in town!',
     steps: [
       {
-        description: 'You can attend workshops to improve your skills. Which one do you choose?',
+        description:
+          'You can attend workshops to improve your skills. Which one do you choose?',
         choices: [
           {
             text: 'Brewing Efficiency (Increases gold)',
-            effect: (state: any) => ({ ...state, cash: state.cash + 300, message: 'You learned how to brew potions more efficiently!' })
+            effect: (state: any) => ({
+              ...state,
+              cash: state.cash + 300,
+              message: 'You learned how to brew potions more efficiently!',
+            }),
           },
           {
             text: 'Advanced Techniques (Increases health)',
-            effect: (state: any) => ({ ...state, health: Math.min(state.health + 20, 100), message: 'You learned advanced brewing techniques, improving your health!' })
+            effect: (state: any) => ({
+              ...state,
+              health: Math.min(state.health + 20, 100),
+              message:
+                'You learned advanced brewing techniques, improving your health!',
+            }),
           },
           {
             text: 'Rare Ingredients (New inventory item)',
             effect: (state: any) => ({
               ...state,
-              inventory: { ...state.inventory, 'Exotic Herb': (state.inventory['Exotic Herb'] || 0) + 5 },
-              message: 'You received 5 Exotic Herbs!'
-            })
-          }
-        ]
-      }
+              inventory: {
+                ...state.inventory,
+                'Exotic Herb': (state.inventory['Exotic Herb'] || 0) + 5,
+              },
+              message: 'You received 5 Exotic Herbs!',
+            }),
+          },
+        ],
+      },
     ],
     probability: 0.1,
     type: 'positive',
@@ -238,6 +263,9 @@ export const events: (Event | MultiStepEvent)[] = [
 
 type RandomEventResponse = {
   message?: string
+  currentEvent?: Event | MultiStepEvent
+  currentStep?: number
+  weather: Weather
   inventory: Record<string, number>
   cash: number
   prices: Record<string, number>
@@ -249,18 +277,28 @@ export const triggerRandomEvent = (state: {
   prices: Record<string, number>
   cash: number
   location: Location
+  weather: Weather
   day: number
 }): RandomEventResponse => {
   const allEvents = [...events, ...weatherEvents]
-  const eligibleEvents = allEvents.filter(event => {
-    const locationMatch = !event.locationSpecific || event.locationSpecific.includes(state.location.name)
-    const timeMatch = !event.timeSpecific || 
-      (typeof event.timeSpecific === 'number' && event.timeSpecific === state.day) ||
-      (Array.isArray(event.timeSpecific) && state.day >= event.timeSpecific[0] && state.day <= event.timeSpecific[1])
+  const eligibleEvents = allEvents.filter((event) => {
+    const locationMatch =
+      !event.locationSpecific ||
+      event.locationSpecific.includes(state.location.name)
+    const timeMatch =
+      !event.timeSpecific ||
+      (typeof event.timeSpecific === 'number' &&
+        event.timeSpecific === state.day) ||
+      (Array.isArray(event.timeSpecific) &&
+        state.day >= event.timeSpecific[0] &&
+        state.day <= event.timeSpecific[1])
     return locationMatch && timeMatch
   })
 
-  const totalProbability = eligibleEvents.reduce((sum, event) => sum + event.probability, 0)
+  const totalProbability = eligibleEvents.reduce(
+    (sum, event) => sum + event.probability,
+    0
+  )
   let randomValue = Math.random() * totalProbability
   let selectedEvent: Event | MultiStepEvent | undefined
 
@@ -281,7 +319,9 @@ export const triggerRandomEvent = (state: {
     const firstStep = selectedEvent.steps[0]
     return {
       ...state,
-      message: `${selectedEvent.name}: ${selectedEvent.description}\n${firstStep.description}`,
+      message: `${selectedEvent.name}: ${selectedEvent.description}\n${
+        firstStep ? firstStep.description : ''
+      }`,
       currentEvent: selectedEvent,
       currentStep: 0,
     }
@@ -295,7 +335,10 @@ export const triggerRandomEvent = (state: {
   }
 }
 
-export const handleEventChoice = (state: any, choiceIndex: number): RandomEventResponse => {
+export const handleMultiStepEventChoice = (
+  state: any,
+  choiceIndex: number
+): RandomEventResponse => {
   if (!state.currentEvent || !('steps' in state.currentEvent)) {
     return state
   }
@@ -327,4 +370,3 @@ export const handleEventChoice = (state: any, choiceIndex: number): RandomEventR
     }
   }
 }
-

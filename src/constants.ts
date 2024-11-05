@@ -71,3 +71,16 @@ export const potions = [
   { name: 'Strength Tonic', minPrice: 70, maxPrice: 250 },
   { name: 'Wisdom Draught', minPrice: 10, maxPrice: 60 },
 ]
+
+export const phrases = {
+  newDayClosers: [
+    'What will today bring?',
+    'Another day, another opportunity.',
+    'The sun rises on a new day.',
+    'The kingdom awaits your next move.',
+    'The alchemist rises from slumber.',
+    'Make it a great one!',
+    'Time to get brewing!',
+    'Those potions won’t peddle themselves!',
+  ],
+}

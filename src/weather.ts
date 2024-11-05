@@ -1,6 +1,6 @@
-import { Event } from './events'
+import { Event } from './events.js'
 
-type Weather = 'sunny' | 'rainy' | 'stormy' | 'windy' | 'foggy'
+export type Weather = 'sunny' | 'rainy' | 'stormy' | 'windy' | 'foggy'
 
 export const currentWeather: Weather = 'sunny'
 

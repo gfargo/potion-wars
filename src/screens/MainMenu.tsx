@@ -52,7 +52,7 @@ function MainMenu() {
       {showHelp ? (
         <Text>{HELP_TEXT}</Text>
       ) : (
-        <Text>Press (S) to start game, (H) for help, (Q) to quit</Text>
+        <Text dimColor>Press (S) to start game, (H) for help, (Q) to quit</Text>
       )}
     </Box>
   )
