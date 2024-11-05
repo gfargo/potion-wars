@@ -11,12 +11,13 @@ export const weatherEvents: Event[] = [
     effect: (state: any) => {
       const newPrices = { ...state.prices }
       for (const potion of Object.keys(newPrices)) {
-        newPrices[potion] *= 1.1
+        newPrices[potion] = Math.floor(newPrices[potion] * 1.1)
       }
       return { ...state, prices: newPrices }
     },
     probability: 0.3,
-    type: 'positive'
+    weatherSpecific: ['sunny'],
+    type: 'positive',
   },
   {
     name: 'Rainy Day',
@@ -24,25 +25,28 @@ export const weatherEvents: Event[] = [
     effect: (state: any) => {
       const newPrices = { ...state.prices }
       for (const potion of Object.keys(newPrices)) {
-        newPrices[potion] *= 0.9
+        newPrices[potion] = Math.floor(newPrices[potion] * 0.9)
       }
       return { ...state, prices: newPrices }
     },
     probability: 0.2,
-    type: 'negative'
+    weatherSpecific: ['rainy'],
+    type: 'negative',
   },
   {
     name: 'Stormy Weather',
     description: 'A fierce storm is raging, making travel dangerous.',
     effect: (state: any) => ({
       ...state,
+      weather: 'stormy',
       location: {
         ...state.location,
         dangerLevel: Math.min(state.location.dangerLevel + 3, 10),
       },
     }),
     probability: 0.1,
-    type: 'negative'
+    weatherSpecific: ['stormy'],
+    type: 'negative',
   },
   {
     name: 'Windy Day',
@@ -52,7 +56,8 @@ export const weatherEvents: Event[] = [
       cash: state.cash + 200,
     }),
     probability: 0.2,
-    type: 'positive'
+    weatherSpecific: ['windy'],
+    type: 'positive',
   },
   {
     name: 'Foggy Morning',
@@ -65,7 +70,8 @@ export const weatherEvents: Event[] = [
       },
     }),
     probability: 0.2,
-    type: 'neutral'
+    weatherSpecific: ['foggy'],
+    type: 'neutral',
   },
 ]
 

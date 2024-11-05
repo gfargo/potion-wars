@@ -9,6 +9,7 @@ export type Event = {
   effect: EventEffect
   locationSpecific?: string[]
   timeSpecific?: number | [number, number]
+  weatherSpecific?: Weather[]
   probability: number // 0-1, with 1 being most likely
   type: 'positive' | 'neutral' | 'negative'
 }
@@ -26,6 +27,7 @@ export type MultiStepEvent = {
     choices: Choice[]
   }[]
   locationSpecific?: string[]
+  weatherSpecific?: Weather[]
   timeSpecific?: number | [number, number]
   probability: number
   type: 'positive' | 'neutral' | 'negative'
@@ -107,7 +109,7 @@ export const events: (Event | MultiStepEvent)[] = [
       const newPrices = { ...state.prices }
       for (const potion of Object.keys(newPrices)) {
         if (newPrices[potion] !== undefined) {
-          newPrices[potion] *= 2
+          newPrices[potion] = Math.floor(newPrices[potion] * 1.8)
         }
       }
 
@@ -135,7 +137,7 @@ export const events: (Event | MultiStepEvent)[] = [
     effect: (state: any) => {
       const newPrices = { ...state.prices }
       for (const potion of Object.keys(newPrices)) {
-        newPrices[potion] *= 0.5
+        newPrices[potion] = Math.floor(newPrices[potion] * 0.5)
       }
       return { ...state, prices: newPrices }
     },
@@ -282,6 +284,8 @@ export const triggerRandomEvent = (state: {
 }): RandomEventResponse => {
   const allEvents = [...events, ...weatherEvents]
   const eligibleEvents = allEvents.filter((event) => {
+    const weatherMatch =
+      !event.weatherSpecific || event.weatherSpecific.includes(state.weather)
     const locationMatch =
       !event.locationSpecific ||
       event.locationSpecific.includes(state.location.name)
@@ -292,7 +296,7 @@ export const triggerRandomEvent = (state: {
       (Array.isArray(event.timeSpecific) &&
         state.day >= event.timeSpecific[0] &&
         state.day <= event.timeSpecific[1])
-    return locationMatch && timeMatch
+    return locationMatch && timeMatch && weatherMatch
   })
 
   const totalProbability = eligibleEvents.reduce(
