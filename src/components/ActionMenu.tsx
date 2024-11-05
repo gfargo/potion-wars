@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { type Location } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
@@ -138,7 +138,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
     }
   })
 
-  const renderMenu = () => {
+  const renderMenu = useCallback(() => {
     switch (currentMenu) {
       case 'main': {
         return <SelectInput items={mainItems} onSelect={handleSelect} />
@@ -210,39 +210,34 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
 
       case 'travel': {
         return (
-          <Box flexDirection="column" key={"travel"}>
+          <>
             <Box key="currentLocation" flexDirection="column" minHeight={1}>
-              {travelLocationPreview && (
-                <Text dimColor>
-                  {
-                    locations.find((loc) => loc.name === travelLocationPreview)
-                      ?.description || ''
-                  }
-                </Text>
-              )}
+              <Text dimColor>
+                {locations.find((loc) => loc.name === travelLocationPreview)
+                  ?.description || ''}
+              </Text>
             </Box>
             <SelectInput
               key="selectLocation"
               items={locations.map((location) => ({
                 label: location.name,
-                value: location,
+                value: location.name,
               }))}
               onHighlight={({ value }) => {
-                setTravelLocationPreview(value.name)
+                setTravelLocationPreview(value)
               }}
               onSelect={({ value }) => {
-                handleAction('travel', value.name)
+                handleAction('travel', value)
                 setTravelLocationPreview(undefined)
                 setCurrentMenu('main')
               }}
             />
-          </Box>
+          </>
         )
       }
-
       case 'repay': {
         return (
-          <Box flexDirection="column" key={"repay"}>
+          <Box flexDirection="column" key={'repay'}>
             <Text>
               Repay Amount: ${repayAmount} (Use ↑↓ to change, Enter to confirm)
             </Text>
@@ -253,7 +248,19 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
         )
       }
     }
-  }
+  }, [
+    currentMenu,
+    affordablePotions,
+    gameState.prices,
+    gameState.inventory,
+    gameState.cash,
+    selectedPotion,
+    quantity,
+    maxAffordableQuantity,
+    locations,
+    travelLocationPreview,
+    repayAmount,
+  ])
 
   return (
     <Box flexDirection="column">

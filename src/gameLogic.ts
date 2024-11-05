@@ -1,7 +1,23 @@
 import { handleCombat } from './combat.js'
-import { type Location, locations, potions } from './constants.js'
-import { type GameState } from './contexts/GameContext.js'
-import { triggerRandomEvent } from './events.js'
+import { locations, phrases, potions, type Location } from './constants.js'
+import { triggerRandomEvent, type MultiStepEvent } from './events.js'
+import { Weather } from './weather.js'
+
+export type GameState = {
+  day: number
+  cash: number
+  debt: number
+  health: number
+  strength: number
+  agility: number
+  intelligence: number
+  location: Location
+  inventory: Record<string, number>
+  prices: Record<string, number>
+  weather: Weather
+  currentEvent?: MultiStepEvent
+  currentStep?: number
+}
 
 export const brewPotion = (
   state: GameState,
@@ -66,26 +82,13 @@ export const travel = (
     return [state, 'Invalid location!']
   }
 
-  const newPrices = generatePrices()
-  const eventResult = triggerRandomEvent({
-    inventory: state.inventory,
-    prices: newPrices,
-    cash: state.cash,
-    location: newLocation,
-  })
-
   const newState = {
     ...state,
+    prices: generatePrices(),
     location: newLocation,
-    prices: eventResult.prices,
-    inventory: eventResult.inventory,
-    cash: eventResult.cash,
   }
 
   let message = `Traveled to ${newLocation.name}. ${newLocation.description}`
-  if (eventResult.message) {
-    message += ` ${eventResult.message}`
-  }
 
   return [newState, message]
 }
@@ -133,7 +136,7 @@ export const initializeGame = (): GameState => {
     Math.floor(Math.random() * locations.length)
   ] as Location
   return {
-    day: 1,
+    day: 0, // Day 0 is the start of the game, initializing game handles setting the first day
     cash: 2000,
     debt: 5000,
     health: 100,
@@ -143,14 +146,15 @@ export const initializeGame = (): GameState => {
     location: initialLocation,
     inventory: {},
     prices: generatePrices(),
+    weather: 'sunny',
   }
 }
 
 export const advanceDay = (
   state: GameState,
   options: { triggerEvent: boolean; triggerDebt: boolean } = {
-    triggerEvent: true,
-    triggerDebt: true,
+    triggerEvent: false,
+    triggerDebt: false,
   }
 ): [GameState, string] => {
   let newState = { ...state, day: state.day + 1 }
@@ -159,20 +163,23 @@ export const advanceDay = (
   if (options.triggerEvent) {
     const eventResult = triggerRandomEvent(newState)
     newState = {
-      ...newState,
-      inventory: eventResult.inventory,
-      prices: eventResult.prices,
-      cash: eventResult.cash,
-      location: eventResult.location,
+      ...(newState as GameState),
+      ...(eventResult as GameState),
     }
     message += eventResult.message || ''
+  } else {
+    const dailyIntroCloser =
+      phrases.newDayClosers[
+        Math.floor(Math.random() * phrases.newDayClosers.length)
+      ]
+    message += `Another ${newState.weather} day here in the ${newState.location.name}... ${dailyIntroCloser}`
   }
 
   if (options.triggerDebt) {
     // Apply daily interest to debt
     const newDebt = Math.floor(newState.debt * 1.1) // 10% daily interest
     newState.debt = newDebt
-    message += ` Your debt has increased to ${newDebt} gold due to interest.`
+    message += ` Your debt has increased to ${newDebt}g due to interest.`
   }
 
   return [newState, message]

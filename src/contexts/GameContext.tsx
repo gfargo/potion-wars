@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
-import { type Location } from '../constants.js'
+import { handleMultiStepEventChoice, triggerRandomEvent } from '../events.js'
 import {
   advanceDay,
   brewPotion,
@@ -8,27 +8,16 @@ import {
   repayDebt,
   sellPotion,
   travel,
-  travelCombat,
+  type GameState,
 } from '../gameLogic.js'
+import { updateWeather } from '../weather.js'
 import { useMessage } from './MessageContext.js'
 import { useUI } from './UIContext.js'
-
-export type GameState = {
-  day: number
-  cash: number
-  debt: number
-  health: number
-  strength: number
-  agility: number
-  intelligence: number
-  location: Location
-  inventory: Record<string, number>
-  prices: Record<string, number>
-}
 
 type GameContextType = {
   gameState: GameState
   handleAction: (action: string, parameters?: any) => void
+  handleEventChoice: (choiceIndex: number) => void
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined)
@@ -37,7 +26,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   children,
 }) => {
   const [gameState, setGameState] = useState<GameState>(initializeGame())
-  const { setScreen, setCombatResult } = useUI()
+  const { setScreen } = useUI()
   const { addMessage } = useMessage()
 
   const handleAction = (action: string, parameters?: any) => {
@@ -65,32 +54,31 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
       }
 
       case 'travel': {
-        // Travel to new location, changes prices
         const [newTravelState, travelMessage] = travel(gameState, parameters)
-        const [travelCombatState, travelCombatMessage] =
-          travelCombat(newTravelState)
-        // Advance day, adds debt, triggers random events
-        const [newState, newDayMessage] = advanceDay(travelCombatState, {
+        const [newState, newDayMessage] = advanceDay(newTravelState, {
           triggerEvent: true,
           triggerDebt: true,
         })
 
-        setGameState(newState)
-        if (travelCombatMessage) {
-          addMessage('combat', travelCombatMessage)
-        }
+        const weather = updateWeather()
+        const eventResult = triggerRandomEvent({
+          ...newState,
+          day: newState.day,
+          weather,
+        })
+
+        setGameState({
+          ...eventResult as GameState,
+          weather,
+        })
 
         addMessage('info', travelMessage)
         addMessage('info', newDayMessage)
-
-        if (
-          newDayMessage.includes("You've encountered") ||
-          newDayMessage.includes('You were caught')
-        ) {
-          setCombatResult(newDayMessage)
-          addMessage('combat', newDayMessage)
-        } else {
-          setCombatResult(undefined)
+        if (eventResult.message) {
+          addMessage(
+            eventResult.currentEvent ? 'random_event' : 'info',
+            eventResult.message
+          )
         }
 
         break
@@ -125,8 +113,18 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     }
   }
 
+  const handleEventChoice = (choiceIndex: number) => {
+    const eventResult = handleMultiStepEventChoice(gameState, choiceIndex)
+    setGameState({ ...gameState, ...(eventResult as GameState) })
+    if (eventResult.message) {
+      addMessage('random_event', eventResult.message)
+    }
+  }
+
   return (
-    <GameContext.Provider value={{ gameState, handleAction }}>
+    <GameContext.Provider
+      value={{ gameState, handleAction, handleEventChoice }}
+    >
       {children}
     </GameContext.Provider>
   )
@@ -137,6 +135,5 @@ export const useGame = () => {
   if (context === undefined) {
     throw new Error('useGame must be used within a GameProvider')
   }
-
   return context
 }

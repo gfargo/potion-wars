@@ -12,7 +12,7 @@ function InventoryDisplay() {
       flexDirection="column"
       paddingX={1}
       borderStyle="bold"
-      minWidth={20}
+      minWidth={22}
     >
       <Text bold>Inventory 🎒</Text>
       {inventoryEntries.length > 0 ? (
