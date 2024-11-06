@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { getSaveDirectory } from './saveLoad'
+import { getSaveDirectory } from './saveLoad.js'
 
 const ACTIVE_SLOT_FILE = path.join(getSaveDirectory(), 'activeSlot.json')
 

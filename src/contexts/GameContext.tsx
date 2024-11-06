@@ -146,7 +146,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     if (eventResult.message) {
       addMessage('random_event', eventResult.message)
     }
-    saveGame(eventResult, activeSlot) // Auto-save after event choice
+    saveGame(eventResult as GameState, activeSlot) // Auto-save after event choice
   }
 
   return (

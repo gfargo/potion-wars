@@ -1,7 +1,7 @@
 import fs from 'fs'
-import path from 'path'
 import os from 'os'
-import { GameState } from './gameLogic'
+import path from 'path'
+import { GameState } from './gameLogic.js'
 
 const getSaveDirectory = () => {
   const homeDir = os.homedir()
@@ -38,7 +38,7 @@ export const saveGame = (state: GameState, slot: number) => {
   fs.writeFileSync(SAVE_FILE, JSON.stringify(saveData))
 }
 
-export const loadGame = (slot: number): GameState | null => {
+export const loadGame = (slot: number): GameState | null | undefined => {
   initializeSaveFile()
   const saveData: SaveData = JSON.parse(fs.readFileSync(SAVE_FILE, 'utf-8'))
   return saveData.slots[slot]
@@ -49,4 +49,3 @@ export const getSaveSlots = (): (GameState | null)[] => {
   const saveData: SaveData = JSON.parse(fs.readFileSync(SAVE_FILE, 'utf-8'))
   return saveData.slots
 }
-
