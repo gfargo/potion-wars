@@ -5,10 +5,10 @@ import { GameProvider, useGame } from './contexts/GameContext.js'
 import { MessageProvider } from './contexts/MessageContext.js'
 import { UIProvider, useUI } from './contexts/UIContext.js'
 import { useStdoutDimensions } from './hooks/useStdOutDimensions.js'
+import { saveGame } from './saveLoad.js'
 import GameOver from './screens/GameOver.js'
 import GameScreen from './screens/GameScreen.js'
-import MainMenu from './screens/MainMenu.js'
-import { saveGame } from './saveLoad.js'
+import TitleScreen from './screens/TitleScreen/index.js'
 
 function AppContent() {
   const { currentScreen } = useUI()
@@ -36,7 +36,7 @@ function AppContent() {
       paddingX={1}
       minHeight={columns >= GAME_SCREEN_HEIGHT ? columns : GAME_SCREEN_HEIGHT}
     >
-      {currentScreen === 'main-menu' && <MainMenu />}
+      {currentScreen === 'main-menu' && <TitleScreen />}
       {currentScreen === 'game' && <GameScreen />}
       {currentScreen === 'game-over' && (
         <GameOver
