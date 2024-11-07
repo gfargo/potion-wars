@@ -1,4 +1,6 @@
+import { useApp } from 'ink'
 import React, { createContext, useContext, useState } from 'react'
+import { getActiveSlot, setActiveSlot } from '../activeSlot.js'
 import { handleMultiStepEventChoice, triggerRandomEvent } from '../events.js'
 import {
   advanceDay,
@@ -10,6 +12,7 @@ import {
   travel,
   type GameState,
 } from '../gameLogic.js'
+import { loadGame, saveGame } from '../saveLoad.js'
 import { updateWeather } from '../weather.js'
 import { useMessage } from './MessageContext.js'
 import { useUI } from './UIContext.js'
@@ -18,6 +21,7 @@ type GameContextType = {
   gameState: GameState
   handleAction: (action: string, parameters?: any) => void
   handleEventChoice: (choiceIndex: number) => void
+  activeSlot: number
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined)
@@ -25,7 +29,9 @@ const GameContext = createContext<GameContextType | undefined>(undefined)
 export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   children,
 }) => {
+  const { exit } = useApp()
   const [gameState, setGameState] = useState<GameState>(initializeGame())
+  const [activeSlot, setActiveSlotState] = useState<number>(getActiveSlot())
   const { setScreen } = useUI()
   const { addMessage } = useMessage()
 
@@ -68,7 +74,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
         })
 
         setGameState({
-          ...eventResult as GameState,
+          ...(eventResult as GameState),
           weather,
         })
 
@@ -97,9 +103,41 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
       case 'startGame': {
         const initialState = initializeGame()
         const [newState, newDayMessage] = advanceDay(initialState)
-
         setGameState(newState)
+        setActiveSlotState(parameters.slot)
+        setActiveSlot(parameters.slot)
+        saveGame(newState, parameters.slot)
         addMessage('info', newDayMessage)
+        break
+      }
+
+      case 'loadGame': {
+        const loadedState = loadGame(parameters.slot)
+        if (loadedState) {
+          setGameState(loadedState)
+          setActiveSlotState(parameters.slot)
+          setActiveSlot(parameters.slot)
+          addMessage('info', `Game loaded from slot ${parameters.slot + 1}`)
+        } else {
+          addMessage(
+            'info',
+            `No saved game found in slot ${parameters.slot + 1}`
+          )
+        }
+        break
+      }
+
+      case 'saveGame': {
+        saveGame(gameState, parameters.slot)
+        setActiveSlotState(parameters.slot)
+        setActiveSlot(parameters.slot)
+        addMessage('info', `Game saved to slot ${parameters.slot + 1}`)
+        break
+      }
+
+      case 'quit': {
+        saveGame(gameState, activeSlot)
+        exit()
         break
       }
 
@@ -119,11 +157,12 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
     if (eventResult.message) {
       addMessage('random_event', eventResult.message)
     }
+    saveGame(eventResult as GameState, activeSlot) // Auto-save after event choice
   }
 
   return (
     <GameContext.Provider
-      value={{ gameState, handleAction, handleEventChoice }}
+      value={{ gameState, handleAction, handleEventChoice, activeSlot }}
     >
       {children}
     </GameContext.Provider>

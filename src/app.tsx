@@ -1,5 +1,5 @@
 import { Box } from 'ink'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { GAME_SCREEN_HEIGHT } from './constants.js'
 import { GameProvider, useGame } from './contexts/GameContext.js'
 import { MessageProvider } from './contexts/MessageContext.js'
@@ -8,11 +8,28 @@ import { useStdoutDimensions } from './hooks/useStdOutDimensions.js'
 import GameOver from './screens/GameOver.js'
 import GameScreen from './screens/GameScreen.js'
 import MainMenu from './screens/MainMenu.js'
+import { saveGame } from './saveLoad.js'
 
 function AppContent() {
   const { currentScreen } = useUI()
-  const { gameState } = useGame()
+  const { gameState, activeSlot } = useGame()
   const [_, columns] = useStdoutDimensions()
+
+  useEffect(() => {
+    const handleExit = () => {
+      saveGame(gameState, activeSlot) // Auto-save to active slot when exiting
+      process.exit()
+    }
+
+    process.on('SIGINT', handleExit)
+    process.on('SIGTERM', handleExit)
+
+    return () => {
+      process.off('SIGINT', handleExit)
+      process.off('SIGTERM', handleExit)
+    }
+  }, [gameState, activeSlot])
+
   return (
     <Box
       flexDirection="column"
@@ -49,3 +66,4 @@ export default function App() {
     </UIProvider>
   )
 }
+
