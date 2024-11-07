@@ -1,9 +1,46 @@
 import { Box, Text, useInput } from 'ink'
-import SelectInput from 'ink-select-input'
 import React, { useCallback, useMemo, useState } from 'react'
+import EnhancedSelectInput from '../components/EnhancedSelectInput.js'
 import { type Location } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
+
+// type ActionMenuItem = {
+//   label: string
+//   value: string
+//   hotkey?: string
+//   indicator?: React.ReactNode
+//   disabled?: boolean
+// }
+
+// type ActionMenuProps = {
+//   items: ActionMenuItem[]
+//   onSelect: (item: ActionMenuItem) => void
+//   orientation?: 'vertical' | 'horizontal'
+//   limit?: number
+//   enableSearch?: boolean
+// }
+
+// const ActionMenu: React.FC<ActionMenuProps> = ({ 
+//   items, 
+//   onSelect, 
+//   orientation = 'vertical', 
+//   limit,
+//   enableSearch = true
+// }) => {
+//   return (
+//     <Box>
+//       <EnhancedSelectInput
+//         items={items}
+//         onSelect={onSelect}
+//         orientation={orientation}
+//         limit={limit}
+//         enableSearch={enableSearch}
+//       />
+//     </Box>
+//   )
+// }
+
 
 type ActionMenuProperties = {
   readonly potions: string[]
@@ -141,7 +178,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
   const renderMenu = useCallback(() => {
     switch (currentMenu) {
       case 'main': {
-        return <SelectInput items={mainItems} onSelect={handleSelect} />
+        return <EnhancedSelectInput items={mainItems} onSelect={handleSelect} />
       }
 
       case 'brew': {
@@ -162,7 +199,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
             <Text>Max Affordable: {maxAffordableQuantity}</Text>
           </Box>
         ) : (
-          <SelectInput
+          <EnhancedSelectInput
             items={affordablePotions.map((potion) => ({
               label: `${potion} - $${gameState.prices[potion]}`,
               value: potion,
@@ -194,7 +231,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
             </Text>
           </Box>
         ) : (
-          <SelectInput
+          <EnhancedSelectInput
             items={Object.entries(gameState.inventory)
               .filter(([_, amount]) => amount > 0)
               .map(([potion, amount]) => ({
@@ -217,7 +254,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
                   ?.description || ''}
               </Text>
             </Box>
-            <SelectInput
+            <EnhancedSelectInput
               key="selectLocation"
               items={locations.map((location) => ({
                 label: location.name,
@@ -272,3 +309,5 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
 }
 
 export default ActionMenu
+
+

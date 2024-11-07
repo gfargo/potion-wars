@@ -1,3 +1,4 @@
+import { useApp } from 'ink'
 import React, { createContext, useContext, useState } from 'react'
 import { getActiveSlot, setActiveSlot } from '../activeSlot.js'
 import { handleMultiStepEventChoice, triggerRandomEvent } from '../events.js'
@@ -28,6 +29,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined)
 export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
   children,
 }) => {
+  const { exit } = useApp()
   const [gameState, setGameState] = useState<GameState>(initializeGame())
   const [activeSlot, setActiveSlotState] = useState<number>(getActiveSlot())
   const { setScreen } = useUI()
@@ -72,7 +74,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
         })
 
         setGameState({
-          ...eventResult as GameState,
+          ...(eventResult as GameState),
           weather,
         })
 
@@ -117,7 +119,10 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           setActiveSlot(parameters.slot)
           addMessage('info', `Game loaded from slot ${parameters.slot + 1}`)
         } else {
-          addMessage('info', `No saved game found in slot ${parameters.slot + 1}`)
+          addMessage(
+            'info',
+            `No saved game found in slot ${parameters.slot + 1}`
+          )
         }
         break
       }
@@ -127,6 +132,12 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
         setActiveSlotState(parameters.slot)
         setActiveSlot(parameters.slot)
         addMessage('info', `Game saved to slot ${parameters.slot + 1}`)
+        break
+      }
+
+      case 'quit': {
+        saveGame(gameState, activeSlot)
+        exit()
         break
       }
 
@@ -165,4 +176,3 @@ export const useGame = () => {
   }
   return context
 }
-
