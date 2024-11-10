@@ -5,42 +5,6 @@ import { type Location } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
 
-// type ActionMenuItem = {
-//   label: string
-//   value: string
-//   hotkey?: string
-//   indicator?: React.ReactNode
-//   disabled?: boolean
-// }
-
-// type ActionMenuProps = {
-//   items: ActionMenuItem[]
-//   onSelect: (item: ActionMenuItem) => void
-//   orientation?: 'vertical' | 'horizontal'
-//   limit?: number
-//   enableSearch?: boolean
-// }
-
-// const ActionMenu: React.FC<ActionMenuProps> = ({ 
-//   items, 
-//   onSelect, 
-//   orientation = 'vertical', 
-//   limit,
-//   enableSearch = true
-// }) => {
-//   return (
-//     <Box>
-//       <EnhancedSelectInput
-//         items={items}
-//         onSelect={onSelect}
-//         orientation={orientation}
-//         limit={limit}
-//         enableSearch={enableSearch}
-//       />
-//     </Box>
-//   )
-// }
-
 
 type ActionMenuProperties = {
   readonly potions: string[]

@@ -1,46 +1,13 @@
-import { Box, Text, useApp, useInput } from 'ink'
+import { Box } from 'ink'
 import Gradient from 'ink-gradient'
 import { default as React } from 'react'
-import EnhancedSelectInput from '../../components/EnhancedSelectInput.js'
-import { HELP_TEXT, TITLE_ART } from '../../constants.js'
-import { useGame } from '../../contexts/GameContext.js'
 import { useUI } from '../../contexts/UIContext.js'
+import { Help } from '../../ui/Help.js'
 import { TitleScreenAnimation } from './TitleScreenAnimation.js'
+import { TitleScreenMenu } from './TitleScreenMenu.js'
 
 function TitleScreen() {
-  const { showHelp, toggleHelp, setScreen } = useUI()
-  const { handleAction } = useGame()
-  const { exit } = useApp()
-
-  useInput((input, key) => {
-    if (showHelp) {
-      if (key.escape || input.toLowerCase() === 'h') {
-        toggleHelp()
-      }
-    } else {
-      switch (input.toLowerCase()) {
-        case 'h': {
-          toggleHelp()
-          break
-        }
-
-        case 'q': {
-          exit()
-          break
-        }
-
-        case 's': {
-          setScreen('game')
-          handleAction('startGame')
-          break
-        }
-
-        default: {
-          break
-        }
-      }
-    }
-  })
+  const { showHelp } = useUI()
 
   return (
     <Box
@@ -53,40 +20,12 @@ function TitleScreen() {
         <TitleScreenAnimation />
       </Gradient>
       {showHelp ? (
-                  <>
-
-          <Text>{HELP_TEXT}</Text>
+        <>
+          <Help />
         </>
       ) : (
         <>
-          <Gradient name="pastel">
-            <Text>{TITLE_ART}</Text>
-          </Gradient>
-          <EnhancedSelectInput
-            items={[
-              {
-                label: 'Start Game',
-                value: 'startGame',
-              },
-              {
-                label: 'Help',
-                value: 'help',
-              },
-              {
-                label: 'Quit',
-                value: 'quit',
-              },
-            ]}
-            onSelect={(item) => {
-              if (item.value === 'help') {
-                toggleHelp()
-                return
-              }
-
-              handleAction(item.value)
-            }}
-            orientation="horizontal"
-          />
+          <TitleScreenMenu />
         </>
       )}
     </Box>

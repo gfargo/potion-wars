@@ -1,4 +1,4 @@
-import { Box } from 'ink'
+import { Box, useApp } from 'ink'
 import React, { useEffect } from 'react'
 import { GAME_SCREEN_HEIGHT } from './constants.js'
 import { GameProvider, useGame } from './contexts/GameContext.js'
@@ -8,17 +8,19 @@ import { useStdoutDimensions } from './hooks/useStdOutDimensions.js'
 import { saveGame } from './saveLoad.js'
 import GameOver from './screens/GameOver.js'
 import GameScreen from './screens/GameScreen.js'
+import { LoadingScreen } from './screens/LoadingScreen.js'
 import TitleScreen from './screens/TitleScreen/index.js'
 
 function AppContent() {
-  const { currentScreen } = useUI()
+  const { exit } = useApp()
+  const { currentScreen, setScreen } = useUI()
   const { gameState, activeSlot } = useGame()
   const [_, columns] = useStdoutDimensions()
 
   useEffect(() => {
     const handleExit = () => {
       saveGame(gameState, activeSlot) // Auto-save to active slot when exiting
-      process.exit()
+      exit()
     }
 
     process.on('SIGINT', handleExit)
@@ -36,7 +38,12 @@ function AppContent() {
       paddingX={1}
       minHeight={columns >= GAME_SCREEN_HEIGHT ? columns : GAME_SCREEN_HEIGHT}
     >
-      {currentScreen === 'main-menu' && <TitleScreen />}
+      {currentScreen === 'title' && <TitleScreen />}
+      {currentScreen === 'loading' && <LoadingScreen onFinish={() => {
+        setScreen('game')
+      }} />}
+      {currentScreen === 'traveling' && <GameScreen />}
+      {currentScreen === 'event' && <GameScreen />}
       {currentScreen === 'game' && <GameScreen />}
       {currentScreen === 'game-over' && (
         <GameOver
@@ -66,4 +73,3 @@ export default function App() {
     </UIProvider>
   )
 }
-

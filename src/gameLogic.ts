@@ -17,6 +17,8 @@ export type GameState = {
   weather: Weather
   currentEvent?: MultiStepEvent
   currentStep?: number
+  lastSave?: string
+  playerName?: string
 }
 
 export const brewPotion = (

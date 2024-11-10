@@ -44,6 +44,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           parameters.quantity
         )
         setGameState(newBrewState)
+        saveGame(newBrewState, activeSlot) // Auto-save after brewing potion
         addMessage('purchase', brewMessage)
         break
       }
@@ -55,6 +56,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           parameters.quantity
         )
         setGameState(newSellState)
+        saveGame(newSellState, activeSlot) // Auto-save after selling potion
         addMessage('sale', sellMessage)
         break
       }
@@ -77,7 +79,8 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           ...(eventResult as GameState),
           weather,
         })
-
+        saveGame(eventResult as GameState, activeSlot) // Auto-save after travel
+        
         addMessage('info', travelMessage)
         addMessage('info', newDayMessage)
         if (eventResult.message) {
@@ -96,6 +99,7 @@ export const GameProvider: React.FC<{ readonly children: React.ReactNode }> = ({
           parameters.amount
         )
         setGameState(newRepayState)
+        saveGame(newRepayState, activeSlot) // Auto-save after repaying debt
         addMessage('info', repayMessage)
         break
       }

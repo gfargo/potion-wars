@@ -77,8 +77,8 @@ const generateCastleFrame = (frameIndex: number): string => {
     (scene[1 + sunY] !== undefined && sunY > 14) ||
     (scene[1 + sunY] !== undefined &&
       sunY > 13 &&
-      sunPosition > 48 &&
-      sunPosition < 55)
+      sunPosition > 47 &&
+      sunPosition < 56)
   ) {
     scene[1 + sunY] =
       scene[1 + sunY]!.substring(0, sunPosition) +
@@ -95,8 +95,8 @@ const generateCastleFrame = (frameIndex: number): string => {
     (scene[1 + moonY] !== undefined && moonY > 14) ||
     (scene[1 + moonY] !== undefined &&
       moonY > 13 &&
-      moonPosition > 48 &&
-      moonPosition < 55)
+      moonPosition > 47 &&
+      moonPosition < 56)
   ) {
     scene[1 + moonY] =
       scene[1 + moonY]!.substring(0, moonPosition) +

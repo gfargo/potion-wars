@@ -34,7 +34,10 @@ export const initializeSaveFile = () => {
 export const saveGame = (state: GameState, slot: number) => {
   initializeSaveFile()
   const saveData: SaveData = JSON.parse(fs.readFileSync(SAVE_FILE, 'utf-8'))
-  saveData.slots[slot] = state
+  saveData.slots[slot] = {
+    ...state,
+    lastSave: new Date().toISOString(),
+  }
   fs.writeFileSync(SAVE_FILE, JSON.stringify(saveData))
 }
 

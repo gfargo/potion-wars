@@ -25,6 +25,7 @@ type Props<V> = {
 
 type IndicatorProps = {
   isSelected: boolean
+  item: Item<unknown>
 }
 
 type ItemProps = {
@@ -176,7 +177,7 @@ function EnhancedSelectInput<V>({
                   <Text>{isSelected ? item.indicator : ' '}</Text>
                 </Box>
               ) : (
-                <IndicatorComponent isSelected={isSelected} />
+                <IndicatorComponent isSelected={isSelected} item={item} />
               )}
               <ItemComponent
                 isSelected={isSelected}

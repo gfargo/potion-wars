@@ -1,26 +1,30 @@
 import { Box, Text } from 'ink'
 import Gradient from 'ink-gradient'
 import React, { useEffect, useState } from 'react'
-import ActionMenu from '../components/ActionMenu.js'
-import Day from '../components/Day.js'
 import EnhancedSelectInput from '../components/EnhancedSelectInput.js'
-import InventoryDisplay from '../components/InventoryDisplay.js'
-import Location from '../components/Location.js'
-import Message from '../components/Message.js'
-import PlayerStatus from '../components/PlayerStatus.js'
-import PriceList from '../components/PriceList.js'
-import Weather from '../components/Weather.js'
-import { HELP_TEXT } from '../constants.js'
+import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useMessage } from '../contexts/MessageContext.js'
 import { useUI } from '../contexts/UIContext.js'
+import ActionMenu from '../ui/ActionMenu.js'
+import Day from '../ui/Day.js'
+import InventoryDisplay from '../ui/InventoryDisplay.js'
+import Location from '../ui/Location.js'
+import Message from '../ui/Message.js'
+import PlayerStatus from '../ui/PlayerStatus.js'
+import PriceList from '../ui/PriceList.js'
+import Weather from '../ui/Weather.js'
 import MultiStepEventScreen from './MultiStepEventScreen.js'
 import TravelingScreen from './TravelingScreen.js'
 
 function GameScreen() {
   const { showHelp, quitConfirmation } = useUI()
   const { addMessage } = useMessage()
-  const { gameState, handleAction, handleEventChoice } = useGame()
+  const {
+    gameState,
+    //handleAction,
+    handleEventChoice,
+  } = useGame()
   const [isTraveling, setIsTraveling] = useState(false)
   const [showEvent, setShowEvent] = useState(false)
 
@@ -41,22 +45,22 @@ function GameScreen() {
   // }
 
   // const actionMenuItems = [
-  //   ...potions.map((potion, index) => ({ 
-  //     label: `Brew ${potion.name}`, 
+  //   ...potions.map((potion, index) => ({
+  //     label: `Brew ${potion.name}`,
   //     value: `brew_${potion.name}`,
   //     hotkey: `${index + 1}`,
   //     indicator: '🧪',
   //     disabled: gameState.cash < potion.minPrice
   //   })),
-  //   ...potions.map((potion, index) => ({ 
-  //     label: `Sell ${potion.name}`, 
+  //   ...potions.map((potion, index) => ({
+  //     label: `Sell ${potion.name}`,
   //     value: `sell_${potion.name}`,
   //     hotkey: `${index + 1 + potions.length}`,
   //     indicator: '💰',
   //     disabled: !gameState.inventory[potion.name] || gameState.inventory[potion.name] === 0
   //   })),
-  //   ...locations.map((location, index) => ({ 
-  //     label: `Travel to ${location.name}`, 
+  //   ...locations.map((location, index) => ({
+  //     label: `Travel to ${location.name}`,
   //     value: `travel_${location.name}`,
   //     hotkey: `${String.fromCharCode(97 + index)}`,
   //     indicator: '🏃‍♂️',
@@ -84,7 +88,7 @@ function GameScreen() {
         width="100%"
         justifyContent="space-between"
       >
-        <Box alignItems="center">
+        <Box alignItems="center" gap={2}>
           <Box marginRight={3}>
             <Gradient name="pastel">
               <Text bold dimColor>
@@ -92,8 +96,10 @@ function GameScreen() {
               </Text>
             </Gradient>
           </Box>
-          <Day />
           <PlayerStatus />
+        </Box>
+        <Box gap={2}>
+          <Day />
           <Weather />
         </Box>
       </Box>
@@ -101,7 +107,7 @@ function GameScreen() {
         <Text>{HELP_TEXT}</Text>
       ) : (
         !quitConfirmation && (
-          <Box marginY={1} flexDirection="column">
+          <Box flexDirection="column">
             <Box>
               <InventoryDisplay />
               <PriceList />
@@ -146,9 +152,10 @@ function GameScreen() {
               </Box>
             ) : (
               <Box
+                marginTop={1}
                 flexDirection="column"
                 justifyContent="flex-end"
-                minHeight={9}
+                // minHeight={9}
               >
                 <Box>
                   <ActionMenu
@@ -166,4 +173,3 @@ function GameScreen() {
 }
 
 export default GameScreen
-

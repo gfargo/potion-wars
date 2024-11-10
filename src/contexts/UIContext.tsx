@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
 
-type Screen = 'main-menu' | 'game' | 'game-over'
+type Screen = 'title' | 'loading' | 'game' | 'traveling' | 'event' | 'game-over'
 
 type UIContextType = {
   currentScreen: Screen
@@ -20,7 +20,7 @@ export function UIProvider({
 }: {
   readonly children: React.ReactNode
 }) {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('main-menu')
+  const [currentScreen, setCurrentScreen] = useState<Screen>('title')
   const [showHelp, setShowHelp] = useState(false)
   const [quitConfirmation, setQuitConfirmation] = useState(false)
   const [combatResult, setCombatResult] = useState<string | undefined>(

@@ -11,7 +11,7 @@ export function GameOver({ finalScore }: GameOverProperties) {
 
   useInput((_, key) => {
     if (key.return) {
-      setScreen('main-menu')
+      setScreen('title')
     }
   })
 
