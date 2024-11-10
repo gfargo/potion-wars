@@ -1,15 +1,14 @@
 export const GAME_SCREEN_HEIGHT = 28
 
-export const TITLE_ART = `
- ____       _   _             __        __
+export const TITLE_ART = ` ____       _   _             __        __
 |  _ \\ ___ | |_(_) ___  _ __  \\ \\      / /_ _ _ __ ___
 | |_) / _ \\| __| |/ _ \\| '_ \\  \\ \\ /\\ / / _\` | '__/ __|
 |  __/ (_) | |_| | (_) | | | |  \\ V  V / (_| | |  \\__ \\
 |_|   \\___/ \\__|_|\\___/|_| |_|   \\_/\\_/ \\__,_|_|  |___/
 `
 
-export const HELP_TEXT = `
-Commands:
+export const HELP_TEXT = `Commands:
+
 Brew - Create potions
 Sell - Sell potions from your inventory
 Travel - Move to a new location in the kingdom
@@ -17,11 +16,9 @@ Repay - Repay your debt
 Help - Display this help message
 Quit - Exit the game
 
-Goal: Make as much money as possible in 30 days!
+Goal: Make as much gold as possible in 30 days!
 Use the arrow keys to navigate menus and adjust quantities.
 Press Enter to confirm your selection.
-
-Press Esc to return to the main menu.
 `
 
 export type Location = {

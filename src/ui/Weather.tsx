@@ -1,4 +1,4 @@
-import { Text } from 'ink'
+import { Box, Text } from 'ink'
 import React from 'react'
 import { useGame } from '../contexts/GameContext.js'
 
@@ -23,23 +23,27 @@ const Weather: React.FC = () => {
   }
 
   return (
-    <Text
-      color={
-        gameState.weather === 'sunny'
-          ? 'yellow'
-          : gameState.weather === 'rainy'
-          ? 'blue'
-          : gameState.weather === 'stormy'
-          ? 'grey'
-          : gameState.weather === 'windy'
-          ? 'cyan'
-          : gameState.weather === 'foggy'
-          ? 'grey'
-          : 'white'
-      }
-    >
-      {getWeatherIcon(gameState.weather)} {gameState.weather}
-    </Text>
+    <Box width={9}>
+      <Text
+        color={
+          gameState.weather === 'sunny'
+            ? 'yellow'
+            : gameState.weather === 'rainy'
+            ? 'blue'
+            : gameState.weather === 'stormy'
+            ? 'grey'
+            : gameState.weather === 'windy'
+            ? 'cyan'
+            : gameState.weather === 'foggy'
+            ? 'grey'
+            : 'white'
+        }
+      >
+        {getWeatherIcon(gameState.weather)}
+        {` `}
+        {gameState.weather}
+      </Text>
+    </Box>
   )
 }
 
