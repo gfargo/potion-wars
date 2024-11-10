@@ -21,7 +21,9 @@ function TitleScreen() {
       </Gradient>
       {showHelp ? (
         <>
-          <Help />
+          <Box marginTop={-10}>
+            <Help />
+          </Box>
         </>
       ) : (
         <>

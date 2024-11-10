@@ -14,7 +14,7 @@ export const Help = () => {
   })
 
   return (
-    <Box flexDirection="column" borderStyle="classic" paddingX={1} marginTop={-10}>
+    <Box flexDirection="column" borderStyle="classic" paddingX={1}>
       <Text>{HELP_TEXT}</Text>
       <Box alignSelf="flex-end" paddingX={1}>
         <Text>Press 'h' or 'esc' to close</Text>

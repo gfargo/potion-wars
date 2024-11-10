@@ -107,7 +107,7 @@ function GameScreen() {
         <Text>{HELP_TEXT}</Text>
       ) : (
         !quitConfirmation && (
-          <Box flexDirection="column">
+          <Box flexDirection="column" flexGrow={1}>
             <Box>
               <InventoryDisplay />
               <PriceList />
@@ -155,7 +155,6 @@ function GameScreen() {
                 marginTop={1}
                 flexDirection="column"
                 justifyContent="flex-end"
-                // minHeight={9}
               >
                 <Box>
                   <ActionMenu

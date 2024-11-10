@@ -147,10 +147,12 @@ export const TitleScreenMenu = () => {
                   return
                 }
 
+                setScreen('loading')
                 handleAction('startGame', { slot: slotIndex })
                 return
               }
-
+              
+              setScreen('loading')
               handleAction('loadGame', { slot: slotIndex })
               return
             }}
