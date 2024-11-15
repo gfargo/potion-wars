@@ -138,7 +138,7 @@ export const TitleScreenMenu = () => {
                 toggleSaveSlotDisplay(false)
                 return
               }
-              
+
               const slotIndex = Number(item.value.replace('slot-', ''))
 
               if (displaySaveSlots === 'new') {
@@ -151,7 +151,7 @@ export const TitleScreenMenu = () => {
                 handleAction('startGame', { slot: slotIndex })
                 return
               }
-              
+
               setScreen('loading')
               handleAction('loadGame', { slot: slotIndex })
               return

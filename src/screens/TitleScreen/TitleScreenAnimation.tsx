@@ -59,7 +59,7 @@ const starPositions = [
 // Generate each frame by overlaying moving stars, bird, sun, and moon animations
 const generateCastleFrame = (frameIndex: number): string => {
   // random castle backdrop
-  let scene = [...castleBackdrop] 
+  let scene = [...castleBackdrop]
 
   // Sun and Moon Parabolic Movement
   const t = frameIndex % (CASTLE_WIDTH * 1) // Total animation length for a full cycle
@@ -119,16 +119,16 @@ const generateCastleFrame = (frameIndex: number): string => {
   })
 
   // Bird Flapping Animation across the entire CASTLE_WIDTH
-  const birdPosition = frameIndex % (CASTLE_WIDTH - 2)
+  const birdPosition = ((frameIndex * -1) % CASTLE_WIDTH) - 5
   const birdFrame = frameIndex % 2 === 0 ? '\\,/' : '/`\\'
-  if (scene[9]) {
+  if (scene[9] && birdPosition < -3 && birdPosition > -CASTLE_WIDTH) {
     scene[9] =
       scene[9].slice(0, birdPosition) +
       birdFrame +
       scene[9].slice(birdPosition + 3)
   }
 
-  return scene.join('\n')
+  return scene.join(`\n`)
 }
 
 // High Fidelity Castle Animation Component
