@@ -25,8 +25,35 @@ export const initializeSaveFile = () => {
   if (!fs.existsSync(SAVE_DIR)) {
     fs.mkdirSync(SAVE_DIR, { recursive: true })
   }
+  const initialData: SaveData = { slots: [null, null, null] }
+  
   if (!fs.existsSync(SAVE_FILE)) {
-    const initialData: SaveData = { slots: [null, null, null] }
+    fs.writeFileSync(SAVE_FILE, JSON.stringify(initialData))
+    return
+  }
+
+  // Validate existing file
+  try {
+    const fileContent = fs.readFileSync(SAVE_FILE, 'utf-8')
+    const parsedData = JSON.parse(fileContent)
+
+    // Check if the file has the correct structure
+    const isValid: boolean =
+      parsedData &&
+      typeof parsedData === 'object' &&
+      Array.isArray(parsedData.slots) &&
+      parsedData.slots.length === 3 &&
+      parsedData.slots.every(
+        (slot: GameState | null) =>
+          slot === null || (typeof slot === 'object' && slot !== null)
+      )
+
+    // If invalid, overwrite with correct structure
+    if (!isValid) {
+      fs.writeFileSync(SAVE_FILE, JSON.stringify(initialData))
+    }
+  } catch (error) {
+    // If there's any error reading or parsing the file, recreate it
     fs.writeFileSync(SAVE_FILE, JSON.stringify(initialData))
   }
 }
