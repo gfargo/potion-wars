@@ -1,10 +1,9 @@
-import { Box, Text, useInput } from 'ink'
+import { Box, Text, TextProps, useInput } from 'ink'
 import React, { useCallback, useMemo, useState } from 'react'
 import EnhancedSelectInput from '../components/EnhancedSelectInput.js'
 import { type Location } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useUI } from '../contexts/UIContext.js'
-
 
 type ActionMenuProperties = {
   readonly potions: string[]
@@ -142,7 +141,52 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
   const renderMenu = useCallback(() => {
     switch (currentMenu) {
       case 'main': {
-        return <EnhancedSelectInput items={mainItems} onSelect={handleSelect} />
+        return (
+          <EnhancedSelectInput
+            items={mainItems}
+            onSelect={handleSelect}
+            indicatorComponent={({ isSelected, item }) => {
+              let returnValue = `  `
+              let color = 'gray' as TextProps['color']
+
+              if (isSelected) {
+                switch (item.value) {
+                  case 'brew': {
+                    returnValue = '⚗︎ '
+                    color = 'green'
+                    break
+                  }
+
+                  case 'sell': {
+                    returnValue = '₺ '
+                    color = 'yellow'
+                    break
+                  }
+
+                  case 'travel': {
+                    returnValue = '᯽ '
+                    color = 'cyan'
+                    break
+                  }
+
+                  case 'repay': {
+                    returnValue = '⚖︎ '
+                    color = 'yellow'
+                    break
+                  }
+
+                  case 'quit': {
+                    returnValue = '⚐ '
+                    color = 'red'
+                    break
+                  }
+                }
+              }
+
+              return <Text color={color}>{returnValue}</Text>
+            }}
+          />
+        )
       }
 
       case 'brew': {
@@ -273,5 +317,3 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
 }
 
 export default ActionMenu
-
-
