@@ -27,7 +27,7 @@ const getMessageColor = (type: MessageType): string => {
   }
 }
 
-const MAX_HISTORY = 4
+const MAX_HISTORY = 5
 
 const Message: React.FC = () => {
   const { messages } = useMessage()
@@ -49,24 +49,24 @@ const Message: React.FC = () => {
     () =>
       messages
         .slice(currentIndex, currentIndex + MAX_HISTORY)
-        .map((message) => (
-          <Text key={message.timestamp} color={getMessageColor(message.type)}>
-            [{new Date(message.timestamp).toLocaleTimeString()}]{' '}
-            {message.content}
-          </Text>
+        .map((message, index) => (
+          <Box key={`${message.timestamp}_index_${index}`}>
+            <Text
+              dimColor
+              color={getMessageColor(message.type)}
+              bold={index === MAX_HISTORY - 1}
+            >
+              [{new Date(message.timestamp).toLocaleTimeString()}]{' '}
+            </Text>
+            <Text color={getMessageColor(message.type)}>{message.content}</Text>
+          </Box>
         )),
     [messages, currentIndex]
   )
 
   return (
     <Box flexDirection="column">
-      <Box
-        borderDimColor
-        borderStyle="round"
-        flexDirection="column"
-        height={6}
-        overflow="hidden"
-      >
+      <Box flexDirection="column" height={6} overflow="hidden">
         {displayMessages}
       </Box>
 
