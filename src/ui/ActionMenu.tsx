@@ -123,8 +123,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
           }
 
           case 'repay': {
-            handleAction('repay', repayAmount)
-
+            handleAction('repay', { ammount: repayAmount })
             break
           }
           // No default
