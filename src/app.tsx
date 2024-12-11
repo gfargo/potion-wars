@@ -1,10 +1,8 @@
 import { Box, useApp } from 'ink'
 import React, { useEffect } from 'react'
-import { GAME_SCREEN_HEIGHT } from './constants.js'
 import { GameProvider, useGame } from './contexts/GameContext.js'
 import { MessageProvider } from './contexts/MessageContext.js'
 import { UIProvider, useUI } from './contexts/UIContext.js'
-import { useStdoutDimensions } from './hooks/useStdOutDimensions.js'
 import { saveGame } from './saveLoad.js'
 import GameOver from './screens/GameOver.js'
 import GameScreen from './screens/GameScreen.js'
@@ -15,7 +13,7 @@ function AppContent() {
   const { exit } = useApp()
   const { currentScreen, setScreen } = useUI()
   const { gameState, activeSlot } = useGame()
-  const [_, columns] = useStdoutDimensions()
+  // const [_, columns] = useStdoutDimensions()
 
   useEffect(() => {
     const handleExit = () => {
@@ -36,7 +34,7 @@ function AppContent() {
     <Box
       flexDirection="column"
       paddingX={1}
-      minHeight={columns >= GAME_SCREEN_HEIGHT ? columns : GAME_SCREEN_HEIGHT}
+      // minHeight={columns >= GAME_SCREEN_HEIGHT ? columns : GAME_SCREEN_HEIGHT}
     >
       {currentScreen === 'title' && <TitleScreen />}
       {currentScreen === 'loading' && <LoadingScreen onFinish={() => {

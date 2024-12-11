@@ -106,9 +106,9 @@ export const TitleScreenMenu = () => {
             initialIndex={activeSlot < 0 ? 0 : activeSlot}
             indicatorComponent={({ isSelected, item }) =>
               isSelected && item.value === 'back' ? (
-                <Text>✘ </Text>
+                <Text color="red">✘ </Text>
               ) : isSelected ? (
-                <Text color={isSelected ? 'blue' : 'gray'}>☛ </Text>
+                <Text color={isSelected ? 'green' : 'gray'}>☛ </Text>
               ) : (
                 <Text>{`  `}</Text>
               )
@@ -170,7 +170,7 @@ export const TitleScreenMenu = () => {
               isSelected && item.value === 'quit' ? (
                 <Text color={'red'}>✘ </Text>
               ) : isSelected ? (
-                <Text color={isSelected ? 'blue' : 'gray'}>☛ </Text>
+                <Text color={isSelected ? 'green' : 'gray'}>☛ </Text>
               ) : (
                 <Text>{`  `}</Text>
               )

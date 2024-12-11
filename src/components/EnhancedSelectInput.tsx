@@ -36,7 +36,7 @@ type ItemProps = {
 
 const DefaultIndicator: FC<IndicatorProps> = ({ isSelected }) => (
   <Box marginRight={1}>
-    <Text color={isSelected ? 'blue' : undefined}>
+    <Text color={isSelected ? 'green' : undefined}>
       {isSelected ? '>' : ' '}
     </Text>
   </Box>
@@ -44,7 +44,7 @@ const DefaultIndicator: FC<IndicatorProps> = ({ isSelected }) => (
 
 const DefaultItem: FC<ItemProps> = ({ isSelected, label, isDisabled }) => (
   <Text
-    color={isDisabled ? 'gray' : isSelected ? 'blue' : undefined}
+    color={isDisabled ? 'gray' : isSelected ? 'green' : undefined}
     dimColor={isDisabled}
   >
     {label}
