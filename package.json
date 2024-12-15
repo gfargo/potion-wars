@@ -46,6 +46,8 @@
     "xo": "^0.59.3"
   },
   "ava": {
+    "timeout": "6s",
+    "failFast": true,
     "typescript": {
       "extensions": [
         "ts",
@@ -56,6 +58,11 @@
       },
       "compile": false
     },
+    "verbose": true,
+    "files": [
+      "**/**.test.*",
+      "!tests/utils/**/*"
+    ],
     "require": [
       "ts-node/register"
     ]
