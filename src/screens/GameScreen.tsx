@@ -1,38 +1,40 @@
 import { Box, Text } from 'ink'
 import Gradient from 'ink-gradient'
 import React, { useEffect, useState } from 'react'
-import EnhancedSelectInput from '../components/EnhancedSelectInput.js'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { useMessage } from '../contexts/MessageContext.js'
 import { useUI } from '../contexts/UIContext.js'
-import ActionMenu from '../ui/ActionMenu.js'
-import Day from '../ui/Day.js'
-import InventoryDisplay from '../ui/InventoryDisplay.js'
-import Location from '../ui/Location.js'
-import Message from '../ui/Message.js'
-import PlayerStatus from '../ui/PlayerStatus.js'
-import PriceList from '../ui/PriceList.js'
-import Weather from '../ui/Weather.js'
+import { EnhancedSelectInput } from '../ui/components/common/index.js'
+import {
+  ActionMenu,
+  Day,
+  GameLog,
+  InventoryDisplay,
+  Location,
+  PlayerStatus,
+  PriceList,
+  Weather,
+} from '../ui/components/game/index.js'
 import MultiStepEventScreen from './MultiStepEventScreen.js'
 import TravelingScreen from './TravelingScreen.js'
 
-function GameScreen() {
+export function GameScreen() {
   const { showHelp, quitConfirmation } = useUI()
   const { addMessage } = useMessage()
   const {
     gameState,
-    //handleAction,
+    // HandleAction,
     handleEventChoice,
   } = useGame()
   const [isTraveling, setIsTraveling] = useState(false)
   const [showEvent, setShowEvent] = useState(false)
 
   useEffect(() => {
-    setShowEvent(!!gameState.currentEvent)
+    setShowEvent(Boolean(gameState.currentEvent))
   }, [gameState.currentEvent])
 
-  // const handleSave = (slot: number) => {
+  // Const handleSave = (slot: number) => {
   //   handleAction('saveGame', { slot })
   // }
 
@@ -73,7 +75,13 @@ function GameScreen() {
   // ]
 
   if (isTraveling) {
-    return <TravelingScreen onFinish={() => setIsTraveling(false)} />
+    return (
+      <TravelingScreen
+        onFinish={() => {
+          setIsTraveling(false)
+        }}
+      />
+    )
   }
 
   if (showEvent) {
@@ -113,7 +121,7 @@ function GameScreen() {
               <PriceList />
               <Location />
             </Box>
-            <Message />
+            <GameLog />
             {gameState.currentEvent && gameState.currentStep !== undefined ? (
               <Box flexDirection="column" marginY={1}>
                 <Text>
@@ -127,7 +135,7 @@ function GameScreen() {
                   items={gameState.currentEvent.steps[
                     gameState.currentStep
                   ]?.choices.map((choice) => ({
-                    // key: index,
+                    // Key: index,
                     label: choice.text,
                     value: choice.text,
                   }))}
@@ -144,7 +152,7 @@ function GameScreen() {
                     const choiceIndex =
                       gameState.currentEvent.steps[
                         gameState.currentStep
-                      ]?.choices.findIndex((choice) => choice.text === value) ||
+                      ]?.choices.findIndex((choice) => choice.text === value) ??
                       0
                     handleEventChoice(choiceIndex)
                   }}

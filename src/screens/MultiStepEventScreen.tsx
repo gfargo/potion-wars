@@ -1,12 +1,12 @@
 import { Box, Text } from 'ink'
 import React from 'react'
-import EnhancedSelectInput from '../components/EnhancedSelectInput.js'
 import { ASCII_PORTRAITS } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
+import { EnhancedSelectInput } from '../ui/components/common/index.js'
 
-const MultiStepEventScreen: React.FC = () => {
+export function MultiStepEventScreen() {
   const { gameState, handleEventChoice } = useGame()
-  const currentEvent = gameState.currentEvent
+  const { currentEvent } = gameState
   const currentStep = gameState.currentStep ?? 0
 
   if (!currentEvent) {
@@ -17,6 +17,7 @@ const MultiStepEventScreen: React.FC = () => {
   if (!step) {
     return null
   }
+
   const portraitKeys = Object.keys(ASCII_PORTRAITS)
   const portraitKey =
     portraitKeys[Math.floor(Math.random() * portraitKeys.length)]

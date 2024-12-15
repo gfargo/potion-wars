@@ -1,6 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { getActiveSlot } from '../activeSlot.js'
-import { loadMessages, saveMessages, clearMessageLog } from '../messageStorage.js'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { getActiveSlot } from '../core/persistence/activeSlot.js'
+import {
+  clearMessageLog,
+  loadMessages,
+  saveMessages,
+} from '../core/persistence/messageStorage.js'
 
 export type MessageType =
   | 'combat'
@@ -23,19 +34,25 @@ type MessageContextType = {
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined)
 
-export const MessageProvider: React.FC<{
+type MessageProviderProperties = {
   readonly children: React.ReactNode
-}> = ({ children }) => {
-  const [messages, setMessages] = useState<Message[]>([])
+  readonly initialMessages?: Message[]
+}
+
+export function MessageProvider({
+  children,
+  initialMessages = [],
+}: MessageProviderProperties) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
   const activeSlot = getActiveSlot()
 
   // Load messages when component mounts or active slot changes
   useEffect(() => {
-    if (activeSlot >= 0) {
+    if (activeSlot >= 0 && initialMessages.length === 0) {
       const loadedMessages = loadMessages(activeSlot)
       setMessages(loadedMessages)
     }
-  }, [activeSlot])
+  }, [activeSlot, initialMessages.length])
 
   // Save messages whenever they change
   useEffect(() => {
@@ -44,22 +61,28 @@ export const MessageProvider: React.FC<{
     }
   }, [messages, activeSlot])
 
-  const addMessage = (type: MessageType, content: string) => {
+  const addMessage = useCallback((type: MessageType, content: string) => {
     setMessages((previousMessages) => [
       ...previousMessages,
-      { type, content, timestamp: Date.now() }
+      { type, content, timestamp: Date.now() },
     ])
-  }
+  }, [])
 
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     if (activeSlot >= 0) {
       clearMessageLog(activeSlot)
     }
+
     setMessages([])
-  }
+  }, [activeSlot])
+
+  const contextValue = useMemo(
+    () => ({ messages, addMessage, clearMessages }),
+    [messages, addMessage, clearMessages]
+  )
 
   return (
-    <MessageContext.Provider value={{ messages, addMessage, clearMessages }}>
+    <MessageContext.Provider value={contextValue}>
       {children}
     </MessageContext.Provider>
   )

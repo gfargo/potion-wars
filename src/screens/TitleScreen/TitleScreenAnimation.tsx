@@ -1,10 +1,10 @@
 import React from 'react'
-import { AsciiAnimation } from '../../components/AsciiAnimation.js'
+import { AsciiAnimation } from '../../ui/components/index.js'
 
 const CASTLE_WIDTH = 80
 const SCENE_HEIGHT = 15
 
-// const secondCastleBackdrop = [
+// Const secondCastleBackdrop = [
 //   `                                  |>>>                                         `,
 //   `                                  |                                            `,
 //   `                    |>>>      _  _|_  _         |>>>                           `,
@@ -57,12 +57,12 @@ const starPositions = [
   { x: 78, y: 4 },
 ]
 // Generate each frame by overlaying moving stars, bird, sun, and moon animations
-const generateCastleFrame = (frameIndex: number): string => {
-  // random castle backdrop
-  let scene = [...castleBackdrop]
+function generateCastleFrame(frameIndex: number): string {
+  // Random castle backdrop
+  const scene = [...castleBackdrop]
 
   // Sun and Moon Parabolic Movement
-  const t = frameIndex % (CASTLE_WIDTH * 1) // Total animation length for a full cycle
+  const t = frameIndex % Number(CASTLE_WIDTH) // Total animation length for a full cycle
   const parabolicHeight = (x: number) =>
     Math.round(
       -((4 * x * (x - CASTLE_WIDTH)) / CASTLE_WIDTH ** 2) * SCENE_HEIGHT
@@ -81,14 +81,13 @@ const generateCastleFrame = (frameIndex: number): string => {
       sunPosition < 56)
   ) {
     scene[1 + sunY] =
-      scene[1 + sunY]!.substring(0, sunPosition) +
-      '' +
-      scene[1 + sunY]!.substring(sunPosition)
+      String(scene[1 + sunY]!.slice(0, Math.max(0, sunPosition))) +
+      scene[1 + sunY]!.slice(Math.max(0, sunPosition))
   } else if (scene[1 + sunY] !== undefined) {
     scene[1 + sunY] =
-      scene[1 + sunY]!.substring(0, sunPosition) +
+      scene[1 + sunY]!.slice(0, Math.max(0, sunPosition)) +
       '☼' +
-      scene[1 + sunY]!.substring(sunPosition + 1)
+      scene[1 + sunY]!.slice(Math.max(0, sunPosition + 1))
   }
 
   if (
@@ -99,24 +98,22 @@ const generateCastleFrame = (frameIndex: number): string => {
       moonPosition < 56)
   ) {
     scene[1 + moonY] =
-      scene[1 + moonY]!.substring(0, moonPosition) +
-      '' +
-      scene[1 + moonY]!.substring(moonPosition)
-  } else if (scene[1 + moonY]) {
-    if (scene[1 + moonY] !== undefined) {
-      scene[1 + moonY] =
-        scene[1 + moonY]!.substring(0, moonPosition) +
-        '☽' +
-        scene[1 + moonY]!.substring(moonPosition + 1)
-    }
+      String(scene[1 + moonY]!.slice(0, Math.max(0, moonPosition))) +
+      scene[1 + moonY]!.slice(Math.max(0, moonPosition))
+  } else if (scene[1 + moonY] && scene[1 + moonY] !== undefined) {
+    scene[1 + moonY] =
+      scene[1 + moonY]!.slice(0, Math.max(0, moonPosition)) +
+      '☽' +
+      scene[1 + moonY]!.slice(Math.max(0, moonPosition + 1))
   }
 
   const starChar = sunY < 12 ? ' ' : frameIndex % 2 === 0 ? '✦' : '✶'
-  starPositions.forEach(({ x, y }) => {
-    if (scene[y]) {
-      scene[y] = scene[y].substring(0, x) + starChar + scene[y].substring(x + 1)
-    }
-  })
+  for (const { x, y } of starPositions) {
+    scene[y] &&=
+      scene[y].slice(0, Math.max(0, x)) +
+      starChar +
+      scene[y].slice(Math.max(0, x + 1))
+  }
 
   // Bird Flapping Animation across the entire CASTLE_WIDTH
   const birdPosition = ((frameIndex * -1) % CASTLE_WIDTH) - 5
@@ -132,11 +129,13 @@ const generateCastleFrame = (frameIndex: number): string => {
 }
 
 // High Fidelity Castle Animation Component
-export const TitleScreenAnimation: React.FC = () => (
-  <AsciiAnimation
-    frames={generateCastleFrame}
-    speed={280} // Adjust speed as needed
-    loop={true}
-    loopDuration={Infinity} // Runs continuously
-  />
-)
+export function TitleScreenAnimation() {
+  return (
+    <AsciiAnimation
+      isLooping
+      frames={generateCastleFrame}
+      speed={280} // Adjust speed as needed
+      loopDuration={Infinity}
+    />
+  )
+}
