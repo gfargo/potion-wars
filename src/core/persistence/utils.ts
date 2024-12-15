@@ -128,7 +128,7 @@ export class SaveFileManager {
       let data: T
 
       try {
-        data = JSON.parse(fileContent)
+        data = JSON.parse(fileContent) as T
       } catch (error) {
         throw new PersistenceError(
           `Invalid JSON in save file: ${filePath}`,

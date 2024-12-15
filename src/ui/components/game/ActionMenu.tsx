@@ -1,5 +1,5 @@
 import { Box, Text, type TextProps, useInput } from 'ink'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useGame } from '../../../contexts/GameContext.js'
 import { useUI } from '../../../contexts/UIContext.js'
 import {
@@ -40,20 +40,26 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
     selectedPotion
   )
 
-  const mainItems = [
-    { label: 'Brew (B)', value: 'brew' },
-    { label: 'Sell (S)', value: 'sell' },
-    { label: 'Travel (T)', value: 'travel' },
-    { label: 'Repay Debt (R)', value: 'repay' },
-    { label: 'Quit (Q)', value: 'quit' },
-  ]
+  const mainItems = useMemo(
+    () => [
+      { label: 'Brew (B)', value: 'brew' },
+      { label: 'Sell (S)', value: 'sell' },
+      { label: 'Travel (T)', value: 'travel' },
+      { label: 'Repay Debt (R)', value: 'repay' },
+      { label: 'Quit (Q)', value: 'quit' },
+    ],
+    []
+  )
 
-  const handleSelect = (item: { value: string }) => {
-    setCurrentMenu(item.value as ActionMenuEnum)
-    if (item.value === 'quit') {
-      setQuitConfirmation(true)
-    }
-  }
+  const handleSelect = useCallback(
+    (item: { value: string }) => {
+      setCurrentMenu(item.value as ActionMenuEnum)
+      if (item.value === 'quit') {
+        setQuitConfirmation(true)
+      }
+    },
+    [setQuitConfirmation]
+  )
 
   useInput((input, key) => {
     if (key.escape) {
