@@ -1,3 +1,5 @@
+import { type Location } from './types/game.types.js'
+
 export const GAME_SCREEN_HEIGHT = 28
 
 export const TITLE_ART = ` ____       _   _             __        __
@@ -20,12 +22,6 @@ Goal: Make as much gold as possible in 30 days!
 Use the arrow keys to navigate menus and adjust quantities.
 Press Enter to confirm your selection.
 `
-
-export type Location = {
-  name: string
-  description: string
-  dangerLevel: number // 1-10, affects probability of royal guard encounters
-}
 
 export const locations: Location[] = [
   {
@@ -185,4 +181,3 @@ export const ASCII_PORTRAITS = {
  /|      |\\
 / |      | \\`,
 }
-

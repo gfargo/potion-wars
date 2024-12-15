@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
 
-type Screen = 'title' | 'loading' | 'game' | 'traveling' | 'event' | 'game-over'
+export type Screen =
+  | 'title'
+  | 'loading'
+  | 'game'
+  | 'traveling'
+  | 'event'
+  | 'game-over'
 
 type UIContextType = {
   currentScreen: Screen
@@ -15,12 +21,16 @@ type UIContextType = {
 
 const UIContext = createContext<UIContextType | undefined>(undefined)
 
+type UIProviderProperties = {
+  readonly children: React.ReactNode
+  readonly initialScreen?: Screen
+}
+
 export function UIProvider({
   children,
-}: {
-  readonly children: React.ReactNode
-}) {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('title')
+  initialScreen = 'title',
+}: UIProviderProperties) {
+  const [currentScreen, setCurrentScreen] = useState<Screen>(initialScreen)
   const [showHelp, setShowHelp] = useState(false)
   const [quitConfirmation, setQuitConfirmation] = useState(false)
   const [combatResult, setCombatResult] = useState<string | undefined>(

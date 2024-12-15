@@ -1,18 +1,19 @@
 import { Box, Text, useApp, useInput } from 'ink'
 import Gradient from 'ink-gradient'
-import { default as React, useMemo } from 'react'
-import EnhancedSelectInput from '../../components/EnhancedSelectInput.js'
+import React, { useMemo, useState } from 'react'
 import { TITLE_ART } from '../../constants.js'
 import { useGame } from '../../contexts/GameContext.js'
 import { useUI } from '../../contexts/UIContext.js'
-import { getSaveSlots } from '../../saveLoad.js'
+import { getSaveSlots } from '../../core/persistence/saveLoad.js'
+import { EnhancedSelectInput } from '../../ui/components/common/index.js'
 
-export const TitleScreenMenu = () => {
+export function TitleScreenMenu() {
   const { toggleHelp, setScreen } = useUI()
-  const [displaySaveSlots, toggleSaveSlotDisplay] = React.useState<
+  // eslint-disable-next-line react/hook-use-state
+  const [displaySaveSlots, toggleSaveSlotDisplay] = useState<
     'load' | 'new' | false
   >(false)
-  const [confirmOverwrite, setConfirmOverwrite] = React.useState(false)
+  const [confirmOverwrite, setConfirmOverwrite] = useState(false)
   const { handleAction, activeSlot } = useGame()
   const { exit } = useApp()
 
@@ -22,7 +23,6 @@ export const TitleScreenMenu = () => {
     if (key.escape) {
       toggleSaveSlotDisplay(false)
       setConfirmOverwrite(false)
-      return
     }
   })
 
@@ -84,15 +84,18 @@ export const TitleScreenMenu = () => {
                 hotkey: 'y',
               },
             ]}
+            orientation="horizontal"
             onSelect={(item) => {
+              console.log(item)
+
+              const slotIndex = Number(item.value.replace('slot-', ''))
               if (item.value === 'yes') {
                 setScreen('loading')
-                handleAction('startGame', { slot: activeSlot })
+                handleAction('startGame', { slot: slotIndex })
               }
 
               setConfirmOverwrite(false)
             }}
-            orientation="horizontal"
           />
         </Box>
       ) : displaySaveSlots ? (
@@ -115,16 +118,16 @@ export const TitleScreenMenu = () => {
             }
             items={[
               ...saveSlots.map((slot, index) => {
-                if (slot === null) {
+                if (slot === null || slot === undefined) {
                   return {
                     label: 'Empty',
-                    value: `slot-${index}`,
+                    value: `slot-${index + 1}`,
                   }
                 }
 
                 return {
                   label: `Day ${slot.day} - ${slot.cash}g`,
-                  value: `slot-${index}`,
+                  value: `slot-${index + 1}`,
                 }
               }),
               {
@@ -133,6 +136,7 @@ export const TitleScreenMenu = () => {
                 hotkey: 'esc',
               },
             ]}
+            orientation="horizontal"
             onSelect={(item) => {
               if (item.value === 'back') {
                 toggleSaveSlotDisplay(false)
@@ -154,9 +158,7 @@ export const TitleScreenMenu = () => {
 
               setScreen('loading')
               handleAction('loadGame', { slot: slotIndex })
-              return
             }}
-            orientation="horizontal"
           />
         </Box>
       ) : (
@@ -168,13 +170,14 @@ export const TitleScreenMenu = () => {
             items={topLevelMenuItems}
             indicatorComponent={({ isSelected, item }) =>
               isSelected && item.value === 'quit' ? (
-                <Text color={'red'}>✘ </Text>
+                <Text color="red">✘ </Text>
               ) : isSelected ? (
                 <Text color={isSelected ? 'green' : 'gray'}>☛ </Text>
               ) : (
                 <Text>{`  `}</Text>
               )
             }
+            orientation="horizontal"
             onSelect={(item) => {
               if (item.value === 'help') {
                 toggleHelp()
@@ -199,10 +202,8 @@ export const TitleScreenMenu = () => {
               if (item.value === 'continue') {
                 setScreen('loading')
                 handleAction('loadGame', { slot: activeSlot })
-                return
               }
             }}
-            orientation="horizontal"
           />
         </Box>
       )}

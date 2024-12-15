@@ -1,12 +1,12 @@
 import { Box } from 'ink'
 import Gradient from 'ink-gradient'
-import { default as React } from 'react'
+import React from 'react'
 import { useUI } from '../../contexts/UIContext.js'
-import { Help } from '../../ui/Help.js'
+import { Help } from '../../ui/components/game/index.js'
 import { TitleScreenAnimation } from './TitleScreenAnimation.js'
 import { TitleScreenMenu } from './TitleScreenMenu.js'
 
-function TitleScreen() {
+export function TitleScreen() {
   const { showHelp } = useUI()
 
   return (
@@ -20,15 +20,11 @@ function TitleScreen() {
         <TitleScreenAnimation />
       </Gradient>
       {showHelp ? (
-        <>
-          <Box marginTop={-10}>
-            <Help />
-          </Box>
-        </>
+        <Box marginTop={-10}>
+          <Help />
+        </Box>
       ) : (
-        <>
-          <TitleScreenMenu />
-        </>
+        <TitleScreenMenu />
       )}
     </Box>
   )

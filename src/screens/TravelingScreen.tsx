@@ -1,18 +1,21 @@
+import { Box, Text, useInput } from 'ink'
 import React, { useEffect, useState } from 'react'
-import { Box, Text } from 'ink'
-import { useInput } from 'ink'
 import { useGame } from '../contexts/GameContext.js'
 
-const TravelingScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
+type TravelingScreenProperties = { readonly onFinish: () => void }
+
+export function TravelingScreen({ onFinish }: TravelingScreenProperties) {
   const [timeLeft, setTimeLeft] = useState(4)
   const { gameState } = useGame()
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1)
+      setTimeLeft((previous) => previous - 1)
     }, 1000)
 
-    return () => clearInterval(timer)
+    return () => {
+      clearInterval(timer)
+    }
   }, [])
 
   useEffect(() => {
