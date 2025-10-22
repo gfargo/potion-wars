@@ -1,5 +1,7 @@
 import { type MultiStepEvent } from './events.types.js'
 import { type Weather } from './weather.types.js'
+import { type ReputationState } from './reputation.types.js'
+import { type LocationMarketState, type TradeTransaction } from './economy.types.js'
 
 export type ActionResult = {
   message?: string
@@ -23,6 +25,10 @@ export type GameState = {
   lastSave?: string
   playerName?: string
   _result?: ActionResult
+  // New features
+  reputation: ReputationState
+  marketData: LocationMarketState
+  tradeHistory: TradeTransaction[]
 }
 export type Location = {
   name: string
