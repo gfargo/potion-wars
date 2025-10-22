@@ -18,6 +18,14 @@ export const initializeGame = (): GameState => {
     inventory: {},
     prices: generatePrices(),
     weather: 'sunny',
+    // New features with default values
+    reputation: {
+      global: 0,
+      locations: {},
+      npcRelationships: {}
+    },
+    marketData: {},
+    tradeHistory: []
   }
 }
 

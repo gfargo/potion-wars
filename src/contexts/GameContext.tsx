@@ -1,10 +1,10 @@
 import { useApp } from 'ink'
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useMemo,
+    useState,
 } from 'react'
 import { getActiveSlot, setActiveSlot } from '../core/persistence/activeSlot.js'
 import { useGameState } from '../core/state/index.js'
@@ -78,6 +78,14 @@ export const DEFAULT_GAME_STATE: GameState = {
   inventory: {},
   prices: {},
   weather: 'sunny',
+  // New features with default values
+  reputation: {
+    global: 0,
+    locations: {},
+    npcRelationships: {}
+  },
+  marketData: {},
+  tradeHistory: []
 }
 
 export function GameProvider({
