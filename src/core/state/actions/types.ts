@@ -1,5 +1,7 @@
 import { type MultiStepEvent } from '../../../types/events.types.js'
 import { type Weather } from '../../../types/weather.types.js'
+import { type ReputationChange } from '../../../types/reputation.types.js'
+import { type LocationMarketState, type SupplyDemandFactor } from '../../../types/economy.types.js'
 
 // Game Actions
 export const BREW_POTION = 'game/brewPotion'
@@ -10,6 +12,16 @@ export const ADVANCE_DAY = 'game/advanceDay'
 export const UPDATE_WEATHER = 'game/updateWeather'
 export const TRIGGER_EVENT = 'game/triggerEvent'
 export const HANDLE_EVENT_CHOICE = 'game/handleEventChoice'
+
+// Reputation Actions
+export const UPDATE_REPUTATION = 'reputation/updateReputation'
+export const RESET_REPUTATION = 'reputation/resetReputation'
+
+// Market Actions
+export const UPDATE_MARKET_DATA = 'market/updateMarketData'
+export const RECORD_TRANSACTION = 'market/recordTransaction'
+export const UPDATE_DAILY_MARKETS = 'market/updateDailyMarkets'
+export const APPLY_SUPPLY_DEMAND_FACTORS = 'market/applySupplyDemandFactors'
 
 // Save/Load Actions
 export const INITIALIZE_GAME = 'save/initializeGame'
@@ -94,6 +106,44 @@ export type LoadGameAction = {
   }
 }
 
+export type UpdateReputationAction = {
+  type: typeof UPDATE_REPUTATION
+  payload: ReputationChange
+}
+
+export type ResetReputationAction = {
+  type: typeof RESET_REPUTATION
+}
+
+export type UpdateMarketDataAction = {
+  type: typeof UPDATE_MARKET_DATA
+  payload: {
+    marketData: LocationMarketState
+  }
+}
+
+export type RecordTransactionAction = {
+  type: typeof RECORD_TRANSACTION
+  payload: {
+    location: string
+    potionType: string
+    quantity: number
+    pricePerUnit: number
+    day: number
+  }
+}
+
+export type UpdateDailyMarketsAction = {
+  type: typeof UPDATE_DAILY_MARKETS
+}
+
+export type ApplySupplyDemandFactorsAction = {
+  type: typeof APPLY_SUPPLY_DEMAND_FACTORS
+  payload: {
+    factors: SupplyDemandFactor[]
+  }
+}
+
 // Union type of all actions
 export type GameAction =
   | BrewPotionAction
@@ -107,3 +157,9 @@ export type GameAction =
   | InitializeGameAction
   | SaveGameAction
   | LoadGameAction
+  | UpdateReputationAction
+  | ResetReputationAction
+  | UpdateMarketDataAction
+  | RecordTransactionAction
+  | UpdateDailyMarketsAction
+  | ApplySupplyDemandFactorsAction

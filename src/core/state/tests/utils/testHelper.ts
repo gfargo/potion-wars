@@ -22,6 +22,14 @@ export const createGameState = (
   inventory: {},
   prices: {},
   weather: 'sunny',
+  // New features with default values
+  reputation: {
+    global: 0,
+    locations: {},
+    npcRelationships: {}
+  },
+  marketData: {},
+  tradeHistory: [],
   ...overrides,
 })
 

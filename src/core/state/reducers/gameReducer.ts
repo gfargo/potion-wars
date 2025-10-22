@@ -2,12 +2,14 @@ import { locations } from '../../../constants.js'
 import { type GameState } from '../../../types/game.types.js'
 import { handleCombat } from '../../combat/index.js'
 import {
-  handleMultiStepEventChoice,
-  triggerRandomEvent,
+    handleMultiStepEventChoice,
+    triggerRandomEvent,
 } from '../../events/index.js'
-import { generatePrices } from '../../game/economy.js'
+import { generatePrices, initializeGameMarkets } from '../../game/economy.js'
 import { brewPotion, sellPotion, travel } from '../../game/index.js'
 import { type GameAction } from '../actions/types.js'
+import { ReputationManager } from '../../reputation/ReputationManager.js'
+import { EnhancedEconomyManager } from '../../game/enhancedEconomy.js'
 
 export const gameReducer = (
   state: GameState,
@@ -119,6 +121,8 @@ export const gameReducer = (
     case 'save/initializeGame': {
       const initialLocation =
         locations[Math.floor(Math.random() * locations.length)]
+      const { marketData, tradeHistory } = initializeGameMarkets()
+      
       return {
         day: 0,
         cash: 2000,
@@ -131,7 +135,75 @@ export const gameReducer = (
         inventory: {},
         prices: generatePrices(),
         weather: 'sunny',
+        // New features with initialized values
+        reputation: ReputationManager.initializeReputation(),
+        marketData,
+        tradeHistory
       }
+    }
+
+    case 'reputation/updateReputation': {
+      return ReputationManager.applyReputationChange(state, action.payload)
+    }
+
+    case 'reputation/resetReputation': {
+      return {
+        ...state,
+        reputation: ReputationManager.initializeReputation()
+      }
+    }
+
+    case 'market/updateMarketData': {
+      return {
+        ...state,
+        marketData: action.payload.marketData
+      }
+    }
+
+    case 'market/recordTransaction': {
+      const { location, potionType, quantity, pricePerUnit, day } = action.payload
+      const locationMarket = state.marketData[location]
+      
+      if (!locationMarket || !locationMarket[potionType]) {
+        return state
+      }
+
+      const updatedMarketData = EnhancedEconomyManager.recordTransaction(
+        locationMarket[potionType],
+        quantity,
+        day,
+        true // Player transaction
+      )
+
+      const tradeRecord = {
+        day,
+        location,
+        potionType,
+        quantity: Math.abs(quantity),
+        pricePerUnit,
+        totalValue: Math.abs(quantity) * pricePerUnit,
+        type: quantity > 0 ? 'buy' as const : 'sell' as const
+      }
+
+      return {
+        ...state,
+        marketData: {
+          ...state.marketData,
+          [location]: {
+            ...locationMarket,
+            [potionType]: updatedMarketData
+          }
+        },
+        tradeHistory: [...state.tradeHistory, tradeRecord]
+      }
+    }
+
+    case 'market/updateDailyMarkets': {
+      return EnhancedEconomyManager.updateMarketDynamics(state)
+    }
+
+    case 'market/applySupplyDemandFactors': {
+      return EnhancedEconomyManager.applySupplyDemandFactors(state, action.payload.factors)
     }
 
     default: {

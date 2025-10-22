@@ -1,4 +1,5 @@
 import { type GameState } from '../../../types/game.types.js'
+import { ReputationManager } from '../../reputation/ReputationManager.js'
 
 // Player Stats
 export const selectHealth = (state: GameState): number => state.health
@@ -140,4 +141,48 @@ export const selectCanSellItem = (
 ): boolean => {
   const currentQuantity = state.inventory[itemName] ?? 0
   return currentQuantity >= quantity
+}
+
+// Reputation Selectors
+export const selectReputation = (state: GameState) => state.reputation
+
+export const selectGlobalReputation = (state: GameState): number => 
+  state.reputation.global
+
+export const selectLocationReputation = (
+  state: GameState, 
+  location: string
+): number => 
+  state.reputation.locations[location] ?? 0
+
+export const selectCurrentLocationReputation = (state: GameState): number =>
+  state.reputation.locations[state.location.name] ?? 0
+
+export const selectNPCRelationship = (
+  state: GameState, 
+  npcId: string
+): number => 
+  state.reputation.npcRelationships[npcId] ?? 0
+
+export const selectAllLocationReputations = (state: GameState): Record<string, number> =>
+  state.reputation.locations
+
+export const selectAllNPCRelationships = (state: GameState): Record<string, number> =>
+  state.reputation.npcRelationships
+
+// Computed Reputation Selectors
+export const selectGlobalReputationLevel = (state: GameState) =>
+  ReputationManager.getReputationLevel(state.reputation.global)
+
+export const selectLocationReputationLevel = (state: GameState, location: string) =>
+  ReputationManager.getReputationLevel(state.reputation.locations[location] ?? 0)
+
+export const selectCurrentLocationReputationLevel = (state: GameState) =>
+  ReputationManager.getReputationLevel(state.reputation.locations[state.location.name] ?? 0)
+
+export const selectReputationPriceModifier = (state: GameState, location?: string) => {
+  const reputation = location 
+    ? state.reputation.locations[location] ?? 0
+    : state.reputation.locations[state.location.name] ?? 0
+  return ReputationManager.calculatePriceModifier(reputation)
 }
