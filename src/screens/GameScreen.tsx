@@ -3,9 +3,7 @@ import Gradient from 'ink-gradient'
 import React, { useEffect, useState } from 'react'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
-import { useMessage } from '../contexts/MessageContext.js'
 import { useUI } from '../contexts/UIContext.js'
-import { EnhancedSelectInput } from '../ui/components/common/index.js'
 import {
   ActionMenu,
   Day,
@@ -14,25 +12,37 @@ import {
   Location,
   PlayerStatus,
   PriceList,
+  QuitMenu,
   Weather,
 } from '../ui/components/game/index.js'
 import MultiStepEventScreen from './MultiStepEventScreen.js'
+import NPCInteractionScreen from './NPCInteractionScreen.js'
 import TravelingScreen from './TravelingScreen.js'
+import { NPCManager } from '../core/npcs/NPCManager.js'
 
 export function GameScreen() {
-  const { showHelp, quitConfirmation } = useUI()
-  const { addMessage } = useMessage()
+  const { showHelp, quitConfirmation, currentScreen } = useUI()
   const {
     gameState,
-    // HandleAction,
-    handleEventChoice,
+    handleAction,
   } = useGame()
   const [isTraveling, setIsTraveling] = useState(false)
-  const [showEvent, setShowEvent] = useState(false)
+  const [previousLocation, setPreviousLocation] = useState<string | undefined>(undefined)
 
+  // Derive showEvent directly from gameState instead of using local state
+  // This ensures we always have the latest event status
+  const showEvent = Boolean(gameState.currentEvent)
+
+  // Track location changes for travel animation
   useEffect(() => {
-    setShowEvent(Boolean(gameState.currentEvent))
-  }, [gameState.currentEvent])
+    if (currentScreen === 'traveling' && !previousLocation) {
+      // When entering traveling screen, capture the current location as "from"
+      setPreviousLocation(gameState.location.name)
+    } else if (currentScreen === 'game' && previousLocation) {
+      // When returning to game screen, clear the previous location
+      setPreviousLocation(undefined)
+    }
+  }, [currentScreen, gameState.location.name, previousLocation])
 
   // Const handleSave = (slot: number) => {
   //   handleAction('saveGame', { slot })
@@ -74,11 +84,14 @@ export function GameScreen() {
   //   { label: 'Save Game (Slot 3)', value: 'save_2', hotkey: 'D', indicator: '💾' },
   // ]
 
-  if (isTraveling) {
+  // Show traveling screen when screen state is 'traveling'
+  if (currentScreen === 'traveling' || isTraveling) {
     return (
       <TravelingScreen
+        fromLocation={previousLocation}
         onFinish={() => {
           setIsTraveling(false)
+          // Note: Screen transition back to 'game' is handled by the travel action
         }}
       />
     )
@@ -86,6 +99,36 @@ export function GameScreen() {
 
   if (showEvent) {
     return <MultiStepEventScreen />
+  }
+
+  if (quitConfirmation) {
+    return (
+      <Box flexDirection="column" height="100%" alignItems="center" justifyContent="center">
+        <QuitMenu />
+      </Box>
+    )
+  }
+
+  // Check for NPC interaction
+  if (gameState.currentNPCInteraction) {
+    const npcManager = NPCManager.getInstance()
+    const npc = npcManager.getNPC(gameState.currentNPCInteraction.npcId)
+
+    if (npc) {
+      return (
+        <NPCInteractionScreen
+          npc={npc}
+          onComplete={() => {
+            // End the NPC interaction
+            handleAction('npcInteraction', {
+              npcId: npc.id,
+              action: 'end',
+              data: {}
+            })
+          }}
+        />
+      )
+    }
   }
 
   return (
@@ -122,56 +165,18 @@ export function GameScreen() {
               <Location />
             </Box>
             <GameLog />
-            {gameState.currentEvent && gameState.currentStep !== undefined ? (
-              <Box flexDirection="column" marginY={1}>
-                <Text>
-                  {
-                    gameState.currentEvent?.steps[gameState.currentStep]
-                      ?.description
-                  }
-                </Text>
-
-                <EnhancedSelectInput
-                  items={gameState.currentEvent.steps[
-                    gameState.currentStep
-                  ]?.choices.map((choice) => ({
-                    // Key: index,
-                    label: choice.text,
-                    value: choice.text,
-                  }))}
-                  onSelect={({ value }) => {
-                    if (!gameState.currentEvent || !gameState.currentStep) {
-                      addMessage(
-                        'info',
-                        'Invalid event or step, defaulting to first choice'
-                      )
-                      handleEventChoice(0)
-                      return
-                    }
-
-                    const choiceIndex =
-                      gameState.currentEvent.steps[
-                        gameState.currentStep
-                      ]?.choices.findIndex((choice) => choice.text === value) ??
-                      0
-                    handleEventChoice(choiceIndex)
-                  }}
+            <Box
+              marginTop={1}
+              flexDirection="column"
+              justifyContent="flex-end"
+            >
+              <Box>
+                <ActionMenu
+                  potions={potions.map((potion) => potion.name)}
+                  locations={locations}
                 />
               </Box>
-            ) : (
-              <Box
-                marginTop={1}
-                flexDirection="column"
-                justifyContent="flex-end"
-              >
-                <Box>
-                  <ActionMenu
-                    potions={potions.map((potion) => potion.name)}
-                    locations={locations}
-                  />
-                </Box>
-              </Box>
-            )}
+            </Box>
           </Box>
         )
       )}

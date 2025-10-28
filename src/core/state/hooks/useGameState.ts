@@ -1,7 +1,6 @@
 import { useCallback, useReducer } from 'react'
 import { type GameState } from '../../../types/game.types.js'
 import {
-  loadGame as loadPersistedGame,
   saveGame as persistGame,
 } from '../../persistence/saveLoad.js'
 import * as actions from '../actions/creators.js'
@@ -52,10 +51,8 @@ export const useGameState = (initialState: GameState) => {
   )
 
   const loadGame = useCallback((slot: number) => {
-    const loadedState = loadPersistedGame(slot)
-    if (loadedState) {
-      dispatch(actions.loadGame(slot))
-    }
+    // Dispatch action - the reducer will handle loading from persistence
+    dispatch(actions.loadGame(slot))
   }, [])
 
   const initializeGame = useCallback(() => {

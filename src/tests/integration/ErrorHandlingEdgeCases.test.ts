@@ -11,7 +11,7 @@ import { type NPC } from '../../types/npc.types.js'
 // Test data setup
 const createMinimalGameState = (): GameState => ({
   day: 1,
-  location: { name: 'Test Location', description: 'Test', dangerLevel: 1 },
+  location: { name: 'Test Location', description: 'A test location', dangerLevel: 1 },
   weather: 'sunny',
   cash: 0,
   debt: 0,
@@ -26,13 +26,8 @@ const createMinimalGameState = (): GameState => ({
     npcRelationships: {}
   },
   marketData: {},
-  messages: [],
-  gameLog: [],
-  currentScreen: 'game',
-  isGameOver: false,
-  gameOverReason: null,
-  prices: {},
-tradeHistory: []
+  tradeHistory: [],
+  prices: {}
 })
 
 const createInvalidNPC = (): any => ({
@@ -60,7 +55,7 @@ const createValidNPC = (): NPC => ({
     lowReputation: 'Bad rep',
     highReputation: 'Good rep'
   },
-  location: { name: 'Test Location', description: 'Test', dangerLevel: 1 },
+  location: 'Test Location',
   availability: {
     probability: 0.5,
     timeRestriction: [1, 30],
@@ -225,7 +220,7 @@ test('ReputationManager handles invalid reputation changes', t => {
   // Test with extreme reputation changes
   const extremeChange = {
     global: Number.MAX_SAFE_INTEGER,
-    location: { name: 'Test Location', description: 'Test', dangerLevel: 1 },
+    location: 'Test Location',
     locationChange: Number.MIN_SAFE_INTEGER,
     npc: 'test_npc',
     npcChange: Infinity
@@ -258,7 +253,8 @@ test('EnhancedEconomyManager handles invalid market data', t => {
   }, 'Should handle invalid market data gracefully')
   
   // Test with empty/null history
-  // const emptyHistoryData = {
+  /*
+  const emptyHistoryData = {
     basePrice: 100,
     currentPrice: 100,
     demand: 0.5,
@@ -268,6 +264,7 @@ test('EnhancedEconomyManager handles invalid market data', t => {
     volatility: 0.1,
     lastUpdated: 1
   }
+  */
   
   t.notThrows(() => {
     const trend = EnhancedEconomyManager.calculateMarketTrend([], 100)
@@ -385,7 +382,6 @@ test('AnimationManager handles memory pressure and cleanup', async t => {
 })
 
 test('DialogueEngine handles malformed dialogue trees', t => {
-  const dialogueEngine = new DialogueEngine()
   const gameState = createMinimalGameState()
   
   // Test with NPC having malformed dialogue
@@ -448,14 +444,12 @@ test('DialogueEngine handles malformed dialogue trees', t => {
 })
 
 test('NPCTrading handles invalid trade scenarios', t => {
-  const npcTrading = new NPCTrading()
   const gameState = createMinimalGameState()
-  
+
   // Test with NPC having invalid trades
   const invalidTradeNPC = createValidNPC()
   invalidTradeNPC.trades = [
     {
-      id: '',
       offer: '',
       price: -100,
       quantity: 0,
@@ -464,9 +458,9 @@ test('NPCTrading handles invalid trade scenarios', t => {
     null as any,
     undefined as any
   ]
-  
+
   t.notThrows(() => {
-    const trades = NPCTrading.getAvailableTrades(invalidTradeNPC, gameState)
+    const trades = NPCTrading.getAvailableOffers(invalidTradeNPC, gameState)
     t.true(Array.isArray(trades), 'Should return array even with invalid trades')
   }, 'Should handle invalid trade data gracefully')
   
@@ -482,7 +476,14 @@ test('NPCTrading handles invalid trade scenarios', t => {
   ]
   
   t.notThrows(() => {
-    const result = NPCTrading.executeTrade(validTradeNPC, 'expensive_item', gameState)
+    // Get an available offer from the NPC
+  const offers = NPCTrading.getAvailableOffers(validTradeNPC, gameState)
+  if (offers.length === 0) {
+    t.fail('No offers available from NPC')
+    return
+  }
+  const offer = offers[0]!
+  const result = NPCTrading.executeTrade(offer, validTradeNPC, gameState)
     t.false(result.success, 'Should fail trade with insufficient funds')
     t.truthy(result.message, 'Should provide error message')
   }, 'Should handle insufficient resources gracefully')

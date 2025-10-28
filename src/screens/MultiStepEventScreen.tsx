@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ASCII_PORTRAITS } from '../constants.js'
 import { useGame } from '../contexts/GameContext.js'
 import { EnhancedSelectInput } from '../ui/components/common/index.js'
@@ -18,44 +18,56 @@ export function MultiStepEventScreen() {
     return null
   }
 
-  const portraitKeys = Object.keys(ASCII_PORTRAITS)
-  const portraitKey =
-    portraitKeys[Math.floor(Math.random() * portraitKeys.length)]
-  const portrait = ASCII_PORTRAITS[portraitKey as keyof typeof ASCII_PORTRAITS]
-  const isPortraitLeft = Math.random() < 0.5
+  // Memoize portrait selection to prevent re-randomizing on every render
+  const { portraitKey, portrait, isPortraitLeft } = useMemo(() => {
+    const portraitKeys = Object.keys(ASCII_PORTRAITS)
+    const key = portraitKeys[Math.floor(Math.random() * portraitKeys.length)]
+    return {
+      portraitKey: key,
+      portrait: ASCII_PORTRAITS[key as keyof typeof ASCII_PORTRAITS],
+      isPortraitLeft: Math.random() < 0.5
+    }
+  }, [currentEvent.name]) // Only change when event changes
 
   return (
-    <Box flexDirection="row" width="100%">
-      {isPortraitLeft && (
-        <Box width="30%" marginRight={2}>
-          <Text>{portrait}</Text>
-          <Text>{portraitKey}</Text>
-        </Box>
-      )}
-      <Box flexDirection="column" width="70%">
-        <Text bold>{currentEvent.name}</Text>
-        <Text>{step.description}</Text>
-        <Box marginY={1}>
-          <EnhancedSelectInput
-            items={step.choices.map((choice) => ({
-              label: choice.text,
-              value: choice.text,
-            }))}
-            onSelect={({ value }) => {
-              const index = step.choices.findIndex(
-                (choice) => choice.text === value
-              )
-              handleEventChoice(index)
-            }}
-          />
-        </Box>
+    <Box flexDirection="column" height="100%" width="100%" padding={1}>
+      <Box marginBottom={1} borderStyle="single" paddingX={1}>
+        <Text bold color="yellow">⚠️  Event: {currentEvent.name}</Text>
       </Box>
-      {!isPortraitLeft && (
-        <Box width="30%" marginLeft={2}>
-          <Text>{portrait}</Text>
-          <Text>{portraitKey}</Text>
+
+      <Box flexDirection="row" width="100%" flexGrow={1}>
+        {isPortraitLeft && (
+          <Box width="30%" marginRight={2}>
+            <Text>{portrait}</Text>
+            <Text dimColor>{portraitKey}</Text>
+          </Box>
+        )}
+        <Box flexDirection="column" width="70%">
+          <Box marginBottom={1}>
+            <Text>{step.description}</Text>
+          </Box>
+          <Box>
+            <EnhancedSelectInput
+              items={step.choices.map((choice) => ({
+                label: choice.text,
+                value: choice.text,
+              }))}
+              onSelect={({ value }) => {
+                const index = step.choices.findIndex(
+                  (choice) => choice.text === value
+                )
+                handleEventChoice(index)
+              }}
+            />
+          </Box>
         </Box>
-      )}
+        {!isPortraitLeft && (
+          <Box width="30%" marginLeft={2}>
+            <Text>{portrait}</Text>
+            <Text dimColor>{portraitKey}</Text>
+          </Box>
+        )}
+      </Box>
     </Box>
   )
 }

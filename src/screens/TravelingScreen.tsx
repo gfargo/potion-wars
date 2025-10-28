@@ -11,7 +11,24 @@ type TravelingScreenProperties = {
 export function TravelingScreen({ onFinish, fromLocation }: TravelingScreenProperties) {
   const [timeLeft, setTimeLeft] = useState(4)
   const [showAnimation, setShowAnimation] = useState(true)
+  const [flavorText, setFlavorText] = useState('')
   const { gameState } = useGame()
+
+  // Initialize flavor text on mount
+  useEffect(() => {
+    setFlavorText(getTravelFlavorText(gameState.location.name))
+  }, [gameState.location.name])
+
+  // Update flavor text every 2 seconds to make it more interesting
+  useEffect(() => {
+    const flavorTimer = setInterval(() => {
+      setFlavorText(getTravelFlavorText(gameState.location.name))
+    }, 2000)
+
+    return () => {
+      clearInterval(flavorTimer)
+    }
+  }, [gameState.location.name])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -71,7 +88,7 @@ export function TravelingScreen({ onFinish, fromLocation }: TravelingScreenPrope
       {/* Travel tips or flavor text */}
       <Box marginTop={2} width="60%" justifyContent="center">
         <Text dimColor wrap="wrap">
-          {getTravelFlavorText(gameState.location.name)}
+          {flavorText}
         </Text>
       </Box>
     </Box>

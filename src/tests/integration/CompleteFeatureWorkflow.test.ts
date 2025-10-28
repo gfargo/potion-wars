@@ -385,17 +385,17 @@ test('Market dynamics integration with reputation and NPC trading', t => {
   t.is(updatedMarketData.history.length, initialMarketData.history.length + 1, 'History should be updated')
   
   // Step 7: Test NPC trading integration
-  const npcTrading = new NPCTrading()
+  // const npcTrading = new NPCTrading()
   const npcManager = NPCManager.getInstance()
   npcManager.registerNPC(npc)
   
-  const tradeOffers = NPCTrading.getAvailableTrades(npc, gameState)
+  const tradeOffers = NPCTrading.getAvailableOffers(npc, gameState)
   t.true(tradeOffers.length > 0, 'Should have available trades')
   
   // Step 8: Verify reputation affects trade availability
   const highRepTrade = tradeOffers.find((trade: any) => trade.reputationRequirement > 0)
   if (highRepTrade) {
-    const hasAccess = playerReputation >= highRepTrade.reputationRequirement
+    const hasAccess = playerReputation >= highRepTrade.reputationRequired
     t.is(tradeOffers.includes(highRepTrade), hasAccess, 
       'High reputation trades should only be available with sufficient reputation')
   }
@@ -567,11 +567,10 @@ test('Performance with complex multi-system interactions', async t => {
     const encounter = npcManager.rollForEncounter('Market Square', gameState)
     
     // Reputation calculations
-    const locationRep = ReputationManager.getLocationReputation(gameState.reputation, 'Market Square')
-    const priceModifier = ReputationManager.calculatePriceModifier(locationRep)
+      // const priceModifier = ReputationManager.calculatePriceModifier(locationRep)
     
     // Market calculations
-    const marketData = gameState.marketData['Market Square']!['Healing Potion']!
+    // const marketData = gameState.marketData['Market Square']!['Healing Potion']!
     // const dynamicPrice = EnhancedEconomyManager.calculateDynamicPrice(marketData, priceModifier)
     
     // Animation operations

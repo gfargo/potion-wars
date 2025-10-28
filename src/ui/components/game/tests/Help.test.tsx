@@ -5,18 +5,9 @@ import Help from '../Help.js'
 import { UIProvider } from '../../../../contexts/UIContext.js'
 import { HELP_SECTIONS } from '../../../../constants.js'
 
-// Mock UI context
-const mockUIContext = {
-  currentScreen: 'game' as const,
-  showHelp: true,
-  showQuitMenu: false,
-  setCurrentScreen: () => {},
-  toggleHelp: () => {},
-  toggleQuitMenu: () => {},
-}
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <UIProvider value={mockUIContext}>
+  <UIProvider>
     {children}
   </UIProvider>
 )

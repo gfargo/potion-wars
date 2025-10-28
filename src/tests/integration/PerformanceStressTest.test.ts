@@ -98,11 +98,6 @@ const generateRandomGameState = (day: number): GameState => ({
     )
   },
   marketData: EnhancedEconomyManager.initializeMarketData(),
-  messages: [],
-  gameLog: [],
-  currentScreen: 'game',
-  isGameOver: false,
-  gameOverReason: null,
   prices: {},
 tradeHistory: []
 })
@@ -317,8 +312,9 @@ test('Concurrent operations performance', async t => {
       
       // Market operations
       const marketLocation = Object.keys(gameState.marketData)[0]!
-      const potion = Object.keys(gameState.marketData[marketLocation])[0]!
-      const marketData = gameState.marketData[marketLocation][potion]!
+      const potion = Object.keys(gameState.marketData[marketLocation]!)[0]!
+      const marketData = gameState.marketData[marketLocation]?.[potion]
+      if (!marketData) return
       EnhancedEconomyManager.calculateDynamicPrice(marketData)
       
       // Animation operations

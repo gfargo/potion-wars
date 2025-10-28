@@ -81,7 +81,7 @@ function getFallbackTravelAnimation(fromLocation: string, toLocation: string): T
   return {
     name: 'Default Travel',
     description: `Traveling from ${fromLocation} to ${toLocation}`,
-    duration: 500,
+    duration: 800, // Increased from 500ms to 800ms per frame for smoother animation
     frames: [
       [
         `Leaving ${fromLocation}...`,
@@ -134,7 +134,7 @@ export function getLocationSpecificAnimation(fromLocation: string, toLocation: s
     'Market Square->Alchemist Quarter': {
       name: 'Market to Alchemist',
       description: 'Walking through the busy market to the quiet alchemist quarter',
-      duration: 400,
+      duration: 1333, // 3 frames × 1333ms = ~4 seconds total
       frames: [
         [
           'Leaving the bustling market...',

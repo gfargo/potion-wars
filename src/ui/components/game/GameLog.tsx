@@ -48,7 +48,7 @@ function GameLog() {
           <Text
             dimColor
             color={selectMessageColor(message.type)}
-            bold={index === MAX_HISTORY - 1}
+            bold={index === visibleMessages.length - 1}
           >
             [{new Date(message.timestamp).toLocaleTimeString()}]{' '}
           </Text>
@@ -62,7 +62,7 @@ function GameLog() {
 
   return (
     <Box flexDirection="column">
-      <Box flexDirection="column" height={6} overflow="hidden">
+      <Box flexDirection="column" minHeight={8}>
         {displayMessages}
       </Box>
 

@@ -10,6 +10,7 @@ import { brewPotion, sellPotion, travel } from '../../game/index.js'
 import { type GameAction } from '../actions/types.js'
 import { ReputationManager } from '../../reputation/ReputationManager.js'
 import { EnhancedEconomyManager } from '../../game/enhancedEconomy.js'
+import { loadGame as loadPersistedGame } from '../../persistence/saveLoad.js'
 
 export const gameReducer = (
   state: GameState,
@@ -250,6 +251,23 @@ export const gameReducer = (
         ...state,
         currentAnimation: undefined
       }
+    }
+
+    case 'save/loadGame': {
+      // Load game from persistence
+      const loadedState = loadPersistedGame(action.payload.slot)
+      if (loadedState) {
+        console.log(`Loaded game from slot ${action.payload.slot}:`, {
+          day: loadedState.day,
+          cash: loadedState.cash,
+          debt: loadedState.debt,
+          location: loadedState.location.name,
+          inventory: Object.keys(loadedState.inventory).length
+        })
+        return loadedState
+      }
+      console.warn(`Failed to load game from slot ${action.payload.slot}, keeping current state`)
+      return state
     }
 
     default: {

@@ -54,12 +54,20 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
 
   const handleSelect = useCallback(
     (item: { value: string }) => {
-      setCurrentMenu(item.value as ActionMenuEnum)
       if (item.value === 'quit') {
         setQuitConfirmation(true)
+        return
       }
+
+      if (item.value === 'npcs') {
+        // Immediately trigger NPC search instead of showing a submenu
+        handleAction('searchNPCs', {})
+        return
+      }
+
+      setCurrentMenu(item.value as ActionMenuEnum)
     },
-    [setQuitConfirmation]
+    [setQuitConfirmation, handleAction]
   )
 
   useInput((input, key) => {

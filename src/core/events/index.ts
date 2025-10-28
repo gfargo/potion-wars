@@ -137,6 +137,7 @@ export const handleMultiStepEventChoice = (
 
   return {
     ...newState,
+    currentEvent: state.currentEvent,
     currentStep: nextStep,
     message: nextStepData.description,
   }
