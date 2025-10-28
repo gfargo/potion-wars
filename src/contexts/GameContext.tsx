@@ -185,10 +185,27 @@ export function GameProvider({
 
             // Handle any triggered events
             if (dayResult.eventResult?.message) {
-              addMessage(
-                dayResult.eventResult.currentEvent ? 'random_event' : 'info',
-                dayResult.eventResult.message as string
-              )
+              console.log('Event triggered:', {
+                message: dayResult.eventResult.message,
+                hasCurrentEvent: Boolean(dayResult.eventResult.currentEvent),
+                eventName: dayResult.eventResult.currentEvent?.name,
+                eventType: dayResult.eventResult.currentEvent?.type
+              })
+
+              // Determine message type based on event type
+              let messageType: 'random_event' | 'info' | 'error' = 'random_event'
+              if (dayResult.eventResult.currentEvent) {
+                const eventType = dayResult.eventResult.currentEvent.type
+                if (eventType === 'negative') {
+                  messageType = 'error' // Red color for negative events
+                } else if (eventType === 'positive') {
+                  messageType = 'random_event' // Magenta for positive (we could add 'success' type later)
+                } else {
+                  messageType = 'random_event' // Magenta for neutral
+                }
+              }
+
+              addMessage(messageType, dayResult.eventResult.message as string)
             }
 
             // Save the game state
@@ -364,15 +381,44 @@ export function GameProvider({
 
   const handleEventChoice = useCallback(
     (choiceIndex: number) => {
-      actions.handleEventChoice(choiceIndex)
-      actions.saveGame(activeSlotState)
+      // Capture choice info before action dispatch
+      const currentStep = gameState.currentStep ?? 0
+      const currentEvent = gameState.currentEvent
+      const step = currentEvent?.steps[currentStep]
+      const selectedChoice = step?.choices[choiceIndex]
+      const eventType = currentEvent?.type
 
-      const { currentEvent } = selectors
-      if (currentEvent?.steps[choiceIndex]?.description) {
-        addMessage('random_event', currentEvent.steps[choiceIndex].description)
+      // Determine message type based on event type
+      let messageType: 'random_event' | 'info' | 'error' = 'random_event'
+      if (eventType === 'negative') {
+        messageType = 'error' // Red for negative events
+      } else if (eventType === 'positive') {
+        messageType = 'random_event' // Magenta for positive events
+      } else {
+        messageType = 'random_event' // Magenta for neutral events
       }
+
+      // Log the choice made
+      if (selectedChoice) {
+        addMessage(messageType, `You chose: ${selectedChoice.text}`)
+      }
+
+      // Apply the choice effect and get the result
+      const result = actions.handleEventChoice(choiceIndex)
+
+      // Log outcome message if the choice effect provided one
+      if (result.message) {
+        addMessage(messageType, result.message)
+      }
+
+      // Log completion message if event ended
+      if (result.isLastStep && result.eventName) {
+        addMessage('info', `${result.eventName} concluded.`)
+      }
+
+      actions.saveGame(activeSlotState)
     },
-    [actions, activeSlotState, addMessage, selectors]
+    [actions, activeSlotState, addMessage, gameState]
   )
 
   const gameContextValue = useMemo(

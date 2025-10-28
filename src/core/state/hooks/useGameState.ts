@@ -37,9 +37,20 @@ export const useGameState = (initialState: GameState) => {
     [state]
   )
 
-  const handleEventChoice = useCallback((choiceIndex: number) => {
-    dispatch(actions.handleEventChoice(choiceIndex))
-  }, [])
+  const handleEventChoice = useCallback(
+    (choiceIndex: number) => {
+      const action = actions.handleEventChoice(choiceIndex)
+      const result = gameReducer(state, action) as GameState & { message?: string }
+      dispatch(action)
+      // Return the choice result including any message from the effect
+      return {
+        message: result.message,
+        isLastStep: !result.currentEvent || result.currentStep === undefined,
+        eventName: state.currentEvent?.name
+      }
+    },
+    [state]
+  )
 
   // Save/Load Actions
   const saveGame = useCallback(
