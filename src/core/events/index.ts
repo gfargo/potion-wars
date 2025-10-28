@@ -1,15 +1,41 @@
 import {
-  type Event,
-  type MultiStepEvent,
-  type RandomEventResponse,
+    type Event,
+    type MultiStepEvent,
+    type RandomEventResponse,
 } from '../../types/events.types.js'
 import { type GameState } from '../../types/game.types.js'
 import { standardEvents } from './handlers/standard.js'
 import { weatherEvents } from './handlers/weather.js'
+import { RivalEventHandler } from './handlers/rival.js'
 
 export * from './handlers/weather.js'
+export * from './handlers/npc.js'
+export * from './handlers/rival.js'
 
 export const triggerRandomEvent = (state: GameState): RandomEventResponse => {
+  // First check for rival encounters
+  try {
+    const rivalHandler = RivalEventHandler.getInstance()
+    // Note: We'll initialize rivals elsewhere to avoid async issues
+    
+    const rivalEvent = rivalHandler.checkForRivalEncounter(state)
+    if (rivalEvent) {
+      const firstStep = rivalEvent.steps[0]
+      return {
+        ...state,
+        message: `${rivalEvent.name}: ${rivalEvent.description}\n${
+          firstStep ? firstStep.description : ''
+        }`,
+        currentEvent: rivalEvent,
+        currentStep: 0,
+      }
+    }
+  } catch (error) {
+    // If rival system fails, continue with regular events
+    console.warn('Rival encounter check failed:', error)
+  }
+
+  // If no rival encounter, proceed with regular events
   const allEvents = [...standardEvents, ...weatherEvents]
   const eligibleEvents = allEvents.filter((event) => {
     const weatherMatch =

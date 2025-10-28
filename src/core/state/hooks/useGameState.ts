@@ -62,6 +62,50 @@ export const useGameState = (initialState: GameState) => {
     dispatch(actions.initializeGame())
   }, [])
 
+  // NPC Actions
+  const startNPCInteraction = useCallback(
+    (npcId: string, interactionType: 'dialogue' | 'trade' | 'information') => {
+      dispatch(actions.startNPCInteraction(npcId, interactionType))
+    },
+    []
+  )
+
+  const endNPCInteraction = useCallback((npcId: string) => {
+    dispatch(actions.endNPCInteraction(npcId))
+  }, [])
+
+  const processNPCDialogue = useCallback(
+    (npcId: string, choiceIndex: number, dialogueData: any) => {
+      dispatch(actions.processNPCDialogue(npcId, choiceIndex, dialogueData))
+    },
+    []
+  )
+
+  // Animation Actions
+  const triggerAnimation = useCallback(
+    (animationType: 'travel' | 'npc_encounter' | 'trade' | 'combat', animationData: any) => {
+      dispatch(actions.triggerAnimation(animationType, animationData))
+    },
+    []
+  )
+
+  const completeAnimation = useCallback((animationType: string) => {
+    dispatch(actions.completeAnimation(animationType))
+  }, [])
+
+  // Reputation Actions
+  const updateReputation = useCallback((change: any) => {
+    dispatch(actions.updateReputation(change))
+  }, [])
+
+  // Market Actions
+  const recordTransaction = useCallback(
+    (location: string, potionType: string, quantity: number, pricePerUnit: number, day: number) => {
+      dispatch(actions.recordTransaction(location, potionType, quantity, pricePerUnit, day))
+    },
+    []
+  )
+
   return {
     state,
     actions: {
@@ -74,6 +118,13 @@ export const useGameState = (initialState: GameState) => {
       saveGame,
       loadGame,
       initializeGame,
+      startNPCInteraction,
+      endNPCInteraction,
+      processNPCDialogue,
+      triggerAnimation,
+      completeAnimation,
+      updateReputation,
+      recordTransaction,
     },
     selectors: {
       health: selectors.selectHealth(state),

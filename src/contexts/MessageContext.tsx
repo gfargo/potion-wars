@@ -19,6 +19,7 @@ export type MessageType =
   | 'purchase'
   | 'random_event'
   | 'info'
+  | 'error'
 
 export type Message = {
   type: MessageType

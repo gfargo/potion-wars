@@ -23,6 +23,15 @@ export const RECORD_TRANSACTION = 'market/recordTransaction'
 export const UPDATE_DAILY_MARKETS = 'market/updateDailyMarkets'
 export const APPLY_SUPPLY_DEMAND_FACTORS = 'market/applySupplyDemandFactors'
 
+// NPC Actions
+export const START_NPC_INTERACTION = 'npc/startInteraction'
+export const END_NPC_INTERACTION = 'npc/endInteraction'
+export const PROCESS_NPC_DIALOGUE = 'npc/processDialogue'
+
+// Animation Actions
+export const TRIGGER_ANIMATION = 'animation/trigger'
+export const COMPLETE_ANIMATION = 'animation/complete'
+
 // Save/Load Actions
 export const INITIALIZE_GAME = 'save/initializeGame'
 export const SAVE_GAME = 'save/saveGame'
@@ -144,6 +153,45 @@ export type ApplySupplyDemandFactorsAction = {
   }
 }
 
+export type StartNPCInteractionAction = {
+  type: typeof START_NPC_INTERACTION
+  payload: {
+    npcId: string
+    interactionType: 'dialogue' | 'trade' | 'information'
+  }
+}
+
+export type EndNPCInteractionAction = {
+  type: typeof END_NPC_INTERACTION
+  payload: {
+    npcId: string
+  }
+}
+
+export type ProcessNPCDialogueAction = {
+  type: typeof PROCESS_NPC_DIALOGUE
+  payload: {
+    npcId: string
+    choiceIndex: number
+    dialogueData: any
+  }
+}
+
+export type TriggerAnimationAction = {
+  type: typeof TRIGGER_ANIMATION
+  payload: {
+    animationType: 'travel' | 'npc_encounter' | 'trade' | 'combat'
+    animationData: any
+  }
+}
+
+export type CompleteAnimationAction = {
+  type: typeof COMPLETE_ANIMATION
+  payload: {
+    animationType: string
+  }
+}
+
 // Union type of all actions
 export type GameAction =
   | BrewPotionAction
@@ -163,3 +211,8 @@ export type GameAction =
   | RecordTransactionAction
   | UpdateDailyMarketsAction
   | ApplySupplyDemandFactorsAction
+  | StartNPCInteractionAction
+  | EndNPCInteractionAction
+  | ProcessNPCDialogueAction
+  | TriggerAnimationAction
+  | CompleteAnimationAction

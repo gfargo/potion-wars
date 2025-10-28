@@ -3,7 +3,11 @@ import path from 'node:path'
 import { DEFAULT_GAME_STATE } from '../../contexts/GameContext.js'
 import { type GameState } from '../../types/game.types.js'
 import { SaveFileManager, SaveFileType } from './utils.js'
-import { isValidReputationState, createDefaultReputationState, sanitizeReputationState } from './reputationValidation.js'
+import {
+    isValidGameState,
+    migrateLegacySaveFile,
+    sanitizeGameState
+} from './dataValidation.js'
 
 export const getSaveDirectory = () => {
   const homeDirectory = os.homedir()
@@ -17,62 +21,14 @@ export const getSaveDirectory = () => {
 
 
 
-/**
- * Migrates legacy save files to include reputation system data
- */
-const migrateLegacySaveFile = (state: any): GameState => {
-  // Create default reputation state if missing or invalid
-  if (!state.reputation || !isValidReputationState(state.reputation)) {
-    state.reputation = createDefaultReputationState()
-  } else {
-    // Sanitize existing reputation data
-    state.reputation = sanitizeReputationState(state.reputation)
-  }
 
-  // Create default market data if missing
-  if (!state.marketData || typeof state.marketData !== 'object') {
-    state.marketData = {}
-  }
-
-  // Create default trade history if missing
-  if (!state.tradeHistory || !Array.isArray(state.tradeHistory)) {
-    state.tradeHistory = []
-  }
-
-  return state as GameState
-}
-
-const isValidGameState = (state: any): state is GameState => {
-  return (
-    typeof state === 'object' &&
-    state !== null &&
-    typeof state.day === 'number' &&
-    typeof state.cash === 'number' &&
-    typeof state.debt === 'number' &&
-    typeof state.health === 'number' &&
-    typeof state.strength === 'number' &&
-    typeof state.agility === 'number' &&
-    typeof state.intelligence === 'number' &&
-    typeof state.location === 'object' &&
-    typeof state.inventory === 'object' &&
-    typeof state.prices === 'object' &&
-    typeof state.weather === 'string' &&
-    // Validate reputation data (required for new saves)
-    isValidReputationState(state.reputation) &&
-    // Validate market data and trade history (can be empty objects/arrays)
-    typeof state.marketData === 'object' &&
-    state.marketData !== null &&
-    Array.isArray(state.tradeHistory)
-  )
-}
 
 export const saveGame = (state: GameState, slot: number) => {
   const saveManager = SaveFileManager.getInstance()
   
-  // Sanitize reputation data before saving
+  // Sanitize all data before saving
   const sanitizedState = {
-    ...state,
-    reputation: sanitizeReputationState(state.reputation),
+    ...sanitizeGameState(state),
     lastSave: new Date().toISOString(),
   }
   

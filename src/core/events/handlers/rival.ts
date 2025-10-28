@@ -1,0 +1,285 @@
+import { type MultiStepEvent } from '../../../types/events.types.js'
+import { type GameState } from '../../../types/game.types.js'
+import { RivalAlchemistManager, RivalDataLoader, type RivalAlchemist, type RivalEncounterType } from '../../rivals/index.js'
+import { ReputationManager } from '../../reputation/ReputationManager.js'
+import { EnhancedEconomyManager } from '../../game/enhancedEconomy.js'
+
+export class RivalEventHandler {
+  private static instance: RivalEventHandler
+  private rivalManager: RivalAlchemistManager
+  private dataLoader: RivalDataLoader
+  private initialized = false
+
+  static getInstance(): RivalEventHandler {
+    if (!RivalEventHandler.instance) {
+      RivalEventHandler.instance = new RivalEventHandler()
+    }
+    return RivalEventHandler.instance
+  }
+
+  constructor() {
+    this.rivalManager = RivalAlchemistManager.getInstance()
+    this.dataLoader = RivalDataLoader.getInstance()
+  }
+
+  async initialize(): Promise<void> {
+    if (!this.initialized) {
+      await this.dataLoader.loadRivals()
+      this.initialized = true
+    }
+  }
+
+  private ensureInitialized(): void {
+    if (!this.initialized && !this.dataLoader.isLoaded()) {
+      // Synchronous initialization - load rivals immediately
+      // This is a simplified approach for the current implementation
+      try {
+        // For now, we'll just mark as initialized and let the data loader handle it
+        this.initialized = true
+        // The data loader will be initialized asynchronously in the background
+        this.dataLoader.loadRivals().catch(console.error)
+      } catch (error) {
+        console.error('Failed to initialize rival system:', error)
+      }
+    }
+  }
+
+  // Check for rival encounters during travel or other activities
+  checkForRivalEncounter(gameState: GameState): MultiStepEvent | null {
+    this.ensureInitialized()
+    
+    // If still not loaded, return null (rivals will be available after async load completes)
+    if (!this.dataLoader.isLoaded()) {
+      return null
+    }
+
+    const rival = this.rivalManager.rollForRivalEncounter(gameState.location.name, gameState)
+    
+    if (!rival) {
+      return null
+    }
+
+    return this.createRivalEvent(rival, gameState)
+  }
+
+  // Create a multi-step event for rival encounters
+  private createRivalEvent(rival: RivalAlchemist, gameState: GameState): MultiStepEvent {
+    const encounterType = this.rivalManager.determineEncounterType(rival, {
+      rival,
+      location: gameState.location.name,
+      day: gameState.day,
+      playerReputation: gameState.reputation.locations[gameState.location.name] || 0,
+      marketConditions: gameState.marketData[gameState.location.name] || {}
+    })
+
+    const steps = this.generateRivalEventSteps(rival, encounterType, gameState)
+
+    return {
+      id: `rival_encounter_${rival.id}_${gameState.day}`,
+      name: `Rival Encounter: ${rival.personality.name}`,
+      description: rival.personality.greeting,
+      probability: 1.0, // Already rolled for encounter
+      locationSpecific: [gameState.location.name],
+      type: 'negative', // Rival encounters are generally challenging
+      steps
+    }
+  }
+
+  private generateRivalEventSteps(rival: RivalAlchemist, encounterType: RivalEncounterType, _gameState: GameState): Array<{
+    description: string
+    choices: Array<{
+      text: string
+      effect: (state: GameState) => GameState
+    }>
+  }> {
+    const steps = []
+
+    // Step 1: Introduction and encounter type reveal
+    const encounterChoices = this.getEncounterChoices(rival, encounterType)
+    steps.push({
+      description: this.getEncounterDescription(rival, encounterType),
+      choices: encounterChoices.map(choice => ({
+        text: choice.text,
+        effect: (state: GameState) => this.resolveRivalEncounter(state, rival, encounterType, choice.value || 'default')
+      }))
+    })
+
+    return steps
+  }
+
+  private getEncounterDescription(rival: RivalAlchemist, encounterType: RivalEncounterType): string {
+    const baseDescription = `You encounter ${rival.personality.name}. ${rival.personality.greeting}`
+    
+    switch (encounterType) {
+      case 'price_war':
+        return `${baseDescription}\n\n"I see you're trying to compete in MY market. Let's see who can offer better prices!"`
+      case 'sabotage':
+        return `${baseDescription}\n\nYou notice them lurking near your supplies with a suspicious look...`
+      case 'theft':
+        return `${baseDescription}\n\n"Nice purse you have there. It would be a shame if something happened to it..."`
+      case 'competition':
+        return `${baseDescription}\n\n"Let's settle this once and for all - a direct competition to see who's the better alchemist!"`
+      case 'negotiation':
+        return `${baseDescription}\n\n"Perhaps we can come to some sort of... arrangement?"`
+      default:
+        return baseDescription
+    }
+  }
+
+  private getEncounterChoices(_rival: RivalAlchemist, encounterType: RivalEncounterType): Array<{ text: string; value?: string }> {
+    const choices: Array<{ text: string; value?: string }> = []
+
+    switch (encounterType) {
+      case 'price_war':
+        choices.push(
+          { text: 'Accept the price war challenge', value: 'accept' },
+          { text: 'Try to negotiate a truce', value: 'negotiate' },
+          { text: 'Back down and leave', value: 'retreat' }
+        )
+        break
+      case 'sabotage':
+        choices.push(
+          { text: 'Confront them directly', value: 'confront' },
+          { text: 'Try to catch them in the act', value: 'watch' },
+          { text: 'Ignore them and continue', value: 'ignore' }
+        )
+        break
+      case 'theft':
+        choices.push(
+          { text: 'Stand your ground and fight', value: 'fight' },
+          { text: 'Try to reason with them', value: 'reason' },
+          { text: 'Offer a small bribe to leave you alone', value: 'bribe' }
+        )
+        break
+      case 'competition':
+        choices.push(
+          { text: 'Accept the challenge', value: 'accept' },
+          { text: 'Propose different terms', value: 'negotiate' },
+          { text: 'Decline and walk away', value: 'decline' }
+        )
+        break
+      case 'negotiation':
+        choices.push(
+          { text: 'Listen to their proposal', value: 'listen' },
+          { text: 'Make a counter-offer', value: 'counter' },
+          { text: 'Refuse to negotiate', value: 'refuse' }
+        )
+        break
+      default:
+        choices.push({ text: 'Continue', value: 'continue' })
+    }
+
+    return choices
+  }
+
+  private resolveRivalEncounter(gameState: GameState, rival: RivalAlchemist, encounterType: RivalEncounterType, playerChoice: string): GameState {
+    const context = {
+      rival,
+      location: gameState.location.name,
+      day: gameState.day,
+      playerReputation: gameState.reputation.locations[gameState.location.name] || 0,
+      marketConditions: gameState.marketData[gameState.location.name] || {}
+    }
+
+    const outcome = this.rivalManager.resolveEncounter(context, encounterType, playerChoice)
+    
+    // Apply the outcome to the game state
+    let newState = { ...gameState }
+
+    // Apply cash changes
+    newState.cash += outcome.cashChange
+
+    // Apply inventory changes
+    if (outcome.inventoryChange) {
+      newState.inventory = { ...newState.inventory }
+      for (const [item, change] of Object.entries(outcome.inventoryChange)) {
+        newState.inventory[item] = Math.max(0, (newState.inventory[item] || 0) + change)
+      }
+    }
+
+    // Apply reputation changes
+    if (outcome.reputationChange) {
+      newState = ReputationManager.applyReputationChange(newState, outcome.reputationChange)
+    }
+
+    // Apply market impacts
+    if (outcome.marketImpact) {
+      newState = EnhancedEconomyManager.applySupplyDemandFactors(newState, outcome.marketImpact)
+    }
+
+    // Update rival state
+    const encounterRecord = {
+      day: gameState.day,
+      location: gameState.location.name,
+      type: encounterType,
+      outcome: outcome.success ? 'player_win' as const : 'rival_win' as const,
+      impact: outcome.message
+    }
+    this.rivalManager.updateRivalAfterEncounter(rival.id, encounterRecord)
+
+    // Note: Message will be displayed through the event system
+    // The outcome message is already included in the event resolution
+
+    return newState
+  }
+
+  // Get all rivals active in a location (for UI display)
+  getActiveRivalsInLocation(location: string, gameState: GameState): RivalAlchemist[] {
+    return this.rivalManager.getAllRivals().filter(rival => 
+      rival.activeLocations.includes(location) &&
+      (!rival.lastEncounter || gameState.day - rival.lastEncounter >= 3)
+    )
+  }
+
+  // Check if a specific rival is available for encounter
+  isRivalAvailable(rivalId: string, gameState: GameState): boolean {
+    const rival = this.rivalManager.getRival(rivalId)
+    if (!rival) return false
+
+    return rival.activeLocations.includes(gameState.location.name) &&
+           (!rival.lastEncounter || gameState.day - rival.lastEncounter >= 3)
+  }
+
+  // Force an encounter with a specific rival (for testing or special events)
+  forceRivalEncounter(rivalId: string, gameState: GameState): MultiStepEvent | null {
+    const rival = this.rivalManager.getRival(rivalId)
+    if (!rival || !this.isRivalAvailable(rivalId, gameState)) {
+      return null
+    }
+
+    return this.createRivalEvent(rival, gameState)
+  }
+
+  // Get rival information for display
+  getRivalInfo(rivalId: string): RivalAlchemist | undefined {
+    return this.rivalManager.getRival(rivalId)
+  }
+
+  // Calculate market impact from all active rivals in a location
+  calculateLocationRivalImpact(location: string, gameState: GameState): Array<{
+    rival: RivalAlchemist
+    impact: string
+    severity: 'low' | 'medium' | 'high'
+  }> {
+    const activeRivals = this.getActiveRivalsInLocation(location, gameState)
+    
+    return activeRivals.map(rival => {
+      const recentEncounters = rival.encounterHistory
+        .filter(record => gameState.day - record.day <= 7)
+        .length
+
+      let severity: 'low' | 'medium' | 'high' = 'low'
+      let impact = `${rival.personality.name} is operating in the area.`
+
+      if (recentEncounters > 2) {
+        severity = 'high'
+        impact = `${rival.personality.name} is very active and significantly affecting local trade.`
+      } else if (recentEncounters > 0) {
+        severity = 'medium'
+        impact = `${rival.personality.name} has been seen recently and may be affecting prices.`
+      }
+
+      return { rival, impact, severity }
+    })
+  }
+}

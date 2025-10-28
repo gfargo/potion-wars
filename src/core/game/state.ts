@@ -2,10 +2,12 @@ import { locations, phrases } from '../../constants.js'
 import { type GameState } from '../../types/game.types.js'
 import { triggerRandomEvent } from '../events/index.js'
 import { generatePrices } from './economy.js'
+import { EnhancedEconomyManager } from './enhancedEconomy.js'
 
 export const initializeGame = (): GameState => {
   const initialLocation =
     locations[Math.floor(Math.random() * locations.length)]
+  
   return {
     day: 0, // Day 0 is the start of the game, initializing game handles setting the first day
     cash: 2000,
@@ -24,7 +26,7 @@ export const initializeGame = (): GameState => {
       locations: {},
       npcRelationships: {}
     },
-    marketData: {},
+    marketData: EnhancedEconomyManager.initializeMarketData(),
     tradeHistory: []
   }
 }

@@ -50,6 +50,8 @@ export type NPCInformationCondition = {
   type: 'reputation' | 'cash' | 'inventory' | 'day' | 'location'
   operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte'
   value: number | string
+  location?: string // for location-specific reputation checks
+  item?: string // for inventory conditions
 }
 
 export type DialogueNode = {
@@ -73,6 +75,7 @@ export type DialogueCondition = {
   operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte'
   value: number | string
   location?: string // for location-specific reputation checks
+  item?: string // for inventory conditions
 }
 
 export type DialogueEffect = {

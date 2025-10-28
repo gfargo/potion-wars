@@ -24,6 +24,10 @@ export const selectMessageColor = (type: MessageType): string => {
     case 'info': {
       return 'white'
     }
+
+    case 'error': {
+      return 'red'
+    }
   }
 }
 

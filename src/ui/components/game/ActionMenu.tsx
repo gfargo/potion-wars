@@ -3,13 +3,13 @@ import React, { useCallback, useMemo, useState } from 'react'
 import { useGame } from '../../../contexts/GameContext.js'
 import { useUI } from '../../../contexts/UIContext.js'
 import {
-  selectAffordablePotions,
-  selectItemPrice,
-  selectItemQuantity,
-  selectMaxAffordableQuantity,
-  selectMaxRepayableAmount,
-  selectSellableItems,
-  selectTotalCost,
+    selectAffordablePotions,
+    selectItemPrice,
+    selectItemQuantity,
+    selectMaxAffordableQuantity,
+    selectMaxRepayableAmount,
+    selectSellableItems,
+    selectTotalCost,
 } from '../../../core/state/index.js'
 import { type Location } from '../../../types/game.types.js'
 import { EnhancedSelectInput } from '../common/index.js'
@@ -45,6 +45,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
       { label: 'Brew (B)', value: 'brew' },
       { label: 'Sell (S)', value: 'sell' },
       { label: 'Travel (T)', value: 'travel' },
+      { label: 'Look for NPCs (N)', value: 'npcs' },
       { label: 'Repay Debt (R)', value: 'repay' },
       { label: 'Quit (Q)', value: 'quit' },
     ],
@@ -83,6 +84,12 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
 
         case 't': {
           setCurrentMenu('travel')
+          break
+        }
+
+        case 'n': {
+          // Trigger NPC encounter search
+          handleAction('searchNPCs', {})
           break
         }
 
@@ -175,6 +182,12 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
                   case 'travel': {
                     returnValue = '᯽ '
                     color = 'cyan'
+                    break
+                  }
+
+                  case 'npcs': {
+                    returnValue = '👥 '
+                    color = 'magenta'
                     break
                   }
 

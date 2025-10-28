@@ -10,8 +10,18 @@ import {
 /**
  * ReputationManager handles all reputation-related calculations and state modifications
  * Provides methods for calculating price modifiers, reputation levels, and applying changes
+ * Includes performance optimizations with memoization for expensive calculations
  */
 export class ReputationManager {
+  // Performance optimization caches
+  private static priceModifierCache: Map<number, number> = new Map()
+  private static reputationLevelCache: Map<number, ReputationLevel> = new Map()
+  private static locationReputationCache: Map<string, number> = new Map()
+  private static npcReputationCache: Map<string, number> = new Map()
+  
+  // Cache configuration
+  private static readonly CACHE_SIZE_LIMIT = 1000
+  
   // Reputation thresholds defining levels and their effects
   private static readonly REPUTATION_THRESHOLDS: ReputationThreshold[] = [
     {
@@ -78,22 +88,48 @@ export class ReputationManager {
 
   /**
    * Calculate price modifier based on reputation value
+   * Uses memoization to cache results for better performance
    * @param reputation - The reputation value to calculate modifier for
    * @returns Price multiplier (1.0 = no change, <1.0 = discount, >1.0 = markup)
    */
   static calculatePriceModifier(reputation: number): number {
+    // Check cache first
+    const cached = this.priceModifierCache.get(reputation)
+    if (cached !== undefined) {
+      return cached
+    }
+    
     const threshold = this.getReputationThreshold(reputation)
-    return threshold.modifier.priceMultiplier
+    const modifier = threshold.modifier.priceMultiplier
+    
+    // Cache the result
+    this.priceModifierCache.set(reputation, modifier)
+    this.limitCacheSize(this.priceModifierCache)
+    
+    return modifier
   }
 
   /**
    * Get reputation level enum based on reputation value
+   * Uses memoization to cache results for better performance
    * @param reputation - The reputation value to evaluate
    * @returns ReputationLevel enum value
    */
   static getReputationLevel(reputation: number): ReputationLevel {
+    // Check cache first
+    const cached = this.reputationLevelCache.get(reputation)
+    if (cached !== undefined) {
+      return cached
+    }
+    
     const threshold = this.getReputationThreshold(reputation)
-    return threshold.level
+    const level = threshold.level
+    
+    // Cache the result
+    this.reputationLevelCache.set(reputation, level)
+    this.limitCacheSize(this.reputationLevelCache)
+    
+    return level
   }
 
   /**
@@ -149,21 +185,37 @@ export class ReputationManager {
   /**
    * Get effective reputation for a specific location
    * Combines global reputation with location-specific reputation
+   * Uses caching to improve performance for repeated calls
    * @param reputation - Current reputation state
    * @param location - Location name to get reputation for
    * @returns Effective reputation value for the location
    */
   static getLocationReputation(reputation: ReputationState, location: string): number {
+    const cacheKey = `${location}_${reputation.global}_${reputation.locations[location] || 0}`
+    
+    // Check cache first
+    const cached = this.locationReputationCache.get(cacheKey)
+    if (cached !== undefined) {
+      return cached
+    }
+    
     const globalRep = reputation.global
     const locationRep = reputation.locations[location] || 0
     
     // Weight: 60% location-specific, 40% global
-    return Math.round(locationRep * 0.6 + globalRep * 0.4)
+    const result = Math.round(locationRep * 0.6 + globalRep * 0.4)
+    
+    // Cache the result
+    this.locationReputationCache.set(cacheKey, result)
+    this.limitCacheSize(this.locationReputationCache)
+    
+    return result
   }
 
   /**
    * Get reputation with a specific NPC
    * Combines location reputation with NPC-specific relationship
+   * Uses caching to improve performance for repeated calls
    * @param reputation - Current reputation state
    * @param npcId - NPC identifier
    * @param location - Location where NPC is encountered
@@ -172,9 +224,22 @@ export class ReputationManager {
   static getNPCReputation(reputation: ReputationState, npcId: string, location: string): number {
     const locationRep = this.getLocationReputation(reputation, location)
     const npcRep = reputation.npcRelationships[npcId] || 0
+    const cacheKey = `${npcId}_${location}_${locationRep}_${npcRep}`
+    
+    // Check cache first
+    const cached = this.npcReputationCache.get(cacheKey)
+    if (cached !== undefined) {
+      return cached
+    }
     
     // Weight: 70% NPC-specific, 30% location reputation
-    return Math.round(npcRep * 0.7 + locationRep * 0.3)
+    const result = Math.round(npcRep * 0.7 + locationRep * 0.3)
+    
+    // Cache the result
+    this.npcReputationCache.set(cacheKey, result)
+    this.limitCacheSize(this.npcReputationCache)
+    
+    return result
   }
 
   /**
@@ -262,5 +327,35 @@ export class ReputationManager {
    */
   private static clampReputation(reputation: number): number {
     return Math.max(-100, Math.min(100, Math.round(reputation)))
+  }
+
+  /**
+   * Clear all caches - useful for testing or when reputation system is reset
+   */
+  static clearCaches(): void {
+    this.priceModifierCache.clear()
+    this.reputationLevelCache.clear()
+    this.locationReputationCache.clear()
+    this.npcReputationCache.clear()
+  }
+
+  /**
+   * Limit cache size to prevent memory leaks
+   * @private
+   * @param cache - The cache to limit
+   */
+  private static limitCacheSize(cache: Map<any, any>): void {
+    if (cache.size > this.CACHE_SIZE_LIMIT) {
+      // Remove oldest entries (first 20% of cache)
+      const entries = Array.from(cache.entries())
+      const toRemove = Math.floor(entries.length * 0.2)
+      
+      for (let i = 0; i < toRemove; i++) {
+        const entry = entries[i]
+        if (entry) {
+          cache.delete(entry[0])
+        }
+      }
+    }
   }
 }

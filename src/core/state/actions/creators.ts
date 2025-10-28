@@ -36,7 +36,17 @@ import {
     UPDATE_DAILY_MARKETS,
     type UpdateDailyMarketsAction,
     APPLY_SUPPLY_DEMAND_FACTORS,
-    type ApplySupplyDemandFactorsAction
+    type ApplySupplyDemandFactorsAction,
+    START_NPC_INTERACTION,
+    type StartNPCInteractionAction,
+    END_NPC_INTERACTION,
+    type EndNPCInteractionAction,
+    PROCESS_NPC_DIALOGUE,
+    type ProcessNPCDialogueAction,
+    TRIGGER_ANIMATION,
+    type TriggerAnimationAction,
+    COMPLETE_ANIMATION,
+    type CompleteAnimationAction
 } from './types.js'
 
 export const brewPotion = (
@@ -168,5 +178,54 @@ export const applySupplyDemandFactors = (factors: SupplyDemandFactor[]): ApplySu
   type: APPLY_SUPPLY_DEMAND_FACTORS,
   payload: {
     factors,
+  },
+})
+
+export const startNPCInteraction = (
+  npcId: string,
+  interactionType: 'dialogue' | 'trade' | 'information'
+): StartNPCInteractionAction => ({
+  type: START_NPC_INTERACTION,
+  payload: {
+    npcId,
+    interactionType,
+  },
+})
+
+export const endNPCInteraction = (npcId: string): EndNPCInteractionAction => ({
+  type: END_NPC_INTERACTION,
+  payload: {
+    npcId,
+  },
+})
+
+export const processNPCDialogue = (
+  npcId: string,
+  choiceIndex: number,
+  dialogueData: any
+): ProcessNPCDialogueAction => ({
+  type: PROCESS_NPC_DIALOGUE,
+  payload: {
+    npcId,
+    choiceIndex,
+    dialogueData,
+  },
+})
+
+export const triggerAnimation = (
+  animationType: 'travel' | 'npc_encounter' | 'trade' | 'combat',
+  animationData: any
+): TriggerAnimationAction => ({
+  type: TRIGGER_ANIMATION,
+  payload: {
+    animationType,
+    animationData,
+  },
+})
+
+export const completeAnimation = (animationType: string): CompleteAnimationAction => ({
+  type: COMPLETE_ANIMATION,
+  payload: {
+    animationType,
   },
 })

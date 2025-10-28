@@ -206,6 +206,52 @@ export const gameReducer = (
       return EnhancedEconomyManager.applySupplyDemandFactors(state, action.payload.factors)
     }
 
+    case 'npc/startInteraction': {
+      // Store the current NPC interaction state
+      return {
+        ...state,
+        currentNPCInteraction: {
+          npcId: action.payload.npcId,
+          type: action.payload.interactionType,
+          active: true
+        }
+      }
+    }
+
+    case 'npc/endInteraction': {
+      // Clear the NPC interaction state
+      return {
+        ...state,
+        currentNPCInteraction: undefined
+      }
+    }
+
+    case 'npc/processDialogue': {
+      // This will be handled by the dialogue system
+      // For now, just pass through the state
+      return state
+    }
+
+    case 'animation/trigger': {
+      // Store animation state for UI components to react to
+      return {
+        ...state,
+        currentAnimation: {
+          type: action.payload.animationType,
+          data: action.payload.animationData,
+          active: true
+        }
+      }
+    }
+
+    case 'animation/complete': {
+      // Clear animation state
+      return {
+        ...state,
+        currentAnimation: undefined
+      }
+    }
+
     default: {
       return state
     }

@@ -20,6 +20,7 @@ export type Choice = {
 }
 
 export type MultiStepEvent = {
+  id?: string
   name: string
   description: string
   steps: Array<{

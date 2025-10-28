@@ -8,6 +8,18 @@ export type ActionResult = {
   eventResult?: any // We'll type this more strictly later
 }
 
+export type NPCInteractionState = {
+  npcId: string
+  type: 'dialogue' | 'trade' | 'information'
+  active: boolean
+}
+
+export type AnimationState = {
+  type: 'travel' | 'npc_encounter' | 'trade' | 'combat'
+  data: any
+  active: boolean
+}
+
 export type GameState = {
   day: number
   cash: number
@@ -29,6 +41,9 @@ export type GameState = {
   reputation: ReputationState
   marketData: LocationMarketState
   tradeHistory: TradeTransaction[]
+  // New interaction states
+  currentNPCInteraction?: NPCInteractionState
+  currentAnimation?: AnimationState
 }
 export type Location = {
   name: string

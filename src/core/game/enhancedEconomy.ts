@@ -1,8 +1,16 @@
-import { potions } from '../../constants.js'
-import { type GameState } from '../../types/game.types.js'
-import { type MarketData, type MarketState, type LocationMarketState, type PriceHistoryEntry, type MarketTrend, type SupplyDemandFactor } from '../../types/economy.types.js'
+import { potions } from '../../constants.js';
+import { type GameState } from '../../types/game.types.js';
+import { type MarketData, type MarketState, type LocationMarketState, type PriceHistoryEntry, type MarketTrend, type SupplyDemandFactor } from '../../types/economy.types.js';
 
 export class EnhancedEconomyManager {
+  // Performance optimization caches
+  private static priceCalculationCache: Map<string, { price: number; timestamp: number }> = new Map()
+  private static marketTrendCache: Map<string, { trend: MarketTrend; timestamp: number }> = new Map()
+  private static supplyDemandCache: Map<string, { result: LocationMarketState; timestamp: number }> = new Map()
+  
+  // Cache configuration
+  private static readonly CACHE_TTL = 30000 // 30 seconds
+  private static readonly MAX_CACHE_SIZE = 500
   /**
    * Initialize market data for all locations and potions
    */
@@ -111,16 +119,28 @@ export class EnhancedEconomyManager {
 
   /**
    * Calculate dynamic price based on supply, demand, and other factors
+   * Uses caching to improve performance for repeated calculations
    */
   static calculateDynamicPrice(
     marketData: MarketData, 
     reputationModifier = 1.0
   ): number {
+    const cacheKey = `${marketData.basePrice}_${marketData.demand}_${marketData.supply}_${marketData.volatility}_${reputationModifier}_${marketData.lastUpdated}`
+    const now = Date.now()
+    
+    // Check cache first
+    const cached = this.priceCalculationCache.get(cacheKey)
+    if (cached && (now - cached.timestamp) < this.CACHE_TTL) {
+      return cached.price
+    }
+    
     // Base price calculation using supply and demand
     const supplyDemandMultiplier = (marketData.demand / marketData.supply)
     
-    // Add some volatility
-    const volatilityFactor = 1 + (Math.random() - 0.5) * marketData.volatility
+    // Add some volatility (use deterministic randomness based on market data)
+    const seed = marketData.basePrice + marketData.lastUpdated
+    const pseudoRandom = (seed * 9301 + 49297) % 233280 / 233280 - 0.5
+    const volatilityFactor = 1 + pseudoRandom * marketData.volatility
     
     // Calculate new price
     let newPrice = marketData.basePrice * supplyDemandMultiplier * volatilityFactor * reputationModifier
@@ -130,7 +150,13 @@ export class EnhancedEconomyManager {
     const maxPrice = marketData.basePrice * 2.5
     newPrice = Math.max(minPrice, Math.min(maxPrice, newPrice))
     
-    return Math.floor(newPrice)
+    const result = Math.floor(newPrice)
+    
+    // Cache the result
+    this.priceCalculationCache.set(cacheKey, { price: result, timestamp: now })
+    this.cleanupCache(this.priceCalculationCache)
+    
+    return result
   }
 
   /**
@@ -178,9 +204,24 @@ export class EnhancedEconomyManager {
 
   /**
    * Calculate market trend based on price history
+   * Uses caching to improve performance for repeated calculations
    */
   static calculateMarketTrend(history: PriceHistoryEntry[], currentPrice: number): MarketTrend {
-    if (history.length < 3) return 'stable'
+    const historyHash = history.map(h => `${h.day}_${h.price}`).join('|')
+    const cacheKey = `${historyHash}_${currentPrice}`
+    const now = Date.now()
+    
+    // Check cache first
+    const cached = this.marketTrendCache.get(cacheKey)
+    if (cached && (now - cached.timestamp) < this.CACHE_TTL) {
+      return cached.trend
+    }
+    
+    if (history.length < 3) {
+      const result = 'stable' as MarketTrend
+      this.marketTrendCache.set(cacheKey, { trend: result, timestamp: now })
+      return result
+    }
 
     const recentPrices = history.slice(-5).map(entry => entry.price)
     recentPrices.push(currentPrice)
@@ -198,11 +239,19 @@ export class EnhancedEconomyManager {
       }
     }
 
-    if (changeCount === 0) return 'stable'
+    if (changeCount === 0) {
+      const result = 'stable' as MarketTrend
+      this.marketTrendCache.set(cacheKey, { trend: result, timestamp: now })
+      return result
+    }
 
     const averageChange = totalChange / changeCount
     const firstPrice = recentPrices[0]
-    if (firstPrice === undefined || firstPrice === 0) return 'stable'
+    if (firstPrice === undefined || firstPrice === 0) {
+      const result = 'stable' as MarketTrend
+      this.marketTrendCache.set(cacheKey, { trend: result, timestamp: now })
+      return result
+    }
     
     const changePercentage = averageChange / firstPrice
 
@@ -216,20 +265,31 @@ export class EnhancedEconomyManager {
       }
     }
     
-    if (changes.length === 0) return 'stable'
+    if (changes.length === 0) {
+      const result = 'stable' as MarketTrend
+      this.marketTrendCache.set(cacheKey, { trend: result, timestamp: now })
+      return result
+    }
     
     const avgVolatility = changes.reduce((sum, change) => sum + change, 0) / changes.length
     const volatilityThreshold = firstPrice * 0.15
 
+    let result: MarketTrend
     if (avgVolatility > volatilityThreshold) {
-      return 'volatile'
+      result = 'volatile'
     } else if (changePercentage > 0.05) {
-      return 'rising'
+      result = 'rising'
     } else if (changePercentage < -0.05) {
-      return 'falling'
+      result = 'falling'
     } else {
-      return 'stable'
+      result = 'stable'
     }
+
+    // Cache the result
+    this.marketTrendCache.set(cacheKey, { trend: result, timestamp: now })
+    this.cleanupCache(this.marketTrendCache)
+    
+    return result
   }
 
   /**
@@ -306,5 +366,41 @@ export class EnhancedEconomyManager {
     }
 
     return trends
+  }
+
+  /**
+   * Clear all caches - useful for testing or when market system is reset
+   */
+  static clearCaches(): void {
+    this.priceCalculationCache.clear()
+    this.marketTrendCache.clear()
+    this.supplyDemandCache.clear()
+  }
+
+  /**
+   * Clean up expired cache entries and limit cache size
+   * @private
+   * @param cache - The cache to clean up
+   */
+  private static cleanupCache(cache: Map<string, { timestamp: number; [key: string]: any }>): void {
+    const now = Date.now()
+    
+    // Remove expired entries
+    for (const [key, value] of cache.entries()) {
+      if (now - value.timestamp > this.CACHE_TTL) {
+        cache.delete(key)
+      }
+    }
+    
+    // Limit cache size by removing oldest entries
+    if (cache.size > this.MAX_CACHE_SIZE) {
+      const entries = Array.from(cache.entries())
+        .sort(([, a], [, b]) => a.timestamp - b.timestamp)
+      
+      const toRemove = entries.slice(0, entries.length - this.MAX_CACHE_SIZE)
+      for (const [key] of toRemove) {
+        cache.delete(key)
+      }
+    }
   }
 }

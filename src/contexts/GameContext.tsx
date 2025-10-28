@@ -35,6 +35,7 @@ type ActionParameters =
   | LoadGameParameters
   | SaveGameParameters
   | QuitParameters
+  | NPCInteractionParameters
 
 type BrewPotionParameters = {
   potion: string
@@ -65,6 +66,12 @@ type SaveGameParameters = {
 }
 
 type QuitParameters = Record<string, unknown>
+
+type NPCInteractionParameters = {
+  npcId: string
+  action: string
+  data?: any
+}
 
 export const DEFAULT_GAME_STATE: GameState = {
   day: 0,
@@ -142,7 +149,7 @@ export function GameProvider({
         }
 
         case 'travel': {
-          // First handle travel
+          // First handle travel with NPC encounters
           actions.travel(parameters as TravelParameters)
           addMessage('info', `Traveled to ${parameters as TravelParameters}`)
 
@@ -161,6 +168,67 @@ export function GameProvider({
           }
 
           // Save the game state
+          actions.saveGame(activeSlotState)
+          break
+        }
+
+        case 'npcInteraction': {
+          // Handle NPC interaction actions
+          const { npcId, action: npcAction, data } = parameters as NPCInteractionParameters
+          
+          switch (npcAction) {
+            case 'start': {
+              const interactionType = data?.type || 'dialogue'
+              actions.startNPCInteraction(npcId, interactionType)
+              addMessage('info', `Started interaction with NPC: ${npcId}`)
+              break
+            }
+            case 'end': {
+              actions.endNPCInteraction(npcId)
+              addMessage('info', `Ended interaction with NPC: ${npcId}`)
+              break
+            }
+            case 'dialogue': {
+              actions.processNPCDialogue(npcId, data?.choiceIndex || 0, data)
+              addMessage('info', `Processed dialogue choice for NPC: ${npcId}`)
+              break
+            }
+            default: {
+              addMessage('info', `Unknown NPC action: ${npcAction}`)
+            }
+          }
+          
+          actions.saveGame(activeSlotState)
+          break
+        }
+
+        case 'triggerAnimation': {
+          // Handle animation triggers
+          const { type, data } = parameters as { type: string; data: any }
+          actions.triggerAnimation(type as any, data)
+          break
+        }
+
+        case 'completeAnimation': {
+          // Handle animation completion
+          const { type } = parameters as { type: string }
+          actions.completeAnimation(type)
+          break
+        }
+
+        case 'updateReputation': {
+          // Handle reputation changes
+          const reputationChange = parameters as any
+          actions.updateReputation(reputationChange)
+          addMessage('info', 'Reputation updated')
+          actions.saveGame(activeSlotState)
+          break
+        }
+
+        case 'recordTransaction': {
+          // Handle market transaction recording
+          const { location, potionType, quantity, pricePerUnit, day } = parameters as any
+          actions.recordTransaction(location, potionType, quantity, pricePerUnit, day)
           actions.saveGame(activeSlotState)
           break
         }

@@ -1,3 +1,4 @@
+// Animation type definitions for Potion Wars
 export type AnimationFrame = string[] // Array of ASCII art lines
 
 export type NPCAnimation = {
@@ -14,7 +15,7 @@ export type TravelAnimation = {
 }
 
 export type EncounterAnimation = {
-  type: string // encounter type identifier
+  name: string
   frames: AnimationFrame[]
   duration: number
 }
@@ -25,9 +26,26 @@ export type AnimationLibrary = {
   encounters: Record<string, EncounterAnimation>
 }
 
-export type AnimationState = {
-  currentFrame: number
-  isPlaying: boolean
-  loop: boolean
+export type AnimationState = 'idle' | 'playing' | 'paused' | 'completed'
+
+export type AnimationConfig = {
+  frames: AnimationFrame[]
+  duration?: number
+  loop?: boolean
+  autoStart?: boolean
   onComplete?: () => void
+}
+
+// Animation validation types
+export type AnimationValidationResult = {
+  isValid: boolean
+  errors: string[]
+  warnings: string[]
+}
+
+// Animation optimization types
+export type AnimationOptimization = {
+  removeEmptyFrames?: boolean
+  normalizeFrameWidth?: boolean
+  trimWhitespace?: boolean
 }
