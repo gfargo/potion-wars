@@ -14,6 +14,8 @@ export function TitleScreenMenu() {
     'load' | 'new' | false
   >(false)
   const [confirmOverwrite, setConfirmOverwrite] = useState(false)
+  const [confirmRestartGameOver, setConfirmRestartGameOver] = useState(false)
+  const [pendingSlotIndex, setPendingSlotIndex] = useState<number>(-1)
   const { handleAction, activeSlot } = useGame()
   const { exit } = useApp()
 
@@ -23,6 +25,8 @@ export function TitleScreenMenu() {
     if (key.escape) {
       toggleSaveSlotDisplay(false)
       setConfirmOverwrite(false)
+      setConfirmRestartGameOver(false)
+      setPendingSlotIndex(-1)
     }
   })
 
@@ -66,7 +70,40 @@ export function TitleScreenMenu() {
 
   return (
     <Box paddingX={2}>
-      {confirmOverwrite ? (
+      {confirmRestartGameOver ? (
+        <Box flexDirection="column" gap={1} alignItems="center" marginTop={1}>
+          <Text dimColor>
+            This save is marked as GAME OVER. You cannot load it.
+          </Text>
+          <Text dimColor>
+            Would you like to start a new game in this slot instead?
+          </Text>
+          <EnhancedSelectInput
+            items={[
+              {
+                label: 'No, go back',
+                value: 'no',
+                hotkey: 'n',
+              },
+              {
+                label: 'Yes, start new game',
+                value: 'yes',
+                hotkey: 'y',
+              },
+            ]}
+            orientation="horizontal"
+            onSelect={(item) => {
+              if (item.value === 'yes' && pendingSlotIndex >= 0) {
+                setScreen('loading')
+                handleAction('startGame', { slot: pendingSlotIndex })
+              }
+
+              setConfirmRestartGameOver(false)
+              setPendingSlotIndex(-1)
+            }}
+          />
+        </Box>
+      ) : confirmOverwrite ? (
         <Box flexDirection="column" gap={1} alignItems="center" marginTop={1}>
           <Text dimColor>
             Are you sure you want to overwrite the save slot?
@@ -88,13 +125,13 @@ export function TitleScreenMenu() {
             onSelect={(item) => {
               console.log(item)
 
-              const slotIndex = Number(item.value.replace('slot-', ''))
-              if (item.value === 'yes') {
+              if (item.value === 'yes' && pendingSlotIndex >= 0) {
                 setScreen('loading')
-                handleAction('startGame', { slot: slotIndex })
+                handleAction('startGame', { slot: pendingSlotIndex })
               }
 
               setConfirmOverwrite(false)
+              setPendingSlotIndex(-1)
             }}
           />
         </Box>
@@ -125,8 +162,18 @@ export function TitleScreenMenu() {
                   }
                 }
 
+                // Check if game is over (health <= 0 or debt >= cash and can't continue)
+                const isGameOver = slot.health <= 0
+                const healthPercent = Math.max(0, Math.min(100, slot.health))
+
+                // Build label with health and status
+                let label = `Day ${slot.day} - ${slot.cash}g - ${healthPercent}% HP`
+                if (isGameOver) {
+                  label += ' [GAME OVER]'
+                }
+
                 return {
-                  label: `Day ${slot.day} - ${slot.cash}g`,
+                  label,
                   value: `slot-${index + 1}`,
                 }
               }),
@@ -144,15 +191,24 @@ export function TitleScreenMenu() {
               }
 
               const slotIndex = Number(item.value.replace('slot-', ''))
+              const selectedSlot = saveSlots[slotIndex]
 
               if (displaySaveSlots === 'new') {
-                if (saveSlots[slotIndex] !== null) {
+                if (selectedSlot !== null && selectedSlot !== undefined) {
+                  setPendingSlotIndex(slotIndex)
                   setConfirmOverwrite(true)
                   return
                 }
 
                 setScreen('loading')
                 handleAction('startGame', { slot: slotIndex })
+                return
+              }
+
+              // Loading a game - check if it's game over
+              if (selectedSlot && selectedSlot.health <= 0) {
+                setPendingSlotIndex(slotIndex)
+                setConfirmRestartGameOver(true)
                 return
               }
 

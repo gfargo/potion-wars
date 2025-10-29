@@ -60,18 +60,29 @@ export const gameReducer = (
     }
 
     case 'game/repayDebt': {
-      if (action.payload.amount > state.cash) {
+      // Validate amount is a valid number
+      const amount = action.payload.amount
+      if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
+        console.error('Invalid repay amount:', amount)
         return state
       }
 
-      if (action.payload.amount > state.debt) {
+      // Validate player has enough cash
+      if (amount > state.cash) {
+        console.warn('Not enough cash to repay', amount)
+        return state
+      }
+
+      // Validate amount doesn't exceed debt
+      if (amount > state.debt) {
+        console.warn('Repay amount exceeds debt', amount)
         return state
       }
 
       return {
         ...state,
-        cash: state.cash - action.payload.amount,
-        debt: state.debt - action.payload.amount,
+        cash: state.cash - amount,
+        debt: state.debt - amount,
       }
     }
 
@@ -123,7 +134,9 @@ export const gameReducer = (
       const initialLocation =
         locations[Math.floor(Math.random() * locations.length)]
       const { marketData, tradeHistory } = initializeGameMarkets()
-      
+
+      // Return a completely fresh game state, explicitly clearing all optional fields
+      // to prevent artifacts from previous games
       return {
         day: 0,
         cash: 2000,
@@ -139,7 +152,14 @@ export const gameReducer = (
         // New features with initialized values
         reputation: ReputationManager.initializeReputation(),
         marketData,
-        tradeHistory
+        tradeHistory,
+        // Explicitly clear all transient state to prevent artifacts
+        currentEvent: undefined,
+        currentStep: undefined,
+        currentNPCInteraction: undefined,
+        currentAnimation: undefined,
+        lastSave: undefined,
+        playerName: undefined
       }
     }
 

@@ -107,22 +107,22 @@ export class RivalEventHandler {
     return steps
   }
 
-  private getEncounterDescription(rival: RivalAlchemist, encounterType: RivalEncounterType): string {
-    const baseDescription = `You encounter ${rival.personality.name}. ${rival.personality.greeting}`
-    
+  private getEncounterDescription(_rival: RivalAlchemist, encounterType: RivalEncounterType): string {
+    // Don't duplicate the greeting - it's already in the event description
+    // which gets logged as part of the event intro message
     switch (encounterType) {
       case 'price_war':
-        return `${baseDescription}\n\n"I see you're trying to compete in MY market. Let's see who can offer better prices!"`
+        return `"I see you're trying to compete in MY market. Let's see who can offer better prices!"`
       case 'sabotage':
-        return `${baseDescription}\n\nYou notice them lurking near your supplies with a suspicious look...`
+        return `You notice them lurking near your supplies with a suspicious look...`
       case 'theft':
-        return `${baseDescription}\n\n"Nice purse you have there. It would be a shame if something happened to it..."`
+        return `"Nice purse you have there. It would be a shame if something happened to it..."`
       case 'competition':
-        return `${baseDescription}\n\n"Let's settle this once and for all - a direct competition to see who's the better alchemist!"`
+        return `"Let's settle this once and for all - a direct competition to see who's the better alchemist!"`
       case 'negotiation':
-        return `${baseDescription}\n\n"Perhaps we can come to some sort of... arrangement?"`
+        return `"Perhaps we can come to some sort of... arrangement?"`
       default:
-        return baseDescription
+        return `They stand before you, ready for a confrontation.`
     }
   }
 
@@ -217,10 +217,12 @@ export class RivalEventHandler {
     }
     this.rivalManager.updateRivalAfterEncounter(rival.id, encounterRecord)
 
-    // Note: Message will be displayed through the event system
-    // The outcome message is already included in the event resolution
-
-    return newState
+    // Return the outcome message in the state so it can be displayed
+    // Use type assertion since effect functions can return GameState with message
+    return {
+      ...newState,
+      message: outcome.message
+    } as GameState
   }
 
   // Get all rivals active in a location (for UI display)

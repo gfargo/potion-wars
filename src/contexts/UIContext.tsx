@@ -8,15 +8,24 @@ export type Screen =
   | 'event'
   | 'game-over'
 
+export type TravelState =
+  | { status: 'idle' }
+  | { status: 'animating'; destination: string }
+  | { status: 'complete'; destination: string }
+
 type UIContextType = {
   currentScreen: Screen
   showHelp: boolean
   quitConfirmation: boolean
   combatResult: string | undefined
+  travelState: TravelState
   setScreen: (screen: Screen) => void
   toggleHelp: () => void
   setQuitConfirmation: (value: boolean) => void
   setCombatResult: (result: string | undefined) => void
+  setTravelDestination: (destination: string) => void
+  completeTravelAnimation: () => void
+  resetTravelState: () => void
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined)
@@ -36,6 +45,7 @@ export function UIProvider({
   const [combatResult, setCombatResult] = useState<string | undefined>(
     undefined
   )
+  const [travelState, setTravelState] = useState<TravelState>({ status: 'idle' })
 
   const setScreen = (screen: Screen) => {
     setCurrentScreen(screen)
@@ -45,18 +55,38 @@ export function UIProvider({
     setShowHelp((previous) => !previous)
   }
 
+  const setTravelDestination = (destination: string) => {
+    setTravelState({ status: 'animating', destination })
+  }
+
+  const completeTravelAnimation = () => {
+    setTravelState((current) =>
+      current.status === 'animating'
+        ? { status: 'complete', destination: current.destination }
+        : current
+    )
+  }
+
+  const resetTravelState = () => {
+    setTravelState({ status: 'idle' })
+  }
+
   const uiContextValue = useMemo(
     () => ({
       currentScreen,
       showHelp,
       quitConfirmation,
       combatResult,
+      travelState,
       setScreen,
       toggleHelp,
       setQuitConfirmation,
       setCombatResult,
+      setTravelDestination,
+      completeTravelAnimation,
+      resetTravelState,
     }),
-    [currentScreen, showHelp, quitConfirmation, combatResult]
+    [currentScreen, showHelp, quitConfirmation, combatResult, travelState]
   )
 
   return (

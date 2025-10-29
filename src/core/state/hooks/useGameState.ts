@@ -39,6 +39,10 @@ export const useGameState = (initialState: GameState) => {
 
   const handleEventChoice = useCallback(
     (choiceIndex: number) => {
+      // Capture the current event name BEFORE applying the action
+      // This ensures we log the correct event name even after it's been cleared
+      const currentEventName = state.currentEvent?.name
+
       const action = actions.handleEventChoice(choiceIndex)
       const result = gameReducer(state, action) as GameState & { message?: string }
       dispatch(action)
@@ -46,7 +50,7 @@ export const useGameState = (initialState: GameState) => {
       return {
         message: result.message,
         isLastStep: !result.currentEvent || result.currentStep === undefined,
-        eventName: state.currentEvent?.name
+        eventName: currentEventName
       }
     },
     [state]

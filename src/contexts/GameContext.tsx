@@ -18,7 +18,11 @@ import { useUI } from './UIContext.js'
 type GameContextType = {
   gameState: GameState
   handleAction: (action: string, parameters?: any) => void
-  handleEventChoice: (choiceIndex: number) => void
+  handleEventChoice: (choiceIndex: number) => {
+    message?: string
+    isLastStep: boolean
+    eventName?: string
+  }
   activeSlot: number
 }
 
@@ -106,7 +110,7 @@ export function GameProvider({
   //
   const [activeSlotState, setActiveSlotState] =
     useState<number>(getActiveSlot())
-  const { setScreen, currentScreen } = useUI()
+  const { setScreen, currentScreen, travelState, setTravelDestination, resetTravelState } = useUI()
   const { addMessage, clearMessages } = useMessage()
 
   // Update active slot in both state and file
@@ -135,6 +139,15 @@ export function GameProvider({
       }
     })
   }, [])
+
+  // Handle automatic screen transitions based on state
+  useEffect(() => {
+    // If travel animation is complete, return to game screen
+    if (travelState.status === 'complete' && currentScreen === 'traveling') {
+      setScreen('game')
+      resetTravelState()
+    }
+  }, [travelState.status, currentScreen, setScreen, resetTravelState])
 
   const handleAction = useCallback(
     (action: string, parameters?: ActionParameters) => {
@@ -165,59 +178,69 @@ export function GameProvider({
         }
 
         case 'travel': {
-          // Store the current location before traveling
-          const fromLocation = gameState.location.name
+          const destination = parameters as TravelParameters
 
-          // Show traveling screen
+          // Set travel destination and trigger animation
+          setTravelDestination(destination)
+
+          // Switch to traveling screen
           setScreen('traveling')
 
-          // Delay the actual travel to allow animation to play
-          setTimeout(() => {
-            // First handle travel with NPC encounters
-            actions.travel(parameters as TravelParameters)
-            addMessage('info', `Traveled from ${fromLocation} to ${parameters as TravelParameters}`)
+          // Don't process travel logic here - wait for animation to complete
+          // TravelingScreen will call 'completeTravelAnimation' when done
+          break
+        }
 
-            // Handle day advancement and events
-            const dayResult = actions.advanceDay(true, true)
-            if (dayResult.message) {
-              addMessage('info', dayResult.message)
-            }
+        case 'completeTravelAnimation': {
+          // This action is triggered by TravelingScreen when animation finishes
+          if (travelState.status !== 'complete') {
+            console.error('Travel animation not complete')
+            break
+          }
 
-            // Handle any triggered events
-            if (dayResult.eventResult?.message) {
-              console.log('Event triggered:', {
-                message: dayResult.eventResult.message,
-                hasCurrentEvent: Boolean(dayResult.eventResult.currentEvent),
-                eventName: dayResult.eventResult.currentEvent?.name,
-                eventType: dayResult.eventResult.currentEvent?.type
-              })
+          const destination = travelState.destination
+          const fromLocation = gameState.location.name
 
-              // Determine message type based on event type
-              let messageType: 'random_event' | 'info' | 'error' = 'random_event'
-              if (dayResult.eventResult.currentEvent) {
-                const eventType = dayResult.eventResult.currentEvent.type
-                if (eventType === 'negative') {
-                  messageType = 'error' // Red color for negative events
-                } else if (eventType === 'positive') {
-                  messageType = 'random_event' // Magenta for positive (we could add 'success' type later)
-                } else {
-                  messageType = 'random_event' // Magenta for neutral
-                }
+          // Now process the actual travel logic
+          actions.travel(destination)
+          addMessage('info', `Traveled from ${fromLocation} to ${destination}`)
+
+          // Handle day advancement and events
+          const dayResult = actions.advanceDay(true, true)
+          if (dayResult.message) {
+            addMessage('info', dayResult.message)
+          }
+
+          // Handle any triggered events
+          if (dayResult.eventResult?.message) {
+            console.log('Event triggered:', {
+              message: dayResult.eventResult.message,
+              hasCurrentEvent: Boolean(dayResult.eventResult.currentEvent),
+              eventName: dayResult.eventResult.currentEvent?.name,
+              eventType: dayResult.eventResult.currentEvent?.type
+            })
+
+            // Determine message type based on event type
+            let messageType: 'random_event' | 'info' | 'error' = 'random_event'
+            if (dayResult.eventResult.currentEvent) {
+              const eventType = dayResult.eventResult.currentEvent.type
+              if (eventType === 'negative') {
+                messageType = 'error' // Red color for negative events
+              } else if (eventType === 'positive') {
+                messageType = 'random_event' // Magenta for positive
+              } else {
+                messageType = 'random_event' // Magenta for neutral
               }
-
-              addMessage(messageType, dayResult.eventResult.message as string)
             }
 
-            // Save the game state
-            actions.saveGame(activeSlotState)
+            addMessage(messageType, dayResult.eventResult.message as string)
+          }
 
-            // Return to game screen after travel completes
-            // Note: Don't call setScreen immediately - wait for React to process state updates
-            // Use setTimeout with 0ms to defer screen transition until after state updates propagate
-            setTimeout(() => {
-              setScreen('game')
-            }, 0)
-          }, 4000)
+          // Save the game state
+          actions.saveGame(activeSlotState)
+
+          // Don't call setScreen here! Let useEffect handle it based on state
+          // This ensures proper state propagation before screen transition
 
           break
         }
@@ -301,6 +324,13 @@ export function GameProvider({
 
         case 'repay': {
           const { amount } = parameters as RepayParameters
+
+          // Validate amount before processing
+          if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
+            addMessage('error', 'Invalid repayment amount')
+            break
+          }
+
           actions.repayDebt(amount)
           actions.saveGame(activeSlotState)
           addMessage('info', `Repaid ${amount} gold of debt`)
@@ -373,7 +403,10 @@ export function GameProvider({
       clearMessages,
       currentScreen,
       exit,
+      gameState,
       setScreen,
+      setTravelDestination,
+      travelState,
       selectors.isGameOver,
       updateActiveSlot,
     ]
@@ -417,6 +450,9 @@ export function GameProvider({
       }
 
       actions.saveGame(activeSlotState)
+
+      // Return the result for components that need it
+      return result
     },
     [actions, activeSlotState, addMessage, gameState]
   )

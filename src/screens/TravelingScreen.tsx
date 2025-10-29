@@ -1,9 +1,10 @@
 import { Box, Text, useInput } from 'ink'
 import React, { useEffect, useState } from 'react'
 import { useGame } from '../contexts/GameContext.js'
+import { useUI } from '../contexts/UIContext.js'
 import { TravelAnimation } from '../ui/components/common/TravelAnimation.js'
 
-type TravelingScreenProperties = { 
+type TravelingScreenProperties = {
   readonly onFinish: () => void
   readonly fromLocation?: string
 }
@@ -12,7 +13,8 @@ export function TravelingScreen({ onFinish, fromLocation }: TravelingScreenPrope
   const [timeLeft, setTimeLeft] = useState(4)
   const [showAnimation, setShowAnimation] = useState(true)
   const [flavorText, setFlavorText] = useState('')
-  const { gameState } = useGame()
+  const { gameState, handleAction } = useGame()
+  const { completeTravelAnimation } = useUI()
 
   // Initialize flavor text on mount
   useEffect(() => {
@@ -42,12 +44,22 @@ export function TravelingScreen({ onFinish, fromLocation }: TravelingScreenPrope
 
   useEffect(() => {
     if (timeLeft === 0) {
+      // Mark animation as complete in UI state
+      completeTravelAnimation()
+      // Trigger the travel completion action
+      handleAction('completeTravelAnimation', {})
+      // Call parent callback
       onFinish()
     }
-  }, [timeLeft, onFinish])
+  }, [timeLeft, onFinish, completeTravelAnimation, handleAction])
 
   useInput((input) => {
     if (input === '\r') {
+      // Mark animation as complete in UI state
+      completeTravelAnimation()
+      // Trigger the travel completion action
+      handleAction('completeTravelAnimation', {})
+      // Call parent callback
       onFinish()
     }
   })

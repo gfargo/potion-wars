@@ -145,7 +145,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
           }
 
           case 'repay': {
-            handleAction('repay', { ammount: repayAmount })
+            handleAction('repay', { amount: repayAmount })
             break
           }
 
@@ -291,10 +291,12 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
             </Box>
             <EnhancedSelectInput
               key="selectLocation"
-              items={locations.map((location) => ({
-                label: location.name,
-                value: location.name,
-              }))}
+              items={locations
+                .filter((location) => location.name !== gameState.location.name)
+                .map((location) => ({
+                  label: location.name,
+                  value: location.name,
+                }))}
               onHighlight={({ value }) => {
                 setTravelLocationPreview(value)
               }}

@@ -112,15 +112,16 @@ export const handleMultiStepEventChoice = (
     return state
   }
 
-  const newState = selectedChoice.effect(state)
+  const newState = selectedChoice.effect(state) as GameState & { message?: string }
   const nextStep = (state.currentStep ?? 0) + 1
 
   if (nextStep >= state.currentEvent.steps.length) {
-    // Event is complete
+    // Event is complete - preserve the outcome message from the effect
     return {
       ...newState,
       currentEvent: undefined,
       currentStep: undefined,
+      message: newState.message, // Preserve the message from the effect
     }
   }
 
@@ -131,7 +132,7 @@ export const handleMultiStepEventChoice = (
       ...newState,
       currentEvent: undefined,
       currentStep: undefined,
-      message: 'Event completed',
+      message: newState.message || 'Event completed', // Preserve effect message
     }
   }
 
@@ -139,6 +140,6 @@ export const handleMultiStepEventChoice = (
     ...newState,
     currentEvent: state.currentEvent,
     currentStep: nextStep,
-    message: nextStepData.description,
+    message: newState.message || nextStepData.description, // Try effect message first
   }
 }
