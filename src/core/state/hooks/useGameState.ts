@@ -1,8 +1,6 @@
 import { useCallback, useReducer } from 'react'
 import { type GameState } from '../../../types/game.types.js'
-import {
-  saveGame as persistGame,
-} from '../../persistence/saveLoad.js'
+import { saveGame as persistGame } from '../../persistence/saveLoad.js'
 import * as actions from '../actions/creators.js'
 import { gameReducer } from '../reducers/gameReducer.js'
 import * as selectors from '../selectors/gameSelectors.js'
@@ -44,17 +42,26 @@ export const useGameState = (initialState: GameState) => {
       const currentEventName = state.currentEvent?.name
 
       const action = actions.handleEventChoice(choiceIndex)
-      const result = gameReducer(state, action) as GameState & { message?: string }
+      const result = gameReducer(state, action) as GameState & {
+        message?: string
+      }
       dispatch(action)
       // Return the choice result including any message from the effect
       return {
         message: result.message,
-        isLastStep: !result.currentEvent || result.currentStep === undefined,
-        eventName: currentEventName
+        isLastStep:
+          !result.currentEvent ||
+          result.currentStep === undefined ||
+          result.isShowingEventOutcome === true,
+        eventName: currentEventName,
       }
     },
     [state]
   )
+
+  const acknowledgeEventOutcome = useCallback(() => {
+    dispatch(actions.acknowledgeEventOutcome())
+  }, [])
 
   // Save/Load Actions
   const saveGame = useCallback(
@@ -95,7 +102,10 @@ export const useGameState = (initialState: GameState) => {
 
   // Animation Actions
   const triggerAnimation = useCallback(
-    (animationType: 'travel' | 'npc_encounter' | 'trade' | 'combat', animationData: any) => {
+    (
+      animationType: 'travel' | 'npc_encounter' | 'trade' | 'combat',
+      animationData: any
+    ) => {
       dispatch(actions.triggerAnimation(animationType, animationData))
     },
     []
@@ -112,8 +122,22 @@ export const useGameState = (initialState: GameState) => {
 
   // Market Actions
   const recordTransaction = useCallback(
-    (location: string, potionType: string, quantity: number, pricePerUnit: number, day: number) => {
-      dispatch(actions.recordTransaction(location, potionType, quantity, pricePerUnit, day))
+    (
+      location: string,
+      potionType: string,
+      quantity: number,
+      pricePerUnit: number,
+      day: number
+    ) => {
+      dispatch(
+        actions.recordTransaction(
+          location,
+          potionType,
+          quantity,
+          pricePerUnit,
+          day
+        )
+      )
     },
     []
   )
@@ -127,6 +151,7 @@ export const useGameState = (initialState: GameState) => {
       repayDebt,
       advanceDay,
       handleEventChoice,
+      acknowledgeEventOutcome,
       saveGame,
       loadGame,
       initializeGame,

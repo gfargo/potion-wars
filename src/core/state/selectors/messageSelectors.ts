@@ -1,7 +1,7 @@
 import {
   type Message,
   type MessageType,
-} from '../../../contexts/MessageContext.js'
+} from '../../../store/appStore.js'
 
 export const selectMessageColor = (type: MessageType): string => {
   switch (type) {

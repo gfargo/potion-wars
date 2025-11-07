@@ -15,12 +15,12 @@ const createTestNPC = (trades: NPCTrade[] = []): NPC => ({
     farewell: 'Goodbye!',
     tradeAccept: 'Deal!',
     tradeDecline: 'No deal',
-    lowReputation: 'I don\'t trust you',
-    highReputation: 'My valued customer!'
+    lowReputation: "I don't trust you",
+    highReputation: 'My valued customer!',
   },
   location: 'Test Market',
   availability: {
-    probability: 1.0
+    probability: 1,
   },
   reputation: {},
   trades,
@@ -30,14 +30,16 @@ const createTestNPC = (trades: NPCTrade[] = []): NPC => ({
       greeting: {
         id: 'greeting',
         text: 'Hello!',
-        choices: []
-      }
-    }
-  }
+        choices: [],
+      },
+    },
+  },
 })
 
 // Test helper to create a basic game state
-const createTestGameState = (overrides: Partial<GameState> = {}): GameState => ({
+const createTestGameState = (
+  overrides: Partial<GameState> = {}
+): GameState => ({
   day: 1,
   cash: 1000,
   debt: 0,
@@ -45,17 +47,21 @@ const createTestGameState = (overrides: Partial<GameState> = {}): GameState => (
   strength: 10,
   agility: 10,
   intelligence: 10,
-  location: { name: 'Test Market', description: 'A test market', dangerLevel: 1 },
+  location: {
+    name: 'Test Market',
+    description: 'A test market',
+    dangerLevel: 1,
+  },
   inventory: { 'Health Potion': 5, 'Mana Potion': 3 },
   prices: {},
   weather: 'sunny',
   reputation: ReputationManager.initializeReputation(),
   marketData: {},
   tradeHistory: [],
-  ...overrides
+  ...overrides,
 })
 
-test('generateTradeOffers returns empty array for NPC with no trades', t => {
+test('generateTradeOffers returns empty array for NPC with no trades', (t) => {
   const npc = createTestNPC()
   const gameState = createTestGameState()
 
@@ -64,14 +70,14 @@ test('generateTradeOffers returns empty array for NPC with no trades', t => {
   t.is(offers.length, 0)
 })
 
-test('generateTradeOffers creates buy offer for positive price trade', t => {
+test('generateTradeOffers creates buy offer for positive price trade', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Rare Potion',
       price: 500,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -87,14 +93,14 @@ test('generateTradeOffers creates buy offer for positive price trade', t => {
   t.is(offers[0]?.available, true)
 })
 
-test('generateTradeOffers creates sell offer for negative price trade', t => {
+test('generateTradeOffers creates sell offer for negative price trade', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Health Potion',
       price: -100,
       quantity: 2,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -110,24 +116,24 @@ test('generateTradeOffers creates sell offer for negative price trade', t => {
   t.is(offers[0]?.available, true)
 })
 
-test('generateTradeOffers applies reputation modifier to prices', t => {
+test('generateTradeOffers applies reputation modifier to prices', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Test Potion',
       price: 100,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
-  
+
   // Create game state with high reputation
   const gameState = createTestGameState({
     reputation: {
       global: 60,
       locations: { 'Test Market': 60 },
-      npcRelationships: { 'test_merchant': 60 }
-    }
+      npcRelationships: { test_merchant: 60 },
+    },
   })
 
   const offers = NPCTrading.generateTradeOffers(npc, gameState)
@@ -137,14 +143,14 @@ test('generateTradeOffers applies reputation modifier to prices', t => {
   t.true((offers[0]?.pricePerUnit || 0) < 100)
 })
 
-test('generateTradeOffers marks trade unavailable when reputation requirement not met', t => {
+test('generateTradeOffers marks trade unavailable when reputation requirement not met', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Exclusive Potion',
       price: 1000,
       quantity: 1,
-      reputationRequirement: 50
-    }
+      reputationRequirement: 50,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState() // Default reputation is 0
@@ -156,14 +162,14 @@ test('generateTradeOffers marks trade unavailable when reputation requirement no
   t.true(offers[0]?.reason?.includes('Requires reputation'))
 })
 
-test('generateTradeOffers marks buy trade unavailable when insufficient funds', t => {
+test('generateTradeOffers marks buy trade unavailable when insufficient funds', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Expensive Potion',
       price: 2000,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ cash: 500 })
@@ -175,14 +181,14 @@ test('generateTradeOffers marks buy trade unavailable when insufficient funds', 
   t.true(offers[0]?.reason?.includes('Insufficient funds'))
 })
 
-test('generateTradeOffers marks sell trade unavailable when insufficient inventory', t => {
+test('generateTradeOffers marks sell trade unavailable when insufficient inventory', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Health Potion',
       price: -100,
       quantity: 10, // Player only has 5
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -194,7 +200,7 @@ test('generateTradeOffers marks sell trade unavailable when insufficient invento
   t.true(offers[0]?.reason?.includes('Insufficient inventory'))
 })
 
-test('generateTradeOffers evaluates trade conditions correctly', t => {
+test('generateTradeOffers evaluates trade conditions correctly', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Day-Limited Potion',
@@ -205,10 +211,10 @@ test('generateTradeOffers evaluates trade conditions correctly', t => {
         {
           type: 'day',
           operator: 'gte',
-          value: 5
-        }
-      ]
-    }
+          value: 5,
+        },
+      ],
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ day: 3 })
@@ -220,14 +226,14 @@ test('generateTradeOffers evaluates trade conditions correctly', t => {
   t.true(offers[0]?.reason?.includes('Requires day'))
 })
 
-test('executeTrade successfully executes buy trade', t => {
+test('executeTrade successfully executes buy trade', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Test Potion',
       price: 200,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ cash: 500 })
@@ -247,14 +253,14 @@ test('executeTrade successfully executes buy trade', t => {
   t.is(result.transaction?.npcInvolved, 'test_merchant')
 })
 
-test('executeTrade successfully executes sell trade', t => {
+test('executeTrade successfully executes sell trade', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Health Potion',
       price: -150,
       quantity: 2,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ cash: 100 })
@@ -274,14 +280,14 @@ test('executeTrade successfully executes sell trade', t => {
   t.is(result.transaction?.quantity, -2) // Negative for sell
 })
 
-test('executeTrade removes item from inventory when quantity reaches zero', t => {
+test('executeTrade removes item from inventory when quantity reaches zero', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Mana Potion',
       price: -100,
       quantity: 3, // Player has exactly 3
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -296,14 +302,14 @@ test('executeTrade removes item from inventory when quantity reaches zero', t =>
   t.is(result.newGameState.inventory['Mana Potion'], undefined)
 })
 
-test('executeTrade fails when trade is not available', t => {
+test('executeTrade fails when trade is not available', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Expensive Potion',
       price: 2000,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ cash: 500 })
@@ -321,14 +327,14 @@ test('executeTrade fails when trade is not available', t => {
   t.is(result.newGameState.cash, gameState.cash) // No change
 })
 
-test('executeTrade applies reputation changes to multiple levels', t => {
+test('executeTrade applies reputation changes to multiple levels', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Valuable Potion',
       price: 1000,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ cash: 1500 })
@@ -340,21 +346,23 @@ test('executeTrade applies reputation changes to multiple levels', t => {
   const result = NPCTrading.executeTrade(offer!, npc, gameState)
 
   t.true(result.success)
-  
+
   // Check that reputation was applied at different levels
   t.true(result.newGameState.reputation.global > gameState.reputation.global)
   t.true((result.newGameState.reputation.locations['Test Market'] || 0) > 0)
-  t.true((result.newGameState.reputation.npcRelationships['test_merchant'] || 0) > 0)
+  t.true(
+    (result.newGameState.reputation.npcRelationships['test_merchant'] || 0) > 0
+  )
 })
 
-test('executeTrade adds transaction to trade history', t => {
+test('executeTrade adds transaction to trade history', (t) => {
   const trades: NPCTrade[] = [
     {
       offer: 'Test Potion',
       price: 100,
       quantity: 1,
-      reputationRequirement: 0
-    }
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -367,7 +375,7 @@ test('executeTrade adds transaction to trade history', t => {
 
   t.true(result.success)
   t.is(result.newGameState.tradeHistory.length, 1)
-  
+
   const transaction = result.newGameState.tradeHistory[0]
   t.truthy(transaction)
   t.is(transaction?.npcInvolved, 'test_merchant')
@@ -375,10 +383,10 @@ test('executeTrade adds transaction to trade history', t => {
   t.is(transaction?.potionType, 'Test Potion')
 })
 
-test('getBuyOffers filters for buy offers only', t => {
+test('getBuyOffers filters for buy offers only', (t) => {
   const trades: NPCTrade[] = [
     { offer: 'Buy Item', price: 100, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Sell Item', price: -100, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Sell Item', price: -100, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -390,10 +398,10 @@ test('getBuyOffers filters for buy offers only', t => {
   t.is(buyOffers[0]?.itemName, 'Buy Item')
 })
 
-test('getSellOffers filters for sell offers only', t => {
+test('getSellOffers filters for sell offers only', (t) => {
   const trades: NPCTrade[] = [
     { offer: 'Buy Item', price: 100, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Sell Item', price: -100, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Sell Item', price: -100, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -405,10 +413,20 @@ test('getSellOffers filters for sell offers only', t => {
   t.is(sellOffers[0]?.itemName, 'Sell Item')
 })
 
-test('getAvailableOffers filters for available offers only', t => {
+test('getAvailableOffers filters for available offers only', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Available Item', price: 100, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Unavailable Item', price: 2000, quantity: 1, reputationRequirement: 0 }
+    {
+      offer: 'Available Item',
+      price: 100,
+      quantity: 1,
+      reputationRequirement: 0,
+    },
+    {
+      offer: 'Unavailable Item',
+      price: 2000,
+      quantity: 1,
+      reputationRequirement: 0,
+    },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState({ cash: 500 })
@@ -420,10 +438,10 @@ test('getAvailableOffers filters for available offers only', t => {
   t.true(availableOffers[0]?.available)
 })
 
-test('findTradeOffer finds specific offer by ID', t => {
+test('findTradeOffer finds specific offer by ID', (t) => {
   const trades: NPCTrade[] = [
     { offer: 'First Item', price: 100, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Second Item', price: 200, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Second Item', price: 200, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createTestNPC(trades)
   const gameState = createTestGameState()
@@ -436,11 +454,15 @@ test('findTradeOffer finds specific offer by ID', t => {
   t.is(foundOffer?.itemName, 'Second Item')
 })
 
-test('findTradeOffer returns undefined for non-existent offer', t => {
+test('findTradeOffer returns undefined for non-existent offer', (t) => {
   const npc = createTestNPC()
   const gameState = createTestGameState()
 
-  const foundOffer = NPCTrading.findTradeOffer(npc, gameState, 'non_existent_id')
+  const foundOffer = NPCTrading.findTradeOffer(
+    npc,
+    gameState,
+    'non_existent_id'
+  )
 
   t.is(foundOffer, undefined)
 })

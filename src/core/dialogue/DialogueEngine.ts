@@ -1,5 +1,11 @@
 import { type GameState } from '../../types/game.types.js'
-import { type NPC, type DialogueNode, type DialogueChoice, type DialogueCondition, type DialogueEffect } from '../../types/npc.types.js'
+import {
+  type NPC,
+  type DialogueNode,
+  type DialogueChoice,
+  type DialogueCondition,
+  type DialogueEffect,
+} from '../../types/npc.types.js'
 
 export class DialogueEngine {
   /**
@@ -8,40 +14,53 @@ export class DialogueEngine {
   static processDialogue(npc: NPC, gameState: GameState): DialogueNode {
     const rootNodeId = npc.dialogue.rootNode
     const rootNode = npc.dialogue.nodes[rootNodeId]
-    
+
     if (!rootNode) {
-      throw new Error(`Root dialogue node '${rootNodeId}' not found for NPC '${npc.id}'`)
+      throw new Error(
+        `Root dialogue node '${rootNodeId}' not found for NPC '${npc.id}'`
+      )
     }
 
     // Evaluate conditions on the root node
-    if (rootNode.conditions && !this.evaluateConditions(rootNode.conditions, gameState, npc.location)) {
+    if (
+      rootNode.conditions &&
+      !this.evaluateConditions(rootNode.conditions, gameState, npc.location)
+    ) {
       // If root node conditions fail, create a fallback node
       return {
         id: 'fallback',
-        text: npc.personality.lowReputation || "I don't have time to talk right now.",
-        choices: [{
-          text: 'Leave',
-          nextNode: undefined
-        }]
+        text:
+          npc.personality.lowReputation ||
+          "I don't have time to talk right now.",
+        choices: [
+          {
+            text: 'Leave',
+            nextNode: undefined,
+          },
+        ],
       }
     }
 
     // Filter choices based on conditions
-    const availableChoices = rootNode.choices.filter(choice => {
+    const availableChoices = rootNode.choices.filter((choice) => {
       if (!choice.conditions) return true
       return this.evaluateConditions(choice.conditions, gameState, npc.location)
     })
 
     return {
       ...rootNode,
-      choices: availableChoices
+      choices: availableChoices,
     }
   }
 
   /**
    * Handle a dialogue choice and apply its effects
    */
-  static handleChoice(choice: DialogueChoice, gameState: GameState, npcLocation: string): GameState {
+  static handleChoice(
+    choice: DialogueChoice,
+    gameState: GameState,
+    npcLocation: string
+  ): GameState {
     let newState = { ...gameState }
 
     // Apply choice effects
@@ -54,7 +73,7 @@ export class DialogueEngine {
       const reputationEffect: DialogueEffect = {
         type: 'reputation',
         value: choice.reputationChange,
-        location: npcLocation
+        location: npcLocation,
       }
       newState = this.applyEffects([reputationEffect], newState, npcLocation)
     }
@@ -65,79 +84,110 @@ export class DialogueEngine {
   /**
    * Get the next dialogue node based on choice
    */
-  static getNextNode(npc: NPC, choice: DialogueChoice, gameState: GameState): DialogueNode | null {
+  static getNextNode(
+    npc: NPC,
+    choice: DialogueChoice,
+    gameState: GameState
+  ): DialogueNode | undefined {
     if (!choice.nextNode) {
-      return null // End of dialogue
+      return undefined // End of dialogue
     }
 
     const nextNode = npc.dialogue.nodes[choice.nextNode]
     if (!nextNode) {
-      throw new Error(`Dialogue node '${choice.nextNode}' not found for NPC '${npc.id}'`)
+      throw new Error(
+        `Dialogue node '${choice.nextNode}' not found for NPC '${npc.id}'`
+      )
     }
 
     // Evaluate conditions on the next node
-    if (nextNode.conditions && !this.evaluateConditions(nextNode.conditions, gameState, npc.location)) {
+    if (
+      nextNode.conditions &&
+      !this.evaluateConditions(nextNode.conditions, gameState, npc.location)
+    ) {
       // If conditions fail, end dialogue or provide fallback
       return {
         id: 'blocked',
         text: "I can't discuss that with you right now.",
-        choices: [{
-          text: 'Understood',
-          nextNode: undefined
-        }]
+        choices: [
+          {
+            text: 'Understood',
+            nextNode: undefined,
+          },
+        ],
       }
     }
 
     // Filter choices based on conditions
-    const availableChoices = nextNode.choices.filter(choice => {
+    const availableChoices = nextNode.choices.filter((choice) => {
       if (!choice.conditions) return true
       return this.evaluateConditions(choice.conditions, gameState, npc.location)
     })
 
     return {
       ...nextNode,
-      choices: availableChoices
+      choices: availableChoices,
     }
   }
 
   /**
    * Evaluate dialogue conditions against game state
    */
-  static evaluateConditions(conditions: DialogueCondition[], gameState: GameState, npcLocation: string): boolean {
-    return conditions.every(condition => this.evaluateCondition(condition, gameState, npcLocation))
+  static evaluateConditions(
+    conditions: DialogueCondition[],
+    gameState: GameState,
+    npcLocation: string
+  ): boolean {
+    return conditions.every((condition) =>
+      this.evaluateCondition(condition, gameState, npcLocation)
+    )
   }
 
   /**
    * Evaluate a single dialogue condition
    */
-  private static evaluateCondition(condition: DialogueCondition, gameState: GameState, npcLocation: string): boolean {
+  private static evaluateCondition(
+    condition: DialogueCondition,
+    gameState: GameState,
+    npcLocation: string
+  ): boolean {
     let actualValue: number | string
 
     switch (condition.type) {
-      case 'reputation':
-        if (condition.location) {
-          actualValue = gameState.reputation.locations[condition.location] || 0
-        } else {
-          actualValue = gameState.reputation.locations[npcLocation] || 0
-        }
+      case 'reputation': {
+        actualValue = condition.location
+          ? gameState.reputation.locations[condition.location] || 0
+          : gameState.reputation.locations[npcLocation] || 0
         break
-      case 'cash':
+      }
+
+      case 'cash': {
         actualValue = gameState.cash
         break
-      case 'inventory':
+      }
+
+      case 'inventory': {
         if (!condition.item) {
           throw new Error('Inventory condition requires item property')
         }
+
         actualValue = gameState.inventory[condition.item] || 0
         break
-      case 'day':
+      }
+
+      case 'day': {
         actualValue = gameState.day
         break
-      case 'location':
+      }
+
+      case 'location': {
         actualValue = gameState.location.name
         break
-      default:
+      }
+
+      default: {
         throw new Error(`Unknown condition type: ${condition.type}`)
+      }
     }
 
     return this.compareValues(actualValue, condition.operator, condition.value)
@@ -146,7 +196,11 @@ export class DialogueEngine {
   /**
    * Apply dialogue effects to game state
    */
-  static applyEffects(effects: DialogueEffect[], gameState: GameState, npcLocation: string): GameState {
+  static applyEffects(
+    effects: DialogueEffect[],
+    gameState: GameState,
+    npcLocation: string
+  ): GameState {
     let newState = { ...gameState }
 
     for (const effect of effects) {
@@ -159,38 +213,59 @@ export class DialogueEngine {
   /**
    * Apply a single dialogue effect
    */
-  private static applyEffect(effect: DialogueEffect, gameState: GameState, npcLocation: string): GameState {
+  private static applyEffect(
+    effect: DialogueEffect,
+    gameState: GameState,
+    npcLocation: string
+  ): GameState {
     const newState = { ...gameState }
 
     switch (effect.type) {
-      case 'reputation':
+      case 'reputation': {
         const location = effect.location || npcLocation
         newState.reputation = {
           ...newState.reputation,
           locations: {
             ...newState.reputation.locations,
-            [location]: (newState.reputation.locations[location] || 0) + effect.value
+            [location]:
+              (newState.reputation.locations[location] || 0) + effect.value,
           },
-          global: newState.reputation.global + (effect.value * 0.1) // Global reputation changes at 10% rate
+          global: newState.reputation.global + effect.value * 0.1, // Global reputation changes at 10% rate
         }
         break
-      case 'cash':
+      }
+
+      case 'cash': {
         newState.cash = Math.max(0, newState.cash + effect.value)
         break
-      case 'inventory':
+      }
+
+      case 'inventory': {
         if (!effect.item) {
           throw new Error('Inventory effect requires item name')
         }
+
         newState.inventory = {
           ...newState.inventory,
-          [effect.item]: Math.max(0, (newState.inventory[effect.item] || 0) + effect.value)
+          [effect.item]: Math.max(
+            0,
+            (newState.inventory[effect.item] || 0) + effect.value
+          ),
         }
         break
-      case 'health':
-        newState.health = Math.max(0, Math.min(100, newState.health + effect.value))
+      }
+
+      case 'health': {
+        newState.health = Math.max(
+          0,
+          Math.min(100, newState.health + effect.value)
+        )
         break
-      default:
+      }
+
+      default: {
         throw new Error(`Unknown effect type: ${effect.type}`)
+      }
     }
 
     return newState
@@ -199,20 +274,35 @@ export class DialogueEngine {
   /**
    * Compare values using the specified operator
    */
-  static compareValues(actual: number | string, operator: string, expected: number | string): boolean {
+  static compareValues(
+    actual: number | string,
+    operator: string,
+    expected: number | string
+  ): boolean {
     switch (operator) {
-      case 'gt':
+      case 'gt': {
         return actual > expected
-      case 'lt':
+      }
+
+      case 'lt': {
         return actual < expected
-      case 'eq':
+      }
+
+      case 'eq': {
         return actual === expected
-      case 'gte':
+      }
+
+      case 'gte': {
         return actual >= expected
-      case 'lte':
+      }
+
+      case 'lte': {
         return actual <= expected
-      default:
+      }
+
+      default: {
         throw new Error(`Unknown operator: ${operator}`)
+      }
     }
   }
 
@@ -235,7 +325,7 @@ export class DialogueEngine {
 
     while (nodesToCheck.length > 0) {
       const nodeId = nodesToCheck.pop()!
-      
+
       if (visitedNodes.has(nodeId)) continue
       visitedNodes.add(nodeId)
 

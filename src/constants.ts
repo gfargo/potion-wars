@@ -37,9 +37,9 @@ Quit - Exit the game
 
 Goal: Make as much gold as possible in 30 days!
 Use the arrow keys to navigate menus and adjust quantities.
-Press Enter to confirm your selection.`
+Press Enter to confirm your selection.`,
   },
-  
+
   npcs: {
     title: 'NPC Interactions',
     content: `NPC System:
@@ -58,9 +58,9 @@ Interacting with NPCs:
 • Choose dialogue options carefully - they affect your reputation
 • Some NPCs require good reputation to access their best offers
 • Build relationships over time for better deals and exclusive information
-• NPCs remember your past interactions and choices`
+• NPCs remember your past interactions and choices`,
   },
-  
+
   reputation: {
     title: 'Reputation System',
     content: `Reputation System:
@@ -82,9 +82,9 @@ Building Reputation:
 • Avoid aggressive or dishonest behavior
 
 Reputation is tracked both globally and per location.
-Your actions in one area may not affect your standing elsewhere.`
+Your actions in one area may not affect your standing elsewhere.`,
   },
-  
+
   market: {
     title: 'Enhanced Market System',
     content: `Market Dynamics:
@@ -109,9 +109,9 @@ Reading Market Data:
 • ↗ Rising prices - good time to sell
 • ↘ Falling prices - good time to buy
 • → Stable prices - normal market conditions
-• Your reputation modifier is shown next to base prices`
+• Your reputation modifier is shown next to base prices`,
   },
-  
+
   animations: {
     title: 'Visual Features',
     content: `Animation System:
@@ -136,9 +136,9 @@ Travel System:
 • Smooth transitions between areas
 
 The animations are designed to enhance immersion while maintaining
-the classic text-based game feel.`
+the classic text-based game feel.`,
   },
-  
+
   advanced: {
     title: 'Advanced Strategies',
     content: `Advanced Tips:
@@ -164,8 +164,8 @@ Risk vs Reward:
 • Higher reputation areas offer better opportunities but more competition
 • Rival alchemists can disrupt your plans but also provide challenges
 • Balance relationship building with profit maximization
-• Use market intelligence to stay ahead of competitors`
-  }
+• Use market intelligence to stay ahead of competitors`,
+  },
 }
 
 export const locations: Location[] = [

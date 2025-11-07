@@ -294,22 +294,22 @@ export class SaveFileManager {
           data !== null &&
           typeof data.activeSlot === 'number' &&
           data.activeSlot >= 1 &&
-          data.activeSlot <= 3,
+          data.activeSlot <= 5,
       }
     )
     return data?.activeSlot ?? 1
   }
 
   public setActiveSlot(slot: number): void {
-    if (slot < 1 || slot > 3) {
-      throw new Error('Invalid slot number. Must be between 1 and 3.')
+    if (slot < 1 || slot > 5) {
+      throw new Error('Invalid slot number. Must be between 1 and 5.')
     }
 
     this.writeSaveFile(0, SaveFileType.ACTIVE_SLOT, { activeSlot: slot })
   }
 
   public getAllSaveSlots(): Array<{ slot: number; exists: boolean }> {
-    return [1, 2, 3].map((slot) => ({
+    return [1, 2, 3, 4, 5].map((slot) => ({
       slot,
       exists: fs.existsSync(this.getFilePath(slot, SaveFileType.GAME_SAVE)),
     }))
@@ -330,9 +330,9 @@ export class SaveFileManager {
   }
 
   private validateSlot(slot: number): void {
-    if (slot < 1 || slot > 3) {
+    if (slot < 1 || slot > 5) {
       throw new PersistenceError(
-        `Invalid slot number: ${slot}. Must be between 1 and 3.`,
+        `Invalid slot number: ${slot}. Must be between 1 and 5.`,
         'INVALID_SLOT',
         slot
       )

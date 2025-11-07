@@ -38,6 +38,7 @@ export type RandomEventResponse = {
   message?: string
   currentEvent?: Event | MultiStepEvent
   currentStep?: number
+  isShowingEventOutcome?: boolean
   weather: Weather
   inventory: Record<string, number>
   cash: number

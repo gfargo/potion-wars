@@ -13,9 +13,9 @@ export type NPCPersonality = {
 
 export type NPCAvailability = {
   probability: number // 0-1, chance of encounter
-  timeRestriction?: [number, number] // day range
+  timeRestriction?: [number, number] // Day range
   weatherRestriction?: Weather[]
-  reputationGate?: number // minimum reputation required
+  reputationGate?: number // Minimum reputation required
 }
 
 export type ReputationRequirement = {
@@ -50,8 +50,8 @@ export type NPCInformationCondition = {
   type: 'reputation' | 'cash' | 'inventory' | 'day' | 'location'
   operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte'
   value: number | string
-  location?: string // for location-specific reputation checks
-  item?: string // for inventory conditions
+  location?: string // For location-specific reputation checks
+  item?: string // For inventory conditions
 }
 
 export type DialogueNode = {
@@ -74,15 +74,15 @@ export type DialogueCondition = {
   type: 'reputation' | 'cash' | 'inventory' | 'day' | 'location'
   operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte'
   value: number | string
-  location?: string // for location-specific reputation checks
-  item?: string // for inventory conditions
+  location?: string // For location-specific reputation checks
+  item?: string // For inventory conditions
 }
 
 export type DialogueEffect = {
   type: 'reputation' | 'cash' | 'inventory' | 'health'
   value: number
-  location?: string // for location-specific reputation changes
-  item?: string // for inventory changes
+  location?: string // For location-specific reputation changes
+  item?: string // For inventory changes
 }
 
 export type NPCDialogue = {

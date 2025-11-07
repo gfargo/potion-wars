@@ -1,13 +1,13 @@
 import { Box } from 'ink'
 import Gradient from 'ink-gradient'
 import React from 'react'
-import { useUI } from '../../contexts/UIContext.js'
+import { useStore } from '../../store/appStore.js'
 import { Help } from '../../ui/components/game/index.js'
 import { TitleScreenAnimation } from './TitleScreenAnimation.js'
 import { TitleScreenMenu } from './TitleScreenMenu.js'
 
 export function TitleScreen() {
-  const { showHelp } = useUI()
+  const showHelp = useStore((state) => state.ui.showHelp)
 
   return (
     <Box

@@ -14,14 +14,22 @@ export class NPCError extends Error {
 
 export class NPCManager {
   private static instance: NPCManager
-  private npcs: Map<string, NPC> = new Map()
-  
+  private readonly npcs = new Map<string, NPC>()
+
   // Performance optimization caches
-  private locationNPCCache: Map<string, NPC[]> = new Map()
-  private availabilityCache: Map<string, { result: boolean; gameStateHash: string }> = new Map()
-  private encounterCache: Map<string, { npcs: NPC[]; gameStateHash: string }> = new Map()
-  private cacheExpiry: Map<string, number> = new Map()
-  
+  private readonly locationNPCCache = new Map<string, NPC[]>()
+  private readonly availabilityCache = new Map<
+    string,
+    { result: boolean; gameStateHash: string }
+  >()
+
+  private readonly encounterCache = new Map<
+    string,
+    { npcs: NPC[]; gameStateHash: string }
+  >()
+
+  private readonly cacheExpiry = new Map<string, number>()
+
   // Cache configuration
   private static readonly CACHE_TTL = 5000 // 5 seconds
   private static readonly MAX_CACHE_SIZE = 100
@@ -31,9 +39,7 @@ export class NPCManager {
   }
 
   static getInstance(): NPCManager {
-    if (!NPCManager.instance) {
-      NPCManager.instance = new NPCManager()
-    }
+    NPCManager.instance ||= new NPCManager()
     return NPCManager.instance
   }
 
@@ -48,6 +54,7 @@ export class NPCManager {
         npc.id
       )
     }
+
     this.npcs.set(npc.id, npc)
   }
 
@@ -65,28 +72,32 @@ export class NPCManager {
   getNPCsForLocation(location: string, gameState: GameState): NPC[] {
     const gameStateHash = this.generateGameStateHash(gameState)
     const cacheKey = `${location}_${gameStateHash}`
-    
+
     // Check cache first
     const cached = this.encounterCache.get(cacheKey)
     const now = Date.now()
-    
+
     if (cached && this.isCacheValid(cacheKey, now)) {
       return cached.npcs
     }
-    
+
     // Get location NPCs from cache or compute
     let locationNPCs = this.locationNPCCache.get(location)
     if (!locationNPCs) {
-      locationNPCs = Array.from(this.npcs.values()).filter(npc => npc.location === location)
+      locationNPCs = [...this.npcs.values()].filter(
+        (npc) => npc.location === location
+      )
       this.locationNPCCache.set(location, locationNPCs)
     }
-    
+
     // Filter by availability
-    const availableNPCs = locationNPCs.filter(npc => this.isNPCAvailable(npc, gameState))
-    
+    const availableNPCs = locationNPCs.filter((npc) =>
+      this.isNPCAvailable(npc, gameState)
+    )
+
     // Cache the result
     this.cacheResult(cacheKey, { npcs: availableNPCs, gameStateHash }, now)
-    
+
     return availableNPCs
   }
 
@@ -94,11 +105,11 @@ export class NPCManager {
    * Roll for a random NPC encounter in the given location
    * Returns null if no encounter occurs
    */
-  rollForEncounter(location: string, gameState: GameState): NPC | null {
+  rollForEncounter(location: string, gameState: GameState): NPC | undefined {
     const availableNPCs = this.getNPCsForLocation(location, gameState)
-    
+
     if (availableNPCs.length === 0) {
-      return null
+      return undefined
     }
 
     // Calculate total probability weight
@@ -108,7 +119,7 @@ export class NPCManager {
     }
 
     if (totalWeight === 0) {
-      return null
+      return undefined
     }
 
     // Roll for encounter
@@ -122,7 +133,7 @@ export class NPCManager {
       }
     }
 
-    return null
+    return undefined
   }
 
   /**
@@ -132,16 +143,16 @@ export class NPCManager {
   isNPCAvailable(npc: NPC, gameState: GameState): boolean {
     const gameStateHash = this.generateGameStateHash(gameState)
     const cacheKey = `${npc.id}_availability_${gameStateHash}`
-    
+
     // Check cache first
     const cached = this.availabilityCache.get(cacheKey)
     const now = Date.now()
-    
+
     if (cached && this.isCacheValid(cacheKey, now)) {
       return cached.result
     }
-    
-    const availability = npc.availability
+
+    const { availability } = npc
     let isAvailable = true
 
     // Check time restrictions
@@ -153,15 +164,18 @@ export class NPCManager {
     }
 
     // Check weather restrictions
-    if (isAvailable && availability.weatherRestriction) {
-      if (!availability.weatherRestriction.includes(gameState.weather)) {
-        isAvailable = false
-      }
+    if (
+      isAvailable &&
+      availability.weatherRestriction &&
+      !availability.weatherRestriction.includes(gameState.weather)
+    ) {
+      isAvailable = false
     }
 
     // Check reputation gate
     if (isAvailable && availability.reputationGate !== undefined) {
-      const locationReputation = gameState.reputation.locations[npc.location] || 0
+      const locationReputation =
+        gameState.reputation.locations[npc.location] || 0
       if (locationReputation < availability.reputationGate) {
         isAvailable = false
       }
@@ -169,20 +183,20 @@ export class NPCManager {
 
     // Check NPC-specific reputation requirements
     if (isAvailable && npc.reputation.minimum !== undefined) {
-      const relevantReputation = npc.reputation.location 
+      const relevantReputation = npc.reputation.location
         ? gameState.reputation.locations[npc.reputation.location] || 0
         : gameState.reputation.global
-      
+
       if (relevantReputation < npc.reputation.minimum) {
         isAvailable = false
       }
     }
 
     if (isAvailable && npc.reputation.maximum !== undefined) {
-      const relevantReputation = npc.reputation.location 
+      const relevantReputation = npc.reputation.location
         ? gameState.reputation.locations[npc.reputation.location] || 0
         : gameState.reputation.global
-      
+
       if (relevantReputation > npc.reputation.maximum) {
         isAvailable = false
       }
@@ -191,7 +205,7 @@ export class NPCManager {
     // Cache the result
     this.availabilityCache.set(cacheKey, { result: isAvailable, gameStateHash })
     this.cacheExpiry.set(cacheKey, now + NPCManager.CACHE_TTL)
-    
+
     // Clean up cache if it gets too large
     this.cleanupCache()
 
@@ -202,14 +216,14 @@ export class NPCManager {
    * Get all registered NPCs
    */
   getAllNPCs(): NPC[] {
-    return Array.from(this.npcs.values())
+    return [...this.npcs.values()]
   }
 
   /**
    * Get NPCs by type
    */
   getNPCsByType(type: string): NPC[] {
-    return Array.from(this.npcs.values()).filter(npc => npc.type === type)
+    return [...this.npcs.values()].filter((npc) => npc.type === type)
   }
 
   /**
@@ -251,7 +265,7 @@ export class NPCManager {
       day: gameState.day,
       weather: gameState.weather,
       location: gameState.location,
-      reputation: gameState.reputation
+      reputation: gameState.reputation,
     }
     return JSON.stringify(relevantState)
   }
@@ -277,7 +291,7 @@ export class NPCManager {
    */
   private cleanupCache(): void {
     const now = Date.now()
-    
+
     // Remove expired entries
     for (const [key, expiry] of this.cacheExpiry.entries()) {
       if (now >= expiry) {
@@ -286,13 +300,17 @@ export class NPCManager {
         this.cacheExpiry.delete(key)
       }
     }
-    
+
     // Limit cache size by removing oldest entries
     if (this.availabilityCache.size > NPCManager.MAX_CACHE_SIZE) {
-      const entries = Array.from(this.cacheExpiry.entries())
-        .sort(([, a], [, b]) => a - b)
-      
-      const toRemove = entries.slice(0, entries.length - NPCManager.MAX_CACHE_SIZE)
+      const entries = [...this.cacheExpiry.entries()].sort(
+        ([, a], [, b]) => a - b
+      )
+
+      const toRemove = entries.slice(
+        0,
+        entries.length - NPCManager.MAX_CACHE_SIZE
+      )
       for (const [key] of toRemove) {
         this.availabilityCache.delete(key)
         this.encounterCache.delete(key)

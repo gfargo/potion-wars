@@ -1,9 +1,14 @@
-import { type ReputationState, type ReputationChange } from '../../types/reputation.types.js'
+import {
+  type ReputationState,
+  type ReputationChange,
+} from '../../types/reputation.types.js'
 
 /**
  * Validates that a reputation state object has the correct structure
  */
-export const isValidReputationState = (reputation: any): reputation is ReputationState => {
+export const isValidReputationState = (
+  reputation: any
+): reputation is ReputationState => {
   if (typeof reputation !== 'object' || reputation === null) {
     return false
   }
@@ -14,7 +19,10 @@ export const isValidReputationState = (reputation: any): reputation is Reputatio
   }
 
   // Check locations is an object with string keys and number values
-  if (typeof reputation.locations !== 'object' || reputation.locations === null) {
+  if (
+    typeof reputation.locations !== 'object' ||
+    reputation.locations === null
+  ) {
     return false
   }
 
@@ -25,7 +33,10 @@ export const isValidReputationState = (reputation: any): reputation is Reputatio
   }
 
   // Check npcRelationships is an object with string keys and number values
-  if (typeof reputation.npcRelationships !== 'object' || reputation.npcRelationships === null) {
+  if (
+    typeof reputation.npcRelationships !== 'object' ||
+    reputation.npcRelationships === null
+  ) {
     return false
   }
 
@@ -41,7 +52,9 @@ export const isValidReputationState = (reputation: any): reputation is Reputatio
 /**
  * Validates that a reputation change object has the correct structure
  */
-export const isValidReputationChange = (change: any): change is ReputationChange => {
+export const isValidReputationChange = (
+  change: any
+): change is ReputationChange => {
   if (typeof change !== 'object' || change === null) {
     return false
   }
@@ -55,7 +68,10 @@ export const isValidReputationChange = (change: any): change is ReputationChange
     return false
   }
 
-  if (change.locationChange !== undefined && typeof change.locationChange !== 'number') {
+  if (
+    change.locationChange !== undefined &&
+    typeof change.locationChange !== 'number'
+  ) {
     return false
   }
 
@@ -72,9 +88,10 @@ export const isValidReputationChange = (change: any): change is ReputationChange
   }
 
   // Must have at least one change field
-  const hasChange = change.global !== undefined || 
-                   (change.location !== undefined && change.locationChange !== undefined) ||
-                   (change.npc !== undefined && change.npcChange !== undefined)
+  const hasChange =
+    change.global !== undefined ||
+    (change.location !== undefined && change.locationChange !== undefined) ||
+    (change.npc !== undefined && change.npcChange !== undefined)
 
   return hasChange
 }
@@ -82,11 +99,13 @@ export const isValidReputationChange = (change: any): change is ReputationChange
 /**
  * Sanitizes reputation values to ensure they stay within reasonable bounds
  */
-export const sanitizeReputationState = (reputation: ReputationState): ReputationState => {
+export const sanitizeReputationState = (
+  reputation: ReputationState
+): ReputationState => {
   const sanitized: ReputationState = {
     global: Math.max(-100, Math.min(100, reputation.global)),
     locations: {},
-    npcRelationships: {}
+    npcRelationships: {},
   }
 
   // Sanitize location reputation values
@@ -108,5 +127,5 @@ export const sanitizeReputationState = (reputation: ReputationState): Reputation
 export const createDefaultReputationState = (): ReputationState => ({
   global: 0,
   locations: {},
-  npcRelationships: {}
+  npcRelationships: {},
 })

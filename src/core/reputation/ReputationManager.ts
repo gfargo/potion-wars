@@ -1,10 +1,10 @@
 import { type GameState } from '../../types/game.types.js'
 import {
-    type ReputationState,
-    type ReputationChange,
-    ReputationLevel,
-    type ReputationModifier,
-    type ReputationThreshold
+  type ReputationState,
+  type ReputationChange,
+  ReputationLevel,
+  type ReputationModifier,
+  type ReputationThreshold,
 } from '../../types/reputation.types.js'
 
 /**
@@ -14,14 +14,18 @@ import {
  */
 export class ReputationManager {
   // Performance optimization caches
-  private static priceModifierCache: Map<number, number> = new Map()
-  private static reputationLevelCache: Map<number, ReputationLevel> = new Map()
-  private static locationReputationCache: Map<string, number> = new Map()
-  private static npcReputationCache: Map<string, number> = new Map()
-  
+  private static readonly priceModifierCache = new Map<number, number>()
+  private static readonly reputationLevelCache = new Map<
+    number,
+    ReputationLevel
+  >()
+
+  private static readonly locationReputationCache = new Map<string, number>()
+  private static readonly npcReputationCache = new Map<string, number>()
+
   // Cache configuration
   private static readonly CACHE_SIZE_LIMIT = 1000
-  
+
   // Reputation thresholds defining levels and their effects
   private static readonly REPUTATION_THRESHOLDS: ReputationThreshold[] = [
     {
@@ -31,8 +35,8 @@ export class ReputationManager {
       modifier: {
         priceMultiplier: 1.5, // 50% markup
         accessLevel: 0,
-        encounterProbability: -0.3 // 30% more negative encounters
-      }
+        encounterProbability: -0.3, // 30% more negative encounters
+      },
     },
     {
       level: ReputationLevel.DISLIKED,
@@ -41,18 +45,18 @@ export class ReputationManager {
       modifier: {
         priceMultiplier: 1.25, // 25% markup
         accessLevel: 1,
-        encounterProbability: -0.15 // 15% more negative encounters
-      }
+        encounterProbability: -0.15, // 15% more negative encounters
+      },
     },
     {
       level: ReputationLevel.NEUTRAL,
       minValue: -20,
       maxValue: 20,
       modifier: {
-        priceMultiplier: 1.0, // No change
+        priceMultiplier: 1, // No change
         accessLevel: 2,
-        encounterProbability: 0 // No change
-      }
+        encounterProbability: 0, // No change
+      },
     },
     {
       level: ReputationLevel.LIKED,
@@ -61,8 +65,8 @@ export class ReputationManager {
       modifier: {
         priceMultiplier: 0.9, // 10% discount
         accessLevel: 3,
-        encounterProbability: 0.1 // 10% more positive encounters
-      }
+        encounterProbability: 0.1, // 10% more positive encounters
+      },
     },
     {
       level: ReputationLevel.RESPECTED,
@@ -71,8 +75,8 @@ export class ReputationManager {
       modifier: {
         priceMultiplier: 0.8, // 20% discount
         accessLevel: 4,
-        encounterProbability: 0.2 // 20% more positive encounters
-      }
+        encounterProbability: 0.2, // 20% more positive encounters
+      },
     },
     {
       level: ReputationLevel.REVERED,
@@ -81,9 +85,9 @@ export class ReputationManager {
       modifier: {
         priceMultiplier: 0.7, // 30% discount
         accessLevel: 5,
-        encounterProbability: 0.3 // 30% more positive encounters
-      }
-    }
+        encounterProbability: 0.3, // 30% more positive encounters
+      },
+    },
   ]
 
   /**
@@ -98,14 +102,14 @@ export class ReputationManager {
     if (cached !== undefined) {
       return cached
     }
-    
+
     const threshold = this.getReputationThreshold(reputation)
     const modifier = threshold.modifier.priceMultiplier
-    
+
     // Cache the result
     this.priceModifierCache.set(reputation, modifier)
     this.limitCacheSize(this.priceModifierCache)
-    
+
     return modifier
   }
 
@@ -121,14 +125,14 @@ export class ReputationManager {
     if (cached !== undefined) {
       return cached
     }
-    
+
     const threshold = this.getReputationThreshold(reputation)
-    const level = threshold.level
-    
+    const { level } = threshold
+
     // Cache the result
     this.reputationLevelCache.set(reputation, level)
     this.limitCacheSize(this.reputationLevelCache)
-    
+
     return level
   }
 
@@ -148,16 +152,21 @@ export class ReputationManager {
    * @param change - Reputation change to apply
    * @returns Updated game state with reputation changes applied
    */
-  static applyReputationChange(state: GameState, change: ReputationChange): GameState {
+  static applyReputationChange(
+    state: GameState,
+    change: ReputationChange
+  ): GameState {
     const newReputation: ReputationState = {
       global: state.reputation.global,
       locations: { ...state.reputation.locations },
-      npcRelationships: { ...state.reputation.npcRelationships }
+      npcRelationships: { ...state.reputation.npcRelationships },
     }
 
     // Apply global reputation change
     if (change.global !== undefined) {
-      newReputation.global = this.clampReputation(newReputation.global + change.global)
+      newReputation.global = this.clampReputation(
+        newReputation.global + change.global
+      )
     }
 
     // Apply location-specific reputation change
@@ -178,7 +187,7 @@ export class ReputationManager {
 
     return {
       ...state,
-      reputation: newReputation
+      reputation: newReputation,
     }
   }
 
@@ -190,25 +199,30 @@ export class ReputationManager {
    * @param location - Location name to get reputation for
    * @returns Effective reputation value for the location
    */
-  static getLocationReputation(reputation: ReputationState, location: string): number {
-    const cacheKey = `${location}_${reputation.global}_${reputation.locations[location] || 0}`
-    
+  static getLocationReputation(
+    reputation: ReputationState,
+    location: string
+  ): number {
+    const cacheKey = `${location}_${reputation.global}_${
+      reputation.locations[location] || 0
+    }`
+
     // Check cache first
     const cached = this.locationReputationCache.get(cacheKey)
     if (cached !== undefined) {
       return cached
     }
-    
+
     const globalRep = reputation.global
     const locationRep = reputation.locations[location] || 0
-    
+
     // Weight: 60% location-specific, 40% global
     const result = Math.round(locationRep * 0.6 + globalRep * 0.4)
-    
+
     // Cache the result
     this.locationReputationCache.set(cacheKey, result)
     this.limitCacheSize(this.locationReputationCache)
-    
+
     return result
   }
 
@@ -221,24 +235,28 @@ export class ReputationManager {
    * @param location - Location where NPC is encountered
    * @returns Effective reputation with the NPC
    */
-  static getNPCReputation(reputation: ReputationState, npcId: string, location: string): number {
+  static getNPCReputation(
+    reputation: ReputationState,
+    npcId: string,
+    location: string
+  ): number {
     const locationRep = this.getLocationReputation(reputation, location)
     const npcRep = reputation.npcRelationships[npcId] || 0
     const cacheKey = `${npcId}_${location}_${locationRep}_${npcRep}`
-    
+
     // Check cache first
     const cached = this.npcReputationCache.get(cacheKey)
     if (cached !== undefined) {
       return cached
     }
-    
+
     // Weight: 70% NPC-specific, 30% location reputation
     const result = Math.round(npcRep * 0.7 + locationRep * 0.3)
-    
+
     // Cache the result
     this.npcReputationCache.set(cacheKey, result)
     this.limitCacheSize(this.npcReputationCache)
-    
+
     return result
   }
 
@@ -248,9 +266,12 @@ export class ReputationManager {
    * @param isNPCTrade - Whether this was an NPC trade (higher reputation gain)
    * @returns Reputation change amount
    */
-  static calculateTradeReputationGain(tradeValue: number, isNPCTrade: boolean = false): number {
+  static calculateTradeReputationGain(
+    tradeValue: number,
+    isNPCTrade = false
+  ): number {
     const baseGain = Math.min(Math.floor(tradeValue / 100), 5) // 1 point per 100 gold, max 5
-    const multiplier = isNPCTrade ? 1.5 : 1.0
+    const multiplier = isNPCTrade ? 1.5 : 1
     return Math.round(baseGain * multiplier)
   }
 
@@ -270,7 +291,10 @@ export class ReputationManager {
    * @param requirement - Minimum reputation required
    * @returns True if reputation meets requirement
    */
-  static meetsReputationRequirement(reputation: number, requirement: number): boolean {
+  static meetsReputationRequirement(
+    reputation: number,
+    requirement: number
+  ): boolean {
     return reputation >= requirement
   }
 
@@ -302,7 +326,7 @@ export class ReputationManager {
     return {
       global: 0,
       locations: {},
-      npcRelationships: {}
+      npcRelationships: {},
     }
   }
 
@@ -312,9 +336,12 @@ export class ReputationManager {
    * @param reputation - Reputation value to find threshold for
    * @returns ReputationThreshold object
    */
-  private static getReputationThreshold(reputation: number): ReputationThreshold {
+  private static getReputationThreshold(
+    reputation: number
+  ): ReputationThreshold {
     const threshold = this.REPUTATION_THRESHOLDS.find(
-      threshold => reputation >= threshold.minValue && reputation < threshold.maxValue
+      (threshold) =>
+        reputation >= threshold.minValue && reputation < threshold.maxValue
     )
     return threshold ?? this.REPUTATION_THRESHOLDS[2]! // Default to NEUTRAL if not found
   }
@@ -347,9 +374,9 @@ export class ReputationManager {
   private static limitCacheSize(cache: Map<any, any>): void {
     if (cache.size > this.CACHE_SIZE_LIMIT) {
       // Remove oldest entries (first 20% of cache)
-      const entries = Array.from(cache.entries())
+      const entries = [...cache.entries()]
       const toRemove = Math.floor(entries.length * 0.2)
-      
+
       for (let i = 0; i < toRemove; i++) {
         const entry = entries[i]
         if (entry) {

@@ -1,12 +1,11 @@
 import { Box, Text, useInput } from 'ink'
 import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
-import { useUI } from '../../../contexts/UIContext.js'
+import { useStore } from '../../../store/appStore.js'
 import { EnhancedSelectInput } from '../common/index.js'
 
 function QuitMenu() {
-  const { handleAction } = useGame()
-  const { setQuitConfirmation } = useUI()
+  const setQuitConfirmation = useStore((state) => state.setQuitConfirmation)
+  const resetGame = useStore((state) => state.resetGame)
 
   useInput((_, key) => {
     if (key.escape) {
@@ -33,7 +32,9 @@ function QuitMenu() {
           )}
           onSelect={({ value }) => {
             if (value === 'yes') {
-              handleAction('quit')
+              // TODO: Implement proper quit action (process.exit or return to title)
+              resetGame()
+              setQuitConfirmation(false)
             } else {
               setQuitConfirmation(false)
             }

@@ -1,11 +1,10 @@
 import { Box, Text } from 'ink'
 import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
-import { selectInventory } from '../../../core/state/index.js'
+import { useStore } from '../../../store/appStore.js'
+import { selectInventory } from '../../../store/selectors.js'
 
 function InventoryDisplay() {
-  const { gameState } = useGame()
-  const inventory = selectInventory(gameState)
+  const inventory = useStore(selectInventory)
   const inventoryEntries = Object.entries(inventory)
 
   return (

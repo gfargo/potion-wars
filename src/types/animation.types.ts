@@ -11,7 +11,7 @@ export type TravelAnimation = {
   name: string
   description: string
   frames: AnimationFrame[]
-  duration: number // ms per frame
+  duration: number // Ms per frame
 }
 
 export type EncounterAnimation = {

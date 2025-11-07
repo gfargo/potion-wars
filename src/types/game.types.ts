@@ -1,7 +1,10 @@
 import { type MultiStepEvent } from './events.types.js'
 import { type Weather } from './weather.types.js'
 import { type ReputationState } from './reputation.types.js'
-import { type LocationMarketState, type TradeTransaction } from './economy.types.js'
+import {
+  type LocationMarketState,
+  type TradeTransaction,
+} from './economy.types.js'
 
 export type ActionResult = {
   message?: string
@@ -34,6 +37,7 @@ export type GameState = {
   weather: Weather
   currentEvent?: MultiStepEvent
   currentStep?: number
+  isShowingEventOutcome?: boolean // Flag to keep event screen visible while showing outcome
   lastSave?: string
   playerName?: string
   _result?: ActionResult

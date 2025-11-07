@@ -37,6 +37,16 @@ Enjoy your adventures in the magical world of potion brewing and trading!
 
 This game is built using React, Ink, and TypeScript. Feel free to contribute to the project by submitting pull requests or reporting issues.
 
+### Animation Iteration
+
+Preview travel animations without launching the full game:
+
+```
+yarn anim:preview --from "Market Square" --to "Alchemist Quarter" --speed 1.25
+```
+
+Controls: space pauses, `+`/`-` adjust playback speed, `r` reloads the underlying animation, and `q` exits.
+
 ## Contributing 🤝
 
 We welcome contributions from the community! Feel free to fork the repository, make changes, and submit a pull request. Check out our [contributing guidelines](CONTRIBUTING.md) for more information.

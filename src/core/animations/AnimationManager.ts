@@ -1,45 +1,43 @@
 import type {
-    AnimationLibrary,
-    NPCAnimation,
-    TravelAnimation,
-    EncounterAnimation,
-    AnimationFrame,
-    AnimationValidationResult,
-    AnimationOptimization
+  AnimationLibrary,
+  NPCAnimation,
+  TravelAnimation,
+  EncounterAnimation,
+  AnimationFrame,
+  AnimationValidationResult,
+  AnimationOptimization,
 } from '../../types/animation.types.js'
 
 export class AnimationManager {
   private static instance: AnimationManager
   private animations: AnimationLibrary
   private isLoaded = false
-  
+
   // Performance optimization caches
-  private frameCache: Map<string, AnimationFrame[]> = new Map()
-  private optimizedFrameCache: Map<string, AnimationFrame[]> = new Map()
-  private lastAccessTime: Map<string, number> = new Map()
-  
+  private readonly frameCache = new Map<string, AnimationFrame[]>()
+  private readonly optimizedFrameCache = new Map<string, AnimationFrame[]>()
+  private readonly lastAccessTime = new Map<string, number>()
+
   // Memory management configuration
   private static readonly MAX_CACHED_FRAMES = 100
-  private static readonly CACHE_CLEANUP_INTERVAL = 60000 // 1 minute
-  private static readonly FRAME_EXPIRY_TIME = 300000 // 5 minutes
-  
+  private static readonly CACHE_CLEANUP_INTERVAL = 60_000 // 1 minute
+  private static readonly FRAME_EXPIRY_TIME = 300_000 // 5 minutes
+
   private cleanupTimer?: NodeJS.Timeout
 
   private constructor() {
     this.animations = {
       npcs: {},
       travel: [],
-      encounters: {}
+      encounters: {},
     }
-    
+
     // Start periodic cache cleanup
     this.startCacheCleanup()
   }
 
   static getInstance(): AnimationManager {
-    if (!AnimationManager.instance) {
-      AnimationManager.instance = new AnimationManager()
-    }
+    AnimationManager.instance ||= new AnimationManager()
     return AnimationManager.instance
   }
 
@@ -61,7 +59,11 @@ export class AnimationManager {
       this.loadDefaultAnimations()
       this.isLoaded = true
     } catch (error) {
-      throw new Error(`Failed to load animations: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new Error(
+        `Failed to load animations: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      )
     }
   }
 
@@ -69,29 +71,32 @@ export class AnimationManager {
    * Get NPC animation frames for a specific type
    * Uses caching to improve performance and reduce memory allocation
    */
-  getNPCAnimation(npcId: string, type: 'idle' | 'talking' | 'trading'): AnimationFrame[] {
+  getNPCAnimation(
+    npcId: string,
+    type: 'idle' | 'talking' | 'trading'
+  ): AnimationFrame[] {
     const cacheKey = `npc_${npcId}_${type}`
-    
+
     // Check cache first
     const cached = this.frameCache.get(cacheKey)
     if (cached) {
       this.lastAccessTime.set(cacheKey, Date.now())
       return cached
     }
-    
+
     const npcAnimation = this.animations.npcs[npcId]
     let frames: AnimationFrame[]
-    
-    if (!npcAnimation) {
+
+    if (npcAnimation) {
+      frames = npcAnimation[type] || this.getDefaultNPCAnimation(type)
+    } else {
       // Return default animation if specific NPC animation not found
       frames = this.getDefaultNPCAnimation(type)
-    } else {
-      frames = npcAnimation[type] || this.getDefaultNPCAnimation(type)
     }
-    
+
     // Cache the frames
     this.cacheFrames(cacheKey, frames)
-    
+
     return frames
   }
 
@@ -102,7 +107,10 @@ export class AnimationManager {
     if (this.animations.travel.length === 0) {
       return this.getDefaultTravelAnimation()
     }
-    const randomIndex = Math.floor(Math.random() * this.animations.travel.length)
+
+    const randomIndex = Math.floor(
+      Math.random() * this.animations.travel.length
+    )
     const animation = this.animations.travel[randomIndex]
     return animation || this.getDefaultTravelAnimation()
   }
@@ -113,26 +121,22 @@ export class AnimationManager {
    */
   getEncounterAnimation(encounterType: string): AnimationFrame[] {
     const cacheKey = `encounter_${encounterType}`
-    
+
     // Check cache first
     const cached = this.frameCache.get(cacheKey)
     if (cached) {
       this.lastAccessTime.set(cacheKey, Date.now())
       return cached
     }
-    
+
     const encounter = this.animations.encounters[encounterType]
     let frames: AnimationFrame[]
-    
-    if (!encounter) {
-      frames = this.getDefaultEncounterAnimation()
-    } else {
-      frames = encounter.frames
-    }
-    
+
+    frames = encounter ? encounter.frames : this.getDefaultEncounterAnimation()
+
     // Cache the frames
     this.cacheFrames(cacheKey, frames)
-    
+
     return frames
   }
 
@@ -143,7 +147,9 @@ export class AnimationManager {
     // Validate animation before registering
     const validation = this.validateNPCAnimation(animation)
     if (!validation.isValid) {
-      throw new Error(`Invalid NPC animation for ${npcId}: ${validation.errors.join(', ')}`)
+      throw new Error(
+        `Invalid NPC animation for ${npcId}: ${validation.errors.join(', ')}`
+      )
     }
 
     this.animations.npcs[npcId] = animation
@@ -155,7 +161,9 @@ export class AnimationManager {
   registerTravelAnimation(animation: TravelAnimation): void {
     const validation = this.validateAnimationFrames(animation.frames)
     if (!validation.isValid) {
-      throw new Error(`Invalid travel animation: ${validation.errors.join(', ')}`)
+      throw new Error(
+        `Invalid travel animation: ${validation.errors.join(', ')}`
+      )
     }
 
     this.animations.travel.push(animation)
@@ -164,10 +172,15 @@ export class AnimationManager {
   /**
    * Register a new encounter animation
    */
-  registerEncounterAnimation(encounterType: string, animation: EncounterAnimation): void {
+  registerEncounterAnimation(
+    encounterType: string,
+    animation: EncounterAnimation
+  ): void {
     const validation = this.validateAnimationFrames(animation.frames)
     if (!validation.isValid) {
-      throw new Error(`Invalid encounter animation: ${validation.errors.join(', ')}`)
+      throw new Error(
+        `Invalid encounter animation: ${validation.errors.join(', ')}`
+      )
     }
 
     this.animations.encounters[encounterType] = animation
@@ -186,10 +199,10 @@ export class AnimationManager {
     }
 
     // Check each frame
-    frames.forEach((frame, index) => {
+    for (const [index, frame] of frames.entries()) {
       if (!Array.isArray(frame)) {
         errors.push(`Frame ${index} must be an array of strings`)
-        return
+        continue
       }
 
       if (frame.length === 0) {
@@ -199,20 +212,20 @@ export class AnimationManager {
       // Check for consistent frame width
       if (frame.length > 0 && frame[0]) {
         const firstLineLength = frame[0].length
-        frame.forEach((line, lineIndex) => {
+        for (const [lineIndex, line] of frame.entries()) {
           if (typeof line !== 'string') {
             errors.push(`Frame ${index}, line ${lineIndex} must be a string`)
           } else if (line.length !== firstLineLength) {
             warnings.push(`Frame ${index} has inconsistent line widths`)
           }
-        })
+        }
       }
-    })
+    }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     }
   }
 
@@ -224,23 +237,25 @@ export class AnimationManager {
     const warnings: string[] = []
 
     // Validate each animation type
-    const types: (keyof NPCAnimation)[] = ['idle', 'talking', 'trading']
-    
+    const types: Array<keyof NPCAnimation> = ['idle', 'talking', 'trading']
+
     for (const type of types) {
       const frames = animation[type]
       const validation = this.validateAnimationFrames(frames)
-      
+
       if (!validation.isValid) {
         errors.push(`${type} animation: ${validation.errors.join(', ')}`)
       }
-      
-      warnings.push(...validation.warnings.map(w => `${type} animation: ${w}`))
+
+      warnings.push(
+        ...validation.warnings.map((w) => `${type} animation: ${w}`)
+      )
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     }
   }
 
@@ -248,40 +263,43 @@ export class AnimationManager {
    * Optimize animation frames
    * Uses caching to avoid re-optimizing the same frames
    */
-  optimizeAnimationData(frames: AnimationFrame[], options: AnimationOptimization): AnimationFrame[] {
+  optimizeAnimationData(
+    frames: AnimationFrame[],
+    options: AnimationOptimization
+  ): AnimationFrame[] {
     const optionsKey = JSON.stringify(options)
     const framesKey = JSON.stringify(frames)
     const cacheKey = `optimized_${framesKey}_${optionsKey}`
-    
+
     // Check cache first
     const cached = this.optimizedFrameCache.get(cacheKey)
     if (cached) {
       this.lastAccessTime.set(cacheKey, Date.now())
       return cached
     }
-    
+
     let optimizedFrames = [...frames]
 
     if (options.removeEmptyFrames) {
-      optimizedFrames = optimizedFrames.filter(frame => 
-        frame.length > 0 && frame.some(line => line.trim().length > 0)
+      optimizedFrames = optimizedFrames.filter((frame) =>
+        frame.some((line) => line.trim().length > 0)
       )
     }
 
     if (options.normalizeFrameWidth) {
       // Find the maximum width across all frames
       const maxWidth = Math.max(
-        ...optimizedFrames.flatMap(frame => frame.map(line => line.length))
+        ...optimizedFrames.flatMap((frame) => frame.map((line) => line.length))
       )
 
-      optimizedFrames = optimizedFrames.map(frame =>
-        frame.map(line => line.padEnd(maxWidth))
+      optimizedFrames = optimizedFrames.map((frame) =>
+        frame.map((line) => line.padEnd(maxWidth))
       )
     }
 
     if (options.trimWhitespace) {
-      optimizedFrames = optimizedFrames.map(frame =>
-        frame.map(line => line.trimEnd())
+      optimizedFrames = optimizedFrames.map((frame) =>
+        frame.map((line) => line.trimEnd())
       )
     }
 
@@ -307,27 +325,27 @@ export class AnimationManager {
     const encounterCount = Object.keys(this.animations.encounters).length
 
     let totalFrames = 0
-    
+
     // Count NPC frames
-    Object.values(this.animations.npcs).forEach(npc => {
+    for (const npc of Object.values(this.animations.npcs)) {
       totalFrames += npc.idle.length + npc.talking.length + npc.trading.length
-    })
+    }
 
     // Count travel frames
-    this.animations.travel.forEach(travel => {
+    for (const travel of this.animations.travel) {
       totalFrames += travel.frames.length
-    })
+    }
 
     // Count encounter frames
-    Object.values(this.animations.encounters).forEach(encounter => {
+    for (const encounter of Object.values(this.animations.encounters)) {
       totalFrames += encounter.frames.length
-    })
+    }
 
     return {
       npcCount,
       travelCount,
       encounterCount,
-      totalFrames
+      totalFrames,
     }
   }
 
@@ -338,7 +356,7 @@ export class AnimationManager {
     this.animations = {
       npcs: {},
       travel: [],
-      encounters: {}
+      encounters: {},
     }
     this.frameCache.clear()
     this.optimizedFrameCache.clear()
@@ -352,10 +370,10 @@ export class AnimationManager {
   private loadDefaultAnimations(): void {
     // Load default NPC animations
     this.loadDefaultNPCAnimations()
-    
+
     // Load default travel animations
     this.loadDefaultTravelAnimations()
-    
+
     // Load default encounter animations
     this.loadDefaultEncounterAnimations()
   }
@@ -369,8 +387,8 @@ export class AnimationManager {
           '   ( o.o ) ',
           '    > ^ <  ',
           '   /|   |\\ ',
-          '  (_)   (_)'
-        ]
+          '  (_)   (_)',
+        ],
       ],
       talking: [
         [
@@ -378,15 +396,15 @@ export class AnimationManager {
           '   ( ^.^ ) ',
           '    > v <  ',
           '   /|   |\\ ',
-          '  (_)   (_)'
+          '  (_)   (_)',
         ],
         [
           '    /\\_/\\  ',
           '   ( o.o ) ',
           '    > ^ <  ',
           '   /|   |\\ ',
-          '  (_)   (_)'
-        ]
+          '  (_)   (_)',
+        ],
       ],
       trading: [
         [
@@ -394,9 +412,9 @@ export class AnimationManager {
           '   ( $.$ ) ',
           '    > ^ <  ',
           '   /|$$$|\\ ',
-          '  (_)   (_)'
-        ]
-      ]
+          '  (_)   (_)',
+        ],
+      ],
     }
 
     this.animations.npcs['default_merchant'] = defaultMerchant
@@ -410,22 +428,10 @@ export class AnimationManager {
       description: 'A simple walking animation',
       duration: 500,
       frames: [
-        [
-          '  o  ',
-          ' /|\\ ',
-          ' / \\ '
-        ],
-        [
-          '  o  ',
-          ' /|\\ ',
-          '  /\\ '
-        ],
-        [
-          '  o  ',
-          ' /|\\ ',
-          ' \\/ '
-        ]
-      ]
+        ['  o  ', ' /|\\ ', ' / \\ '],
+        ['  o  ', ' /|\\ ', '  /\\ '],
+        ['  o  ', ' /|\\ ', ' \\/ '],
+      ],
     }
 
     const cartAnimation: TravelAnimation = {
@@ -433,19 +439,9 @@ export class AnimationManager {
       description: 'Traveling by cart',
       duration: 600,
       frames: [
-        [
-          '     o    ',
-          '    /|\\   ',
-          '_____|____',
-          '  O     O '
-        ],
-        [
-          '      o   ',
-          '     /|\\  ',
-          '_____|____',
-          '   O     O'
-        ]
-      ]
+        ['     o    ', '    /|\\   ', '_____|____', '  O     O '],
+        ['      o   ', '     /|\\  ', '_____|____', '   O     O'],
+      ],
     }
 
     this.animations.travel.push(walkingAnimation, cartAnimation)
@@ -456,36 +452,24 @@ export class AnimationManager {
       name: 'Combat',
       duration: 400,
       frames: [
-        [
-          '  ⚔️  ',
-          ' /|\\ ',
-          ' / \\ '
-        ],
-        [
-          '  ⚡  ',
-          ' /|\\ ',
-          ' / \\ '
-        ]
-      ]
+        ['  ⚔️  ', ' /|\\ ', ' / \\ '],
+        ['  ⚡  ', ' /|\\ ', ' / \\ '],
+      ],
     }
 
     this.animations.encounters['combat'] = combatAnimation
   }
 
-  private getDefaultNPCAnimation(type: 'idle' | 'talking' | 'trading'): AnimationFrame[] {
+  private getDefaultNPCAnimation(
+    type: 'idle' | 'talking' | 'trading'
+  ): AnimationFrame[] {
     const defaultAnimation = this.animations.npcs['default_merchant']
     if (defaultAnimation) {
       return defaultAnimation[type]
     }
 
     // Fallback if no default animation is loaded
-    return [
-      [
-        '  ?  ',
-        ' /|\\ ',
-        ' / \\ '
-      ]
-    ]
+    return [['  ?  ', ' /|\\ ', ' / \\ ']]
   }
 
   private getDefaultTravelAnimation(): TravelAnimation {
@@ -493,24 +477,12 @@ export class AnimationManager {
       name: 'Default Travel',
       description: 'Default travel animation',
       duration: 500,
-      frames: [
-        [
-          '  →  ',
-          ' --- ',
-          '  →  '
-        ]
-      ]
+      frames: [['  →  ', ' --- ', '  →  ']],
     }
   }
 
   private getDefaultEncounterAnimation(): AnimationFrame[] {
-    return [
-      [
-        '  !  ',
-        ' /!\\ ',
-        ' / \\ '
-      ]
-    ]
+    return [['  !  ', ' /!\\ ', ' / \\ ']]
   }
 
   /**
@@ -555,15 +527,17 @@ export class AnimationManager {
    * Limit cache size to prevent memory leaks
    */
   private limitCacheSize(): void {
-    const totalCachedFrames = this.frameCache.size + this.optimizedFrameCache.size
+    const totalCachedFrames =
+      this.frameCache.size + this.optimizedFrameCache.size
 
     if (totalCachedFrames > AnimationManager.MAX_CACHED_FRAMES) {
       // Remove least recently used frames
-      const sortedByAccess = Array.from(this.lastAccessTime.entries())
-        .sort(([, a], [, b]) => a - b)
+      const sortedByAccess = [...this.lastAccessTime.entries()].sort(
+        ([, a], [, b]) => a - b
+      )
 
       const toRemove = Math.ceil(totalCachedFrames * 0.2) // Remove 20% of cache
-      
+
       for (let i = 0; i < toRemove && i < sortedByAccess.length; i++) {
         const [key] = sortedByAccess[i]!
         this.frameCache.delete(key)
@@ -586,7 +560,7 @@ export class AnimationManager {
       cachedFrames: this.frameCache.size,
       optimizedFrames: this.optimizedFrameCache.size,
       totalCacheSize: this.frameCache.size + this.optimizedFrameCache.size,
-      lastCleanup: Date.now()
+      lastCleanup: Date.now(),
     }
   }
 
@@ -598,6 +572,7 @@ export class AnimationManager {
       clearInterval(this.cleanupTimer)
       this.cleanupTimer = undefined
     }
+
     this.clearCache()
   }
 }

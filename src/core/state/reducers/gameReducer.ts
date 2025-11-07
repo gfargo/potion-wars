@@ -2,10 +2,13 @@ import { locations } from '../../../constants.js'
 import { type GameState } from '../../../types/game.types.js'
 import { handleCombat } from '../../combat/index.js'
 import {
-    handleMultiStepEventChoice,
-    triggerRandomEvent,
+  handleMultiStepEventChoice,
+  triggerRandomEvent,
 } from '../../events/index.js'
-import { generatePrices, initializeGameMarkets } from '../../game/economy.js'
+import {
+  generateDynamicPrices,
+  initializeGameMarkets,
+} from '../../game/economy.js'
 import { brewPotion, sellPotion, travel } from '../../game/index.js'
 import { type GameAction } from '../actions/types.js'
 import { ReputationManager } from '../../reputation/ReputationManager.js'
@@ -61,7 +64,7 @@ export const gameReducer = (
 
     case 'game/repayDebt': {
       // Validate amount is a valid number
-      const amount = action.payload.amount
+      const { amount } = action.payload
       if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
         console.error('Invalid repay amount:', amount)
         return state
@@ -130,14 +133,23 @@ export const gameReducer = (
       return { ...state, ...(eventResult as GameState) }
     }
 
+    case 'game/acknowledgeEventOutcome': {
+      // User has acknowledged the event outcome, clear all event state
+      return {
+        ...state,
+        currentEvent: undefined,
+        currentStep: undefined,
+        isShowingEventOutcome: undefined,
+      }
+    }
+
     case 'save/initializeGame': {
       const initialLocation =
         locations[Math.floor(Math.random() * locations.length)]
       const { marketData, tradeHistory } = initializeGameMarkets()
 
-      // Return a completely fresh game state, explicitly clearing all optional fields
-      // to prevent artifacts from previous games
-      return {
+      // Create initial state with market data first
+      const initialState: GameState = {
         day: 0,
         cash: 2000,
         debt: 5000,
@@ -147,7 +159,7 @@ export const gameReducer = (
         intelligence: Math.floor(Math.random() * 5) + 5,
         location: initialLocation!,
         inventory: {},
-        prices: generatePrices(),
+        prices: {}, // Temporary empty prices
         weather: 'sunny',
         // New features with initialized values
         reputation: ReputationManager.initializeReputation(),
@@ -159,7 +171,13 @@ export const gameReducer = (
         currentNPCInteraction: undefined,
         currentAnimation: undefined,
         lastSave: undefined,
-        playerName: undefined
+        playerName: undefined,
+      }
+
+      // Now generate dynamic prices based on the complete initial state
+      return {
+        ...initialState,
+        prices: generateDynamicPrices(initialState),
       }
     }
 
@@ -170,22 +188,23 @@ export const gameReducer = (
     case 'reputation/resetReputation': {
       return {
         ...state,
-        reputation: ReputationManager.initializeReputation()
+        reputation: ReputationManager.initializeReputation(),
       }
     }
 
     case 'market/updateMarketData': {
       return {
         ...state,
-        marketData: action.payload.marketData
+        marketData: action.payload.marketData,
       }
     }
 
     case 'market/recordTransaction': {
-      const { location, potionType, quantity, pricePerUnit, day } = action.payload
+      const { location, potionType, quantity, pricePerUnit, day } =
+        action.payload
       const locationMarket = state.marketData[location]
-      
-      if (!locationMarket || !locationMarket[potionType]) {
+
+      if (!locationMarket?.[potionType]) {
         return state
       }
 
@@ -203,7 +222,7 @@ export const gameReducer = (
         quantity: Math.abs(quantity),
         pricePerUnit,
         totalValue: Math.abs(quantity) * pricePerUnit,
-        type: quantity > 0 ? 'buy' as const : 'sell' as const
+        type: quantity > 0 ? ('buy' as const) : ('sell' as const),
       }
 
       return {
@@ -212,10 +231,10 @@ export const gameReducer = (
           ...state.marketData,
           [location]: {
             ...locationMarket,
-            [potionType]: updatedMarketData
-          }
+            [potionType]: updatedMarketData,
+          },
         },
-        tradeHistory: [...state.tradeHistory, tradeRecord]
+        tradeHistory: [...state.tradeHistory, tradeRecord],
       }
     }
 
@@ -224,7 +243,10 @@ export const gameReducer = (
     }
 
     case 'market/applySupplyDemandFactors': {
-      return EnhancedEconomyManager.applySupplyDemandFactors(state, action.payload.factors)
+      return EnhancedEconomyManager.applySupplyDemandFactors(
+        state,
+        action.payload.factors
+      )
     }
 
     case 'npc/startInteraction': {
@@ -234,8 +256,8 @@ export const gameReducer = (
         currentNPCInteraction: {
           npcId: action.payload.npcId,
           type: action.payload.interactionType,
-          active: true
-        }
+          active: true,
+        },
       }
     }
 
@@ -243,7 +265,7 @@ export const gameReducer = (
       // Clear the NPC interaction state
       return {
         ...state,
-        currentNPCInteraction: undefined
+        currentNPCInteraction: undefined,
       }
     }
 
@@ -260,8 +282,8 @@ export const gameReducer = (
         currentAnimation: {
           type: action.payload.animationType,
           data: action.payload.animationData,
-          active: true
-        }
+          active: true,
+        },
       }
     }
 
@@ -269,7 +291,7 @@ export const gameReducer = (
       // Clear animation state
       return {
         ...state,
-        currentAnimation: undefined
+        currentAnimation: undefined,
       }
     }
 
@@ -282,11 +304,20 @@ export const gameReducer = (
           cash: loadedState.cash,
           debt: loadedState.debt,
           location: loadedState.location.name,
-          inventory: Object.keys(loadedState.inventory).length
+          inventory: Object.keys(loadedState.inventory).length,
         })
-        return loadedState
+
+        // Regenerate prices based on current market data and reputation
+        // This ensures prices are always in sync with the enhanced economy system
+        return {
+          ...loadedState,
+          prices: generateDynamicPrices(loadedState),
+        }
       }
-      console.warn(`Failed to load game from slot ${action.payload.slot}, keeping current state`)
+
+      console.warn(
+        `Failed to load game from slot ${action.payload.slot}, keeping current state`
+      )
       return state
     }
 

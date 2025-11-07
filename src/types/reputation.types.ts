@@ -14,12 +14,12 @@ export type ReputationChange = {
 }
 
 export enum ReputationLevel {
-  DESPISED = 'Despised',      // < -50
-  DISLIKED = 'Disliked',      // -50 to -20
-  NEUTRAL = 'Neutral',        // -20 to 20
-  LIKED = 'Liked',            // 20 to 50
-  RESPECTED = 'Respected',    // 50 to 80
-  REVERED = 'Revered'         // > 80
+  DESPISED = 'Despised', // < -50
+  DISLIKED = 'Disliked', // -50 to -20
+  NEUTRAL = 'Neutral', // -20 to 20
+  LIKED = 'Liked', // 20 to 50
+  RESPECTED = 'Respected', // 50 to 80
+  REVERED = 'Revered', // > 80
 }
 
 export type ReputationModifier = {

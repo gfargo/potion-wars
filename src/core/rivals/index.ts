@@ -7,5 +7,5 @@ export type {
   RivalEncounterType,
   RivalEncounterOutcome,
   RivalEncounterRecord,
-  RivalEncounterContext
+  RivalEncounterContext,
 } from './RivalAlchemist.js'

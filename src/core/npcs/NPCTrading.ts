@@ -1,5 +1,9 @@
 import { type GameState } from '../../types/game.types.js'
-import { type NPC, type NPCTrade, type NPCTradeCondition } from '../../types/npc.types.js'
+import {
+  type NPC,
+  type NPCTrade,
+  type NPCTradeCondition,
+} from '../../types/npc.types.js'
 import { type TradeTransaction } from '../../types/economy.types.js'
 import { ReputationManager } from '../reputation/ReputationManager.js'
 import { EnhancedEconomyManager } from '../game/enhancedEconomy.js'
@@ -7,7 +11,12 @@ import { EnhancedEconomyManager } from '../game/enhancedEconomy.js'
 export class NPCTradingError extends Error {
   constructor(
     message: string,
-    public code: 'INSUFFICIENT_FUNDS' | 'INSUFFICIENT_INVENTORY' | 'REPUTATION_TOO_LOW' | 'TRADE_UNAVAILABLE' | 'INVALID_TRADE',
+    public code:
+      | 'INSUFFICIENT_FUNDS'
+      | 'INSUFFICIENT_INVENTORY'
+      | 'REPUTATION_TOO_LOW'
+      | 'TRADE_UNAVAILABLE'
+      | 'INVALID_TRADE',
     public tradeId?: string
   ) {
     super(message)
@@ -64,7 +73,13 @@ export class NPCTrading {
       const trade = npc.trades[i]
       if (!trade) continue
 
-      const offer = this.createTradeOffer(npc, trade, i, gameState, npcReputation)
+      const offer = this.createTradeOffer(
+        npc,
+        trade,
+        i,
+        gameState,
+        npcReputation
+      )
       offers.push(offer)
     }
 
@@ -90,8 +105,11 @@ export class NPCTrading {
     const type: 'buy' | 'sell' = isBuyOffer ? 'buy' : 'sell'
 
     // Calculate reputation-adjusted price
-    const reputationModifier = ReputationManager.calculatePriceModifier(npcReputation)
-    const adjustedPricePerUnit = Math.floor(Math.abs(trade.price) * reputationModifier)
+    const reputationModifier =
+      ReputationManager.calculatePriceModifier(npcReputation)
+    const adjustedPricePerUnit = Math.floor(
+      Math.abs(trade.price) * reputationModifier
+    )
     const totalPrice = adjustedPricePerUnit * trade.quantity
 
     // Check availability
@@ -114,7 +132,7 @@ export class NPCTrading {
       totalPrice,
       reputationRequired,
       available,
-      reason
+      reason,
     }
   }
 
@@ -129,10 +147,13 @@ export class NPCTrading {
     type: 'buy' | 'sell'
   ): { available: boolean; reason?: string } {
     // Check reputation requirement
-    if (trade.reputationRequirement && npcReputation < trade.reputationRequirement) {
+    if (
+      trade.reputationRequirement &&
+      npcReputation < trade.reputationRequirement
+    ) {
       return {
         available: false,
-        reason: `Requires reputation of ${trade.reputationRequirement} (you have ${npcReputation})`
+        reason: `Requires reputation of ${trade.reputationRequirement} (you have ${npcReputation})`,
       }
     }
 
@@ -142,7 +163,7 @@ export class NPCTrading {
         if (!this.evaluateTradeCondition(condition, gameState)) {
           return {
             available: false,
-            reason: this.getConditionFailureReason(condition, gameState)
+            reason: this.getConditionFailureReason(condition, gameState),
           }
         }
       }
@@ -152,7 +173,7 @@ export class NPCTrading {
     if (type === 'buy' && gameState.cash < totalPrice) {
       return {
         available: false,
-        reason: `Insufficient funds (need ${totalPrice}, have ${gameState.cash})`
+        reason: `Insufficient funds (need ${totalPrice}, have ${gameState.cash})`,
       }
     }
 
@@ -162,7 +183,7 @@ export class NPCTrading {
       if (playerQuantity < trade.quantity) {
         return {
           available: false,
-          reason: `Insufficient inventory (need ${trade.quantity}, have ${playerQuantity})`
+          reason: `Insufficient inventory (need ${trade.quantity}, have ${playerQuantity})`,
         }
       }
     }
@@ -173,24 +194,36 @@ export class NPCTrading {
   /**
    * Evaluate a trade condition against game state
    */
-  private static evaluateTradeCondition(condition: NPCTradeCondition, gameState: GameState): boolean {
+  private static evaluateTradeCondition(
+    condition: NPCTradeCondition,
+    gameState: GameState
+  ): boolean {
     let actualValue: number | string
 
     switch (condition.type) {
-      case 'reputation':
+      case 'reputation': {
         actualValue = gameState.reputation.global
         break
-      case 'cash':
+      }
+
+      case 'cash': {
         actualValue = gameState.cash
         break
-      case 'inventory':
+      }
+
+      case 'inventory': {
         actualValue = gameState.inventory[condition.value as string] || 0
         break
-      case 'day':
+      }
+
+      case 'day': {
         actualValue = gameState.day
         break
-      default:
+      }
+
+      default: {
         return false
+      }
     }
 
     return this.compareValues(actualValue, condition.operator, condition.value)
@@ -205,37 +238,60 @@ export class NPCTrading {
     expected: number | string
   ): boolean {
     switch (operator) {
-      case 'gt':
+      case 'gt': {
         return actual > expected
-      case 'lt':
+      }
+
+      case 'lt': {
         return actual < expected
-      case 'eq':
+      }
+
+      case 'eq': {
         return actual === expected
-      case 'gte':
+      }
+
+      case 'gte': {
         return actual >= expected
-      case 'lte':
+      }
+
+      case 'lte': {
         return actual <= expected
-      default:
+      }
+
+      default: {
         return false
+      }
     }
   }
 
   /**
    * Get human-readable reason for condition failure
    */
-  private static getConditionFailureReason(condition: NPCTradeCondition, gameState: GameState): string {
+  private static getConditionFailureReason(
+    condition: NPCTradeCondition,
+    gameState: GameState
+  ): string {
     switch (condition.type) {
-      case 'reputation':
+      case 'reputation': {
         return `Requires reputation ${condition.operator} ${condition.value} (you have ${gameState.reputation.global})`
-      case 'cash':
+      }
+
+      case 'cash': {
         return `Requires cash ${condition.operator} ${condition.value} (you have ${gameState.cash})`
-      case 'inventory':
+      }
+
+      case 'inventory': {
         const quantity = gameState.inventory[condition.value as string] || 0
         return `Requires ${condition.value} ${condition.operator} ${condition.value} (you have ${quantity})`
-      case 'day':
+      }
+
+      case 'day': {
         return `Requires day ${condition.operator} ${condition.value} (current day is ${gameState.day})`
-      default:
+      }
+
+      default: {
         return 'Condition not met'
+      }
     }
   }
 
@@ -290,14 +346,17 @@ export class NPCTrading {
       // Update inventory
       const newInventory = { ...gameState.inventory }
       if (offer.type === 'buy') {
-        newInventory[offer.itemName] = (newInventory[offer.itemName] || 0) + offer.quantity
+        newInventory[offer.itemName] =
+          (newInventory[offer.itemName] || 0) + offer.quantity
       } else {
-        newInventory[offer.itemName] = (newInventory[offer.itemName] || 0) - offer.quantity
+        newInventory[offer.itemName] =
+          (newInventory[offer.itemName] || 0) - offer.quantity
         const currentQuantity = newInventory[offer.itemName]
         if (currentQuantity !== undefined && currentQuantity <= 0) {
           delete newInventory[offer.itemName]
         }
       }
+
       newGameState.inventory = newInventory
 
       // Calculate reputation change
@@ -312,7 +371,7 @@ export class NPCTrading {
         location: npc.location,
         locationChange: Math.floor(reputationChange * 0.5), // 50% to location
         npc: npc.id,
-        npcChange: reputationChange // 100% to NPC relationship
+        npcChange: reputationChange, // 100% to NPC relationship
       })
 
       // Create transaction record
@@ -325,7 +384,7 @@ export class NPCTrading {
         totalValue: offer.totalPrice,
         type: offer.type,
         npcInvolved: npc.id,
-        reputationChange
+        reputationChange,
       }
 
       // Add transaction to history
@@ -333,7 +392,7 @@ export class NPCTrading {
 
       // Update market data if trading potions
       const locationMarket = newGameState.marketData[npc.location]
-      if (locationMarket && locationMarket[offer.itemName]) {
+      if (locationMarket?.[offer.itemName]) {
         const marketData = locationMarket[offer.itemName]
         if (marketData) {
           const updatedMarketData = EnhancedEconomyManager.recordTransaction(
@@ -346,14 +405,18 @@ export class NPCTrading {
         }
       }
 
-      const message = this.generateTradeSuccessMessage(offer, npc, reputationChange)
+      const message = this.generateTradeSuccessMessage(
+        offer,
+        npc,
+        reputationChange
+      )
 
       return {
         success: true,
         transaction,
         reputationChange,
         message,
-        newGameState
+        newGameState,
       }
     } catch (error) {
       if (error instanceof NPCTradingError) {
@@ -361,7 +424,7 @@ export class NPCTrading {
           success: false,
           reputationChange: 0,
           message: error.message,
-          newGameState: gameState
+          newGameState: gameState,
         }
       }
 
@@ -369,7 +432,7 @@ export class NPCTrading {
         success: false,
         reputationChange: 0,
         message: 'An unexpected error occurred during the trade',
-        newGameState: gameState
+        newGameState: gameState,
       }
     }
   }
@@ -384,9 +447,9 @@ export class NPCTrading {
   ): string {
     const action = offer.type === 'buy' ? 'bought' : 'sold'
     const preposition = offer.type === 'buy' ? 'from' : 'to'
-    
+
     let message = `You ${action} ${offer.quantity} ${offer.itemName} ${preposition} ${npc.name} for ${offer.totalPrice} gold.`
-    
+
     if (reputationChange > 0) {
       message += ` Your reputation improved! (+${reputationChange})`
     }
@@ -398,27 +461,39 @@ export class NPCTrading {
    * Get trade offers filtered by type
    */
   static getBuyOffers(npc: NPC, gameState: GameState): NPCTradeOffer[] {
-    return this.generateTradeOffers(npc, gameState).filter(offer => offer.type === 'buy')
+    return this.generateTradeOffers(npc, gameState).filter(
+      (offer) => offer.type === 'buy'
+    )
   }
 
   /**
    * Get trade offers filtered by type
    */
   static getSellOffers(npc: NPC, gameState: GameState): NPCTradeOffer[] {
-    return this.generateTradeOffers(npc, gameState).filter(offer => offer.type === 'sell')
+    return this.generateTradeOffers(npc, gameState).filter(
+      (offer) => offer.type === 'sell'
+    )
   }
 
   /**
    * Get available trade offers only
    */
   static getAvailableOffers(npc: NPC, gameState: GameState): NPCTradeOffer[] {
-    return this.generateTradeOffers(npc, gameState).filter(offer => offer.available)
+    return this.generateTradeOffers(npc, gameState).filter(
+      (offer) => offer.available
+    )
   }
 
   /**
    * Find a specific trade offer by ID
    */
-  static findTradeOffer(npc: NPC, gameState: GameState, offerId: string): NPCTradeOffer | undefined {
-    return this.generateTradeOffers(npc, gameState).find(offer => offer.id === offerId)
+  static findTradeOffer(
+    npc: NPC,
+    gameState: GameState,
+    offerId: string
+  ): NPCTradeOffer | undefined {
+    return this.generateTradeOffers(npc, gameState).find(
+      (offer) => offer.id === offerId
+    )
   }
 }

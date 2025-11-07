@@ -1,31 +1,35 @@
 import { Box, Text } from 'ink'
-import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
-import { selectPriceList } from '../../../core/state/index.js'
-import { EnhancedMarketDisplay } from './EnhancedMarketDisplay.js'
+import React, { useMemo } from 'react'
+import { useStore } from '../../../store/appStore.js'
+// import { EnhancedMarketDisplay } from './EnhancedMarketDisplay.js'
+
+// Stable selectors defined outside component to prevent recreation
+const selectGamePrices = (state: any) => state.game.prices
 
 function PriceList() {
-  const { gameState } = useGame()
-  const prices = selectPriceList(gameState)
+  const gamePrices = useStore(selectGamePrices)
 
-  // If enhanced market data is available, use the enhanced display
-  if (gameState.marketData && Object.keys(gameState.marketData).length > 0) {
-    const locationMarkets = gameState.marketData[gameState.location.name]
-    
-    if (locationMarkets && Object.keys(locationMarkets).length > 0) {
-      return (
-        <EnhancedMarketDisplay
-          markets={locationMarkets}
-          reputation={gameState.reputation}
-          currentLocation={gameState.location.name}
-          compact={true}
-          showTrends={true}
-        />
-      )
-    }
-  }
+  // Get prices for fallback display
+  const prices = useMemo(() => {
+    return Object.entries(gamePrices).sort((a, b) => a[0].localeCompare(b[0]))
+  }, [gamePrices])
 
-  // Fallback to original price list if no enhanced data
+  // TEMPORARILY DISABLED: If enhanced market data is available, use the enhanced display
+  // TODO: Fix EnhancedMarketDisplay infinite render loop
+  // if (locationMarkets && Object.keys(locationMarkets).length > 0) {
+  //   return (
+  //     <EnhancedMarketDisplay
+  //       compact
+  //       showTrends
+  //       markets={locationMarkets}
+  //       reputation={reputation}
+  //       currentLocation={locationName}
+  //       prices={gamePrices}
+  //     />
+  //   )
+  // }
+
+  // Fallback to original price list
   return (
     <Box
       borderDimColor
@@ -37,7 +41,7 @@ function PriceList() {
       <Text bold>Prices 🧪</Text>
       {prices.map(([potion, price]) => (
         <Text key={potion}>
-          {potion}: {price}g
+          {potion}: {String(price)}g
         </Text>
       ))}
     </Box>

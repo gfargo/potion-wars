@@ -16,15 +16,15 @@ const mockNPC: NPC = {
     farewell: 'Come back soon!',
     tradeAccept: 'Excellent choice!',
     tradeDecline: 'Perhaps another time.',
-    lowReputation: 'I don\'t trust you.',
-    highReputation: 'My valued customer!'
+    lowReputation: "I don't trust you.",
+    highReputation: 'My valued customer!',
   },
   location: 'Market Square',
   availability: {
-    probability: 1.0
+    probability: 1,
   },
   reputation: {
-    minimum: 0
+    minimum: 0,
   },
   dialogue: {
     rootNode: 'greeting',
@@ -34,55 +34,55 @@ const mockNPC: NPC = {
         text: 'What can I do for you today?',
         choices: [
           {
-            text: 'I\'d like to browse your wares',
-            nextNode: 'trade'
+            text: "I'd like to browse your wares",
+            nextNode: 'trade',
           },
           {
             text: 'Just saying hello',
-            nextNode: 'farewell'
-          }
-        ]
+            nextNode: 'farewell',
+          },
+        ],
       },
       trade: {
         id: 'trade',
         text: 'Here are my finest potions!',
         choices: [
           {
-            text: 'I\'ll take a healing potion',
+            text: "I'll take a healing potion",
             effects: [
               {
                 type: 'cash',
-                value: -100
+                value: -100,
               },
               {
                 type: 'inventory',
                 value: 1,
-                item: 'Healing Potion'
-              }
-            ]
+                item: 'Healing Potion',
+              },
+            ],
           },
           {
             text: 'Maybe later',
-            nextNode: 'farewell'
-          }
-        ]
+            nextNode: 'farewell',
+          },
+        ],
       },
       farewell: {
         id: 'farewell',
         text: 'Safe travels!',
         choices: [
           {
-            text: 'Goodbye'
-          }
-        ]
-      }
-    }
-  }
+            text: 'Goodbye',
+          },
+        ],
+      },
+    },
+  },
 }
 
-test('NPCInteractionScreen renders correctly', t => {
+test('NPCInteractionScreen renders correctly', (t) => {
   const onComplete = () => {}
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={mockNPC} onComplete={onComplete} />
@@ -94,9 +94,9 @@ test('NPCInteractionScreen renders correctly', t => {
   t.true(lastFrame()!.includes('Conversation with Test Merchant'))
 })
 
-test('NPCInteractionScreen shows loading state initially', t => {
+test('NPCInteractionScreen shows loading state initially', (t) => {
   const onComplete = () => {}
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={mockNPC} onComplete={onComplete} />
@@ -105,14 +105,14 @@ test('NPCInteractionScreen shows loading state initially', t => {
 
   // Should show loading or conversation content
   t.true(
-    lastFrame()!.includes('Starting conversation') || 
-    lastFrame()!.includes('Test Merchant')
+    lastFrame()!.includes('Starting conversation') ||
+      lastFrame()!.includes('Test Merchant')
   )
 })
 
-test('NPCInteractionScreen displays dialogue choices', t => {
+test('NPCInteractionScreen displays dialogue choices', (t) => {
   const onComplete = () => {}
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={mockNPC} onComplete={onComplete} />
@@ -121,25 +121,25 @@ test('NPCInteractionScreen displays dialogue choices', t => {
 
   // Should show dialogue choices from the greeting node
   t.true(
-    lastFrame()!.includes('browse your wares') || 
-    lastFrame()!.includes('saying hello')
+    lastFrame()!.includes('browse your wares') ||
+      lastFrame()!.includes('saying hello')
   )
 })
 
-test('NPCInteractionScreen handles invalid NPC gracefully', t => {
+test('NPCInteractionScreen handles invalid NPC gracefully', (t) => {
   const invalidNPC: NPC = {
     ...mockNPC,
     dialogue: {
       rootNode: 'nonexistent',
-      nodes: {}
-    }
+      nodes: {},
+    },
   }
-  
+
   let completeCalled = false
   const onComplete = () => {
     completeCalled = true
   }
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={invalidNPC} onComplete={onComplete} />
@@ -150,9 +150,9 @@ test('NPCInteractionScreen handles invalid NPC gracefully', t => {
   t.true(lastFrame()!.includes('conversation') || completeCalled)
 })
 
-test('NPCInteractionScreen shows conversation history', t => {
+test('NPCInteractionScreen shows conversation history', (t) => {
   const onComplete = () => {}
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={mockNPC} onComplete={onComplete} />
@@ -164,9 +164,9 @@ test('NPCInteractionScreen shows conversation history', t => {
   t.true(lastFrame()!.includes('Welcome to my shop!'))
 })
 
-test('NPCInteractionScreen displays NPC portrait area', t => {
+test('NPCInteractionScreen displays NPC portrait area', (t) => {
   const onComplete = () => {}
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={mockNPC} onComplete={onComplete} />
@@ -178,9 +178,9 @@ test('NPCInteractionScreen displays NPC portrait area', t => {
   t.true(lastFrame()!.includes('merchant'))
 })
 
-test('NPCInteractionScreen shows instructions', t => {
+test('NPCInteractionScreen shows instructions', (t) => {
   const onComplete = () => {}
-  
+
   const { lastFrame } = render(
     <TestWrapper>
       <NPCInteractionScreen npc={mockNPC} onComplete={onComplete} />

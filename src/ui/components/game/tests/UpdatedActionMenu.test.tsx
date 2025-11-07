@@ -7,7 +7,7 @@ import { locations } from '../../../../constants.js'
 
 const testPotions = ['Healing Potion', 'Strength Potion']
 
-test('Updated ActionMenu includes NPC search option', t => {
+test('Updated ActionMenu includes NPC search option', (t) => {
   const { lastFrame } = render(
     <TestWrapper>
       <ActionMenu potions={testPotions} locations={locations} />
@@ -20,7 +20,7 @@ test('Updated ActionMenu includes NPC search option', t => {
   t.true(output!.includes('(N)'))
 })
 
-test('Updated ActionMenu shows NPC icon when selected', t => {
+test('Updated ActionMenu shows NPC icon when selected', (t) => {
   const { lastFrame } = render(
     <TestWrapper>
       <ActionMenu potions={testPotions} locations={locations} />
@@ -33,7 +33,7 @@ test('Updated ActionMenu shows NPC icon when selected', t => {
   t.true(output!.includes('👥') || output!.includes('NPC'))
 })
 
-test('Updated ActionMenu maintains all original options', t => {
+test('Updated ActionMenu maintains all original options', (t) => {
   const { lastFrame } = render(
     <TestWrapper>
       <ActionMenu potions={testPotions} locations={locations} />
@@ -49,7 +49,7 @@ test('Updated ActionMenu maintains all original options', t => {
   t.true(output!.includes('Quit'))
 })
 
-test('Updated ActionMenu shows current action', t => {
+test('Updated ActionMenu shows current action', (t) => {
   const { lastFrame } = render(
     <TestWrapper>
       <ActionMenu potions={testPotions} locations={locations} />

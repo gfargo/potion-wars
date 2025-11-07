@@ -16,6 +16,7 @@
     "release": "release-it",
     "lint": "prettier --check . && xo",
     "lint:fix": "prettier --write . && xo --fix",
+    "anim:preview": "node --loader ts-node/esm src/dev/TravelAnimationPreview.tsx",
     "pretest": "yarn build",
     "test": "ava",
     "test:fix": "yarn lint:fix && ava --update-snapshots"
@@ -24,10 +25,12 @@
     "dist"
   ],
   "dependencies": {
+    "immer": "^10.2.0",
     "ink": "^4.1.0",
     "ink-gradient": "^3.0.0",
     "ink-select-input": "^6.0.0",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@ava/typescript": "^5.0.0",

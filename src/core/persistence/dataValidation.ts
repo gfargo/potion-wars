@@ -1,6 +1,18 @@
-import { type GameState, type NPCInteractionState, type AnimationState } from '../../types/game.types.js'
-import { type LocationMarketState, type MarketData, type TradeTransaction } from '../../types/economy.types.js'
-import { isValidReputationState, createDefaultReputationState, sanitizeReputationState } from './reputationValidation.js'
+import {
+  type GameState,
+  type NPCInteractionState,
+  type AnimationState,
+} from '../../types/game.types.js'
+import {
+  type LocationMarketState,
+  type MarketData,
+  type TradeTransaction,
+} from '../../types/economy.types.js'
+import {
+  isValidReputationState,
+  createDefaultReputationState,
+  sanitizeReputationState,
+} from './reputationValidation.js'
 
 /**
  * Validates that a market data object has the correct structure
@@ -33,9 +45,12 @@ export const isValidMarketData = (data: any): data is MarketData => {
     if (typeof entry !== 'object' || entry === null) {
       return false
     }
-    if (typeof entry.day !== 'number' || 
-        typeof entry.price !== 'number' || 
-        typeof entry.volume !== 'number') {
+
+    if (
+      typeof entry.day !== 'number' ||
+      typeof entry.price !== 'number' ||
+      typeof entry.volume !== 'number'
+    ) {
       return false
     }
   }
@@ -46,7 +61,9 @@ export const isValidMarketData = (data: any): data is MarketData => {
 /**
  * Validates that a location market state has the correct structure
  */
-export const isValidLocationMarketState = (data: any): data is LocationMarketState => {
+export const isValidLocationMarketState = (
+  data: any
+): data is LocationMarketState => {
   if (typeof data !== 'object' || data === null) {
     return false
   }
@@ -61,7 +78,9 @@ export const isValidLocationMarketState = (data: any): data is LocationMarketSta
       return false
     }
 
-    for (const [potionType, marketData] of Object.entries(locationData as Record<string, any>)) {
+    for (const [potionType, marketData] of Object.entries(
+      locationData as Record<string, any>
+    )) {
       if (typeof potionType !== 'string') {
         return false
       }
@@ -78,7 +97,9 @@ export const isValidLocationMarketState = (data: any): data is LocationMarketSta
 /**
  * Validates that a trade transaction has the correct structure
  */
-export const isValidTradeTransaction = (data: any): data is TradeTransaction => {
+export const isValidTradeTransaction = (
+  data: any
+): data is TradeTransaction => {
   if (typeof data !== 'object' || data === null) {
     return false
   }
@@ -90,7 +111,7 @@ export const isValidTradeTransaction = (data: any): data is TradeTransaction => 
     potionType: 'string',
     quantity: 'number',
     pricePerUnit: 'number',
-    totalValue: 'number'
+    totalValue: 'number',
   }
 
   for (const [field, expectedType] of Object.entries(requiredFields)) {
@@ -105,7 +126,12 @@ export const isValidTradeTransaction = (data: any): data is TradeTransaction => 
   }
 
   // Validate numeric constraints
-  if (data.day < 0 || data.quantity <= 0 || data.pricePerUnit <= 0 || data.totalValue <= 0) {
+  if (
+    data.day < 0 ||
+    data.quantity <= 0 ||
+    data.pricePerUnit <= 0 ||
+    data.totalValue <= 0
+  ) {
     return false
   }
 
@@ -115,7 +141,9 @@ export const isValidTradeTransaction = (data: any): data is TradeTransaction => 
 /**
  * Validates that an NPC interaction state has the correct structure
  */
-export const isValidNPCInteractionState = (data: any): data is NPCInteractionState => {
+export const isValidNPCInteractionState = (
+  data: any
+): data is NPCInteractionState => {
   if (typeof data !== 'object' || data === null) {
     return false
   }
@@ -138,7 +166,7 @@ export const isValidAnimationState = (data: any): data is AnimationState => {
   return (
     ['travel', 'npc_encounter', 'trade', 'combat'].includes(data.type) &&
     typeof data.active === 'boolean'
-    // data field can be any type, so we don't validate it strictly
+    // Data field can be any type, so we don't validate it strictly
   )
 }
 
@@ -159,7 +187,7 @@ export const isValidGameState = (state: any): state is GameState => {
     strength: 'number',
     agility: 'number',
     intelligence: 'number',
-    weather: 'string'
+    weather: 'string',
   }
 
   for (const [field, expectedType] of Object.entries(basicFields)) {
@@ -169,22 +197,33 @@ export const isValidGameState = (state: any): state is GameState => {
   }
 
   // Check location object
-  if (typeof state.location !== 'object' || state.location === null ||
-      typeof state.location.name !== 'string' ||
-      typeof state.location.description !== 'string' ||
-      typeof state.location.dangerLevel !== 'number') {
+  if (
+    typeof state.location !== 'object' ||
+    state.location === null ||
+    typeof state.location.name !== 'string' ||
+    typeof state.location.description !== 'string' ||
+    typeof state.location.dangerLevel !== 'number'
+  ) {
     return false
   }
 
   // Check inventory and prices objects
-  if (typeof state.inventory !== 'object' || state.inventory === null ||
-      typeof state.prices !== 'object' || state.prices === null) {
+  if (
+    typeof state.inventory !== 'object' ||
+    state.inventory === null ||
+    typeof state.prices !== 'object' ||
+    state.prices === null
+  ) {
     return false
   }
 
   // Validate inventory values are numbers
   for (const [item, quantity] of Object.entries(state.inventory)) {
-    if (typeof item !== 'string' || typeof quantity !== 'number' || quantity < 0) {
+    if (
+      typeof item !== 'string' ||
+      typeof quantity !== 'number' ||
+      quantity < 0
+    ) {
       return false
     }
   }
@@ -218,26 +257,33 @@ export const isValidGameState = (state: any): state is GameState => {
   }
 
   // Validate optional NPC interaction state
-  if (state.currentNPCInteraction !== undefined && 
-      !isValidNPCInteractionState(state.currentNPCInteraction)) {
+  if (
+    state.currentNPCInteraction !== undefined &&
+    !isValidNPCInteractionState(state.currentNPCInteraction)
+  ) {
     return false
   }
 
   // Validate optional animation state
-  if (state.currentAnimation !== undefined && 
-      !isValidAnimationState(state.currentAnimation)) {
+  if (
+    state.currentAnimation !== undefined &&
+    !isValidAnimationState(state.currentAnimation)
+  ) {
     return false
   }
 
   // Validate optional event fields
-  if (state.currentEvent !== undefined) {
-    // Basic event validation - could be expanded
-    if (typeof state.currentEvent !== 'object' || state.currentEvent === null) {
-      return false
-    }
+  if (
+    state.currentEvent !== undefined && // Basic event validation - could be expanded
+    (typeof state.currentEvent !== 'object' || state.currentEvent === null)
+  ) {
+    return false
   }
 
-  if (state.currentStep !== undefined && typeof state.currentStep !== 'number') {
+  if (
+    state.currentStep !== undefined &&
+    typeof state.currentStep !== 'number'
+  ) {
     return false
   }
 
@@ -255,7 +301,7 @@ export const createDefaultMarketData = (basePrice: number): MarketData => ({
   trend: 'stable',
   history: [],
   volatility: 0.3,
-  lastUpdated: 0
+  lastUpdated: 0,
 })
 
 /**
@@ -271,16 +317,20 @@ export const sanitizeMarketData = (data: MarketData): MarketData => ({
   currentPrice: Math.max(1, data.currentPrice),
   demand: Math.max(0, Math.min(1, data.demand)),
   supply: Math.max(0, Math.min(1, data.supply)),
-  trend: ['rising', 'falling', 'stable', 'volatile'].includes(data.trend) ? data.trend : 'stable',
+  trend: ['rising', 'falling', 'stable', 'volatile'].includes(data.trend)
+    ? data.trend
+    : 'stable',
   history: data.history.slice(-100), // Keep only last 100 entries
   volatility: Math.max(0, Math.min(1, data.volatility || 0.3)),
-  lastUpdated: data.lastUpdated || 0
+  lastUpdated: data.lastUpdated || 0,
 })
 
 /**
  * Sanitizes location market state
  */
-export const sanitizeLocationMarketState = (data: LocationMarketState): LocationMarketState => {
+export const sanitizeLocationMarketState = (
+  data: LocationMarketState
+): LocationMarketState => {
   const sanitized: LocationMarketState = {}
 
   for (const [location, locationData] of Object.entries(data)) {
@@ -296,16 +346,18 @@ export const sanitizeLocationMarketState = (data: LocationMarketState): Location
 /**
  * Sanitizes trade history to remove invalid entries and limit size
  */
-export const sanitizeTradeHistory = (history: TradeTransaction[]): TradeTransaction[] => {
+export const sanitizeTradeHistory = (
+  history: TradeTransaction[]
+): TradeTransaction[] => {
   return history
     .filter(isValidTradeTransaction)
     .slice(-1000) // Keep only last 1000 transactions
-    .map(transaction => ({
+    .map((transaction) => ({
       ...transaction,
       day: Math.max(0, transaction.day),
       quantity: Math.max(1, transaction.quantity),
       pricePerUnit: Math.max(1, transaction.pricePerUnit),
-      totalValue: Math.max(1, transaction.totalValue)
+      totalValue: Math.max(1, transaction.totalValue),
     }))
 }
 
@@ -314,32 +366,35 @@ export const sanitizeTradeHistory = (history: TradeTransaction[]): TradeTransact
  */
 export const migrateLegacySaveFile = (state: any): GameState => {
   // Create default reputation state if missing or invalid
-  if (!state.reputation || !isValidReputationState(state.reputation)) {
-    state.reputation = createDefaultReputationState()
-  } else {
-    state.reputation = sanitizeReputationState(state.reputation)
-  }
+  state.reputation =
+    !state.reputation || !isValidReputationState(state.reputation)
+      ? createDefaultReputationState()
+      : sanitizeReputationState(state.reputation)
 
   // Create default market data if missing
-  if (!state.marketData || !isValidLocationMarketState(state.marketData)) {
-    state.marketData = createDefaultLocationMarketState()
-  } else {
-    state.marketData = sanitizeLocationMarketState(state.marketData)
-  }
+  state.marketData =
+    !state.marketData || !isValidLocationMarketState(state.marketData)
+      ? createDefaultLocationMarketState()
+      : sanitizeLocationMarketState(state.marketData)
 
   // Create default trade history if missing
-  if (!state.tradeHistory || !Array.isArray(state.tradeHistory)) {
-    state.tradeHistory = []
-  } else {
-    state.tradeHistory = sanitizeTradeHistory(state.tradeHistory)
-  }
+  state.tradeHistory =
+    !state.tradeHistory || !Array.isArray(state.tradeHistory)
+      ? []
+      : sanitizeTradeHistory(state.tradeHistory)
 
   // Remove invalid optional states
-  if (state.currentNPCInteraction && !isValidNPCInteractionState(state.currentNPCInteraction)) {
+  if (
+    state.currentNPCInteraction &&
+    !isValidNPCInteractionState(state.currentNPCInteraction)
+  ) {
     delete state.currentNPCInteraction
   }
 
-  if (state.currentAnimation && !isValidAnimationState(state.currentAnimation)) {
+  if (
+    state.currentAnimation &&
+    !isValidAnimationState(state.currentAnimation)
+  ) {
     delete state.currentAnimation
   }
 
@@ -360,20 +415,31 @@ export const sanitizeGameState = (state: GameState): GameState => {
     strength: Math.max(1, Math.min(20, state.strength)),
     agility: Math.max(1, Math.min(20, state.agility)),
     intelligence: Math.max(1, Math.min(20, state.intelligence)),
-    
+
     // Sanitize inventory (remove negative quantities)
     inventory: Object.fromEntries(
       Object.entries(state.inventory).filter(([, quantity]) => quantity > 0)
     ),
-    
+
     // Sanitize prices (ensure positive values)
     prices: Object.fromEntries(
-      Object.entries(state.prices).map(([item, price]) => [item, Math.max(1, price)])
+      Object.entries(state.prices).map(([item, price]) => [
+        item,
+        Math.max(1, price),
+      ])
     ),
-    
+
     // Sanitize complex data structures
     reputation: sanitizeReputationState(state.reputation),
     marketData: sanitizeLocationMarketState(state.marketData),
-    tradeHistory: sanitizeTradeHistory(state.tradeHistory)
+    tradeHistory: sanitizeTradeHistory(state.tradeHistory),
+
+    // IMPORTANT: Clear transient state that contains functions (cannot be serialized)
+    // Events will be re-triggered naturally through gameplay
+    currentEvent: undefined,
+    currentStep: undefined,
+    isShowingEventOutcome: undefined,
+    currentNPCInteraction: undefined,
+    currentAnimation: undefined,
   }
 }

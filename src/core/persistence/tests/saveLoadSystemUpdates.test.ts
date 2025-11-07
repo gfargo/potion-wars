@@ -1,18 +1,22 @@
-import test from 'ava'
 import fs from 'node:fs'
 import path from 'node:path'
+import test from 'ava'
 import { saveGame, loadGame, getSaveSlots } from '../saveLoad.js'
 import { SaveFileManager, SaveFileType } from '../utils.js'
 import {
-    isValidGameState,
-    isValidMarketData, isValidTradeTransaction,
-    isValidNPCInteractionState,
-    isValidAnimationState,
-    migrateLegacySaveFile,
-    sanitizeGameState
+  isValidGameState,
+  isValidMarketData,
+  isValidTradeTransaction,
+  isValidNPCInteractionState,
+  isValidAnimationState,
+  migrateLegacySaveFile,
+  sanitizeGameState,
 } from '../dataValidation.js'
 import { type GameState } from '../../../types/game.types.js'
-import { type MarketData, type TradeTransaction } from '../../../types/economy.types.js'
+import {
+  type MarketData,
+  type TradeTransaction,
+} from '../../../types/economy.types.js'
 
 const createTestGameState = (): GameState => ({
   day: 5,
@@ -22,14 +26,18 @@ const createTestGameState = (): GameState => ({
   strength: 10,
   agility: 10,
   intelligence: 10,
-  location: { name: "Alchemist's Quarter", description: 'Test location', dangerLevel: 1 },
+  location: {
+    name: "Alchemist's Quarter",
+    description: 'Test location',
+    dangerLevel: 1,
+  },
   inventory: { 'Health Potion': 5, 'Mana Potion': 3 },
   prices: { 'Health Potion': 100, 'Mana Potion': 150 },
   weather: 'sunny',
   reputation: {
     global: 10,
     locations: { "Alchemist's Quarter": 15 },
-    npcRelationships: { 'test_npc': 5 }
+    npcRelationships: { test_npc: 5 },
   },
   marketData: {
     "Alchemist's Quarter": {
@@ -41,12 +49,12 @@ const createTestGameState = (): GameState => ({
         trend: 'rising',
         history: [
           { day: 1, price: 100, volume: 10 },
-          { day: 2, price: 105, volume: 8 }
+          { day: 2, price: 105, volume: 8 },
         ],
         volatility: 0.3,
-        lastUpdated: 0
-      }
-    }
+        lastUpdated: 0,
+      },
+    },
   },
   tradeHistory: [
     {
@@ -56,9 +64,9 @@ const createTestGameState = (): GameState => ({
       quantity: 2,
       pricePerUnit: 110,
       totalValue: 220,
-      type: 'sell'
-    }
-  ]
+      type: 'sell',
+    },
+  ],
 })
 
 const createLegacyGameState = (): any => ({
@@ -69,10 +77,14 @@ const createLegacyGameState = (): any => ({
   strength: 10,
   agility: 10,
   intelligence: 10,
-  location: { name: "Alchemist's Quarter", description: 'Test location', dangerLevel: 1 },
+  location: {
+    name: "Alchemist's Quarter",
+    description: 'Test location',
+    dangerLevel: 1,
+  },
   inventory: { 'Health Potion': 5 },
   prices: { 'Health Potion': 100 },
-  weather: 'sunny'
+  weather: 'sunny',
   // Missing: reputation, marketData, tradeHistory
 })
 
@@ -122,9 +134,9 @@ test('isValidMarketData - validates market data structure', (t) => {
     trend: 'rising',
     history: [{ day: 1, price: 100, volume: 10 }],
     volatility: 0.3,
-    lastUpdated: 0
+    lastUpdated: 0,
   }
-  
+
   t.true(isValidMarketData(validMarketData))
 })
 
@@ -137,9 +149,9 @@ test('isValidMarketData - rejects invalid trend', (t) => {
     trend: 'invalid',
     history: [],
     volatility: 0.3,
-    lastUpdated: 0
+    lastUpdated: 0,
   }
-  
+
   t.false(isValidMarketData(invalidMarketData))
 })
 
@@ -151,9 +163,9 @@ test('isValidTradeTransaction - validates transaction structure', (t) => {
     quantity: 2,
     pricePerUnit: 110,
     totalValue: 220,
-    type: 'sell'
+    type: 'sell',
   }
-  
+
   t.true(isValidTradeTransaction(validTransaction))
 })
 
@@ -165,9 +177,9 @@ test('isValidTradeTransaction - rejects invalid type', (t) => {
     quantity: 2,
     pricePerUnit: 110,
     totalValue: 220,
-    type: 'invalid'
+    type: 'invalid',
   }
-  
+
   t.false(isValidTradeTransaction(invalidTransaction))
 })
 
@@ -175,9 +187,9 @@ test('isValidNPCInteractionState - validates NPC interaction', (t) => {
   const validInteraction = {
     npcId: 'test_npc',
     type: 'dialogue',
-    active: true
+    active: true,
   }
-  
+
   t.true(isValidNPCInteractionState(validInteraction))
 })
 
@@ -185,16 +197,16 @@ test('isValidAnimationState - validates animation state', (t) => {
   const validAnimation = {
     type: 'travel',
     data: { from: 'A', to: 'B' },
-    active: true
+    active: true,
   }
-  
+
   t.true(isValidAnimationState(validAnimation))
 })
 
 test('migrateLegacySaveFile - adds missing data structures', (t) => {
   const legacyState = createLegacyGameState()
   const migratedState = migrateLegacySaveFile(legacyState)
-  
+
   t.truthy(migratedState.reputation)
   t.truthy(migratedState.marketData)
   t.truthy(migratedState.tradeHistory)
@@ -209,11 +221,11 @@ test('sanitizeGameState - cleans invalid data', (t) => {
     cash: -100, // Invalid negative cash
     health: 150, // Invalid high health
     inventory: { 'Health Potion': -2, 'Mana Potion': 5 }, // Negative quantity
-    prices: { 'Health Potion': -50, 'Mana Potion': 100 } // Negative price
+    prices: { 'Health Potion': -50, 'Mana Potion': 100 }, // Negative price
   }
-  
+
   const cleanState = sanitizeGameState(dirtyState)
-  
+
   t.is(cleanState.day, 0)
   t.is(cleanState.cash, 0)
   t.is(cleanState.health, 100)
@@ -225,14 +237,14 @@ test('sanitizeGameState - cleans invalid data', (t) => {
 
 test('saveGame - saves complete game state', (t) => {
   const gameState = createTestGameState()
-  
+
   saveGame(gameState, 1)
-  
+
   const saveManager = SaveFileManager.getInstance()
   const filePath = path.join(saveManager.saveDir, 'slot_1_save.json')
-  
+
   t.true(fs.existsSync(filePath))
-  
+
   const savedData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
   t.truthy(savedData.lastSave)
   t.is(savedData.day, gameState.day)
@@ -244,9 +256,9 @@ test('saveGame - saves complete game state', (t) => {
 test('loadGame - loads complete game state', (t) => {
   const originalState = createTestGameState()
   saveGame(originalState, 1)
-  
+
   const loadedState = loadGame(1)
-  
+
   t.truthy(loadedState)
   t.is(loadedState?.day, originalState.day)
   t.deepEqual(loadedState?.reputation, originalState.reputation)
@@ -259,9 +271,9 @@ test('loadGame - migrates legacy save file', (t) => {
   const saveManager = SaveFileManager.getInstance()
   const legacyState = createLegacyGameState()
   saveManager.writeSaveFile(2, SaveFileType.GAME_SAVE, legacyState)
-  
+
   const loadedState = loadGame(2)
-  
+
   t.truthy(loadedState)
   t.truthy(loadedState?.reputation)
   t.truthy(loadedState?.marketData)
@@ -277,17 +289,17 @@ test('loadGame - returns undefined for non-existent save', (t) => {
 test('getSaveSlots - returns array of save states', (t) => {
   const state1 = createTestGameState()
   const state2 = { ...createTestGameState(), day: 10 }
-  
+
   saveGame(state1, 1)
   saveGame(state2, 2)
-  
+
   const slots = getSaveSlots()
-  
+
   t.is(slots.length, 3)
   t.truthy(slots[0])
   t.truthy(slots[1])
   t.is(slots[2], undefined)
-  
+
   t.is(slots[0]?.day, 5)
   t.is(slots[1]?.day, 10)
 })
@@ -297,12 +309,12 @@ test('save/load with NPC interaction state', (t) => {
   gameState.currentNPCInteraction = {
     npcId: 'test_npc',
     type: 'dialogue',
-    active: true
+    active: true,
   }
-  
+
   saveGame(gameState, 1)
   const loadedState = loadGame(1)
-  
+
   t.truthy(loadedState?.currentNPCInteraction)
   t.is(loadedState?.currentNPCInteraction?.npcId, 'test_npc')
   t.is(loadedState?.currentNPCInteraction?.type, 'dialogue')
@@ -314,21 +326,24 @@ test('save/load with animation state', (t) => {
   gameState.currentAnimation = {
     type: 'travel',
     data: { from: 'Location A', to: 'Location B' },
-    active: true
+    active: true,
   }
-  
+
   saveGame(gameState, 1)
   const loadedState = loadGame(1)
-  
+
   t.truthy(loadedState?.currentAnimation)
   t.is(loadedState?.currentAnimation?.type, 'travel')
-  t.deepEqual(loadedState?.currentAnimation?.data, { from: 'Location A', to: 'Location B' })
+  t.deepEqual(loadedState?.currentAnimation?.data, {
+    from: 'Location A',
+    to: 'Location B',
+  })
   t.is(loadedState?.currentAnimation?.active, true)
 })
 
 test('save/load preserves complex market data', (t) => {
   const gameState = createTestGameState()
-  
+
   // Add more complex market data
   gameState.marketData['Market Square'] = {
     'Strength Potion': {
@@ -340,20 +355,21 @@ test('save/load preserves complex market data', (t) => {
       history: [
         { day: 1, price: 200, volume: 5 },
         { day: 2, price: 190, volume: 8 },
-        { day: 3, price: 180, volume: 12 }
+        { day: 3, price: 180, volume: 12 },
       ],
       volatility: 0.3,
-      lastUpdated: 0
-    }
+      lastUpdated: 0,
+    },
   }
-  
+
   saveGame(gameState, 1)
   const loadedState = loadGame(1)
-  
+
   t.truthy(loadedState?.marketData['Market Square'])
   t.truthy(loadedState?.marketData?.['Market Square']?.['Strength Potion'])
 
-  const strengthPotionData = loadedState?.marketData?.['Market Square']?.['Strength Potion']
+  const strengthPotionData =
+    loadedState?.marketData?.['Market Square']?.['Strength Potion']
   t.is(strengthPotionData?.basePrice, 200)
   t.is(strengthPotionData?.currentPrice, 180)
   t.is(strengthPotionData?.trend, 'falling')
@@ -362,7 +378,7 @@ test('save/load preserves complex market data', (t) => {
 
 test('save/load preserves trade history', (t) => {
   const gameState = createTestGameState()
-  
+
   // Add more trade history
   gameState.tradeHistory.push(
     {
@@ -372,7 +388,7 @@ test('save/load preserves trade history', (t) => {
       quantity: 3,
       pricePerUnit: 150,
       totalValue: 450,
-      type: 'buy'
+      type: 'buy',
     },
     {
       day: 5,
@@ -381,13 +397,13 @@ test('save/load preserves trade history', (t) => {
       quantity: 1,
       pricePerUnit: 200,
       totalValue: 200,
-      type: 'sell'
+      type: 'sell',
     }
   )
-  
+
   saveGame(gameState, 1)
   const loadedState = loadGame(1)
-  
+
   t.is(loadedState?.tradeHistory.length, 3)
   t.is(loadedState?.tradeHistory[1]?.type, 'buy')
   t.is(loadedState?.tradeHistory[1]?.potionType, 'Mana Potion')

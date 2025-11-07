@@ -15,12 +15,12 @@ const createMerchantNPC = (trades: NPCTrade[] = []): NPC => ({
     farewell: 'Come back soon!',
     tradeAccept: 'Excellent choice!',
     tradeDecline: 'Perhaps another time.',
-    lowReputation: 'I don\'t trust you.',
-    highReputation: 'My valued customer!'
+    lowReputation: "I don't trust you.",
+    highReputation: 'My valued customer!',
   },
   location: 'Test Market',
   availability: {
-    probability: 1.0
+    probability: 1,
   },
   reputation: {},
   trades,
@@ -33,16 +33,18 @@ const createMerchantNPC = (trades: NPCTrade[] = []): NPC => ({
         choices: [
           {
             text: 'Just browsing',
-            nextNode: undefined
-          }
-        ]
-      }
-    }
-  }
+            nextNode: undefined,
+          },
+        ],
+      },
+    },
+  },
 })
 
 // Test helper to create a basic game state
-const createTestGameState = (overrides: Partial<GameState> = {}): GameState => ({
+const createTestGameState = (
+  overrides: Partial<GameState> = {}
+): GameState => ({
   day: 1,
   cash: 1000,
   debt: 0,
@@ -50,20 +52,24 @@ const createTestGameState = (overrides: Partial<GameState> = {}): GameState => (
   strength: 10,
   agility: 10,
   intelligence: 10,
-  location: { name: 'Test Market', description: 'A test market', dangerLevel: 1 },
+  location: {
+    name: 'Test Market',
+    description: 'A test market',
+    dangerLevel: 1,
+  },
   inventory: { 'Health Potion': 5, 'Mana Potion': 3 },
   prices: {},
   weather: 'sunny',
   reputation: ReputationManager.initializeReputation(),
   marketData: {},
   tradeHistory: [],
-  ...overrides
+  ...overrides,
 })
 
-test('generateTradeMenuNode creates menu with available trades', t => {
+test('generateTradeMenuNode creates menu with available trades', (t) => {
   const trades: NPCTrade[] = [
     { offer: 'Sword', price: 500, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Shield', price: 300, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Shield', price: 300, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState()
@@ -72,24 +78,33 @@ test('generateTradeMenuNode creates menu with available trades', t => {
 
   t.is(menuNode.id, 'trade_menu')
   t.true(menuNode.text.includes('available'))
-  
+
   // Should have 2 trade choices + 1 back option
   t.is(menuNode.choices.length, 3)
-  
+
   // Check trade choices
-  const tradeChoices = menuNode.choices.filter(choice => choice.nextNode?.startsWith('trade_confirm_'))
+  const tradeChoices = menuNode.choices.filter((choice) =>
+    choice.nextNode?.startsWith('trade_confirm_')
+  )
   t.is(tradeChoices.length, 2)
-  
+
   // Check back option
-  const backChoice = menuNode.choices.find(choice => choice.text.includes('Never mind'))
+  const backChoice = menuNode.choices.find((choice) =>
+    choice.text.includes('Never mind')
+  )
   t.truthy(backChoice)
   t.is(backChoice?.nextNode, 'greeting')
 })
 
-test('generateTradeMenuNode handles unavailable trades', t => {
+test('generateTradeMenuNode handles unavailable trades', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Expensive Item', price: 2000, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Cheap Item', price: 100, quantity: 1, reputationRequirement: 0 }
+    {
+      offer: 'Expensive Item',
+      price: 2000,
+      quantity: 1,
+      reputationRequirement: 0,
+    },
+    { offer: 'Cheap Item', price: 100, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState({ cash: 500 }) // Can't afford expensive item
@@ -97,22 +112,22 @@ test('generateTradeMenuNode handles unavailable trades', t => {
   const menuNode = DialogueTrading.generateTradeMenuNode(npc, gameState)
 
   t.is(menuNode.choices.length, 3) // 1 available + 1 unavailable + 1 back
-  
-  const availableChoices = menuNode.choices.filter(choice => 
+
+  const availableChoices = menuNode.choices.filter((choice) =>
     choice.nextNode?.startsWith('trade_confirm_')
   )
-  const unavailableChoices = menuNode.choices.filter(choice => 
+  const unavailableChoices = menuNode.choices.filter((choice) =>
     choice.nextNode?.startsWith('trade_unavailable_')
   )
-  
+
   t.is(availableChoices.length, 1)
   t.is(unavailableChoices.length, 1)
-  
+
   // Unavailable choice should be marked
   t.true(unavailableChoices[0]?.text.includes('[Unavailable]'))
 })
 
-test('generateTradeConfirmationNode creates proper confirmation', t => {
+test('generateTradeConfirmationNode creates proper confirmation', (t) => {
   const offer = {
     id: 'test_offer',
     npcId: 'test_merchant',
@@ -123,7 +138,7 @@ test('generateTradeConfirmationNode creates proper confirmation', t => {
     pricePerUnit: 500,
     totalPrice: 500,
     reputationRequired: 0,
-    available: true
+    available: true,
   }
   const confirmNode = DialogueTrading.generateTradeConfirmationNode(offer)
 
@@ -131,19 +146,23 @@ test('generateTradeConfirmationNode creates proper confirmation', t => {
   t.true(confirmNode.text.includes('buy'))
   t.true(confirmNode.text.includes('Magic Sword'))
   t.true(confirmNode.text.includes('500 gold'))
-  
+
   t.is(confirmNode.choices.length, 2)
-  
-  const yesChoice = confirmNode.choices.find(choice => choice.text.includes('Yes'))
-  const noChoice = confirmNode.choices.find(choice => choice.text.includes('No'))
-  
+
+  const yesChoice = confirmNode.choices.find((choice) =>
+    choice.text.includes('Yes')
+  )
+  const noChoice = confirmNode.choices.find((choice) =>
+    choice.text.includes('No')
+  )
+
   t.truthy(yesChoice)
   t.truthy(noChoice)
   t.is(yesChoice?.nextNode, 'trade_execute_test_offer')
   t.is(noChoice?.nextNode, 'trade_menu')
 })
 
-test('generateTradeExecutionNode handles successful trade', t => {
+test('generateTradeExecutionNode handles successful trade', (t) => {
   const offer = {
     id: 'test_offer',
     npcId: 'test_merchant',
@@ -154,32 +173,40 @@ test('generateTradeExecutionNode handles successful trade', t => {
     pricePerUnit: 500,
     totalPrice: 500,
     reputationRequired: 0,
-    available: true
+    available: true,
   }
   const npc = createMerchantNPC()
   const result = {
     success: true,
     reputationChange: 5,
     message: 'Trade completed successfully!',
-    newGameState: createTestGameState()
+    newGameState: createTestGameState(),
   }
 
-  const execNode = DialogueTrading.generateTradeExecutionNode(offer, npc, result)
+  const execNode = DialogueTrading.generateTradeExecutionNode(
+    offer,
+    npc,
+    result
+  )
 
   t.is(execNode.id, 'trade_execute_test_offer')
-  t.true(execNode.text.includes('Excellent choice!')) // tradeAccept personality
+  t.true(execNode.text.includes('Excellent choice!')) // TradeAccept personality
   t.true(execNode.text.includes('Trade completed successfully!'))
-  
+
   t.is(execNode.choices.length, 2)
-  
-  const continueChoice = execNode.choices.find(choice => choice.nextNode === 'trade_menu')
-  const endChoice = execNode.choices.find(choice => choice.nextNode === undefined)
-  
+
+  const continueChoice = execNode.choices.find(
+    (choice) => choice.nextNode === 'trade_menu'
+  )
+  const endChoice = execNode.choices.find(
+    (choice) => choice.nextNode === undefined
+  )
+
   t.truthy(continueChoice)
   t.truthy(endChoice)
 })
 
-test('generateTradeExecutionNode handles failed trade', t => {
+test('generateTradeExecutionNode handles failed trade', (t) => {
   const offer = {
     id: 'test_offer',
     npcId: 'test_merchant',
@@ -190,23 +217,27 @@ test('generateTradeExecutionNode handles failed trade', t => {
     pricePerUnit: 500,
     totalPrice: 500,
     reputationRequired: 0,
-    available: true
+    available: true,
   }
   const npc = createMerchantNPC()
   const result = {
     success: false,
     reputationChange: 0,
     message: 'Insufficient funds',
-    newGameState: createTestGameState()
+    newGameState: createTestGameState(),
   }
 
-  const execNode = DialogueTrading.generateTradeExecutionNode(offer, npc, result)
+  const execNode = DialogueTrading.generateTradeExecutionNode(
+    offer,
+    npc,
+    result
+  )
 
-  t.true(execNode.text.includes('Perhaps another time.')) // tradeDecline personality
+  t.true(execNode.text.includes('Perhaps another time.')) // TradeDecline personality
   t.true(execNode.text.includes('Insufficient funds'))
 })
 
-test('generateUnavailableTradeNode explains why trade is unavailable', t => {
+test('generateUnavailableTradeNode explains why trade is unavailable', (t) => {
   const offer = {
     id: 'test_offer',
     npcId: 'test_merchant',
@@ -218,30 +249,38 @@ test('generateUnavailableTradeNode explains why trade is unavailable', t => {
     totalPrice: 2000,
     reputationRequired: 0,
     available: false,
-    reason: 'Insufficient funds (need 2000, have 500)'
+    reason: 'Insufficient funds (need 2000, have 500)',
   }
   const unavailableNode = DialogueTrading.generateUnavailableTradeNode(offer)
 
   t.is(unavailableNode.id, 'trade_unavailable_test_offer')
   t.true(unavailableNode.text.includes('Insufficient funds'))
-  
+
   t.is(unavailableNode.choices.length, 2)
-  
-  const backChoice = unavailableNode.choices.find(choice => choice.nextNode === 'trade_menu')
-  const endChoice = unavailableNode.choices.find(choice => choice.nextNode === undefined)
-  
+
+  const backChoice = unavailableNode.choices.find(
+    (choice) => choice.nextNode === 'trade_menu'
+  )
+  const endChoice = unavailableNode.choices.find(
+    (choice) => choice.nextNode === undefined
+  )
+
   t.truthy(backChoice)
   t.truthy(endChoice)
 })
 
-test('processTradeExecution successfully executes trade', t => {
+test('processTradeExecution successfully executes trade', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Test Item', price: 200, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Test Item', price: 200, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState({ cash: 500 })
 
-  const result = DialogueTrading.processTradeExecution('test_merchant_trade_0', npc, gameState)
+  const result = DialogueTrading.processTradeExecution(
+    'test_merchant_trade_0',
+    npc,
+    gameState
+  )
 
   t.true(result.success)
   t.truthy(result.tradeResult)
@@ -249,41 +288,53 @@ test('processTradeExecution successfully executes trade', t => {
   t.is(result.newGameState.inventory['Test Item'], 1)
 })
 
-test('processTradeExecution handles non-existent trade', t => {
+test('processTradeExecution handles non-existent trade', (t) => {
   const npc = createMerchantNPC()
   const gameState = createTestGameState()
 
-  const result = DialogueTrading.processTradeExecution('non_existent_trade', npc, gameState)
+  const result = DialogueTrading.processTradeExecution(
+    'non_existent_trade',
+    npc,
+    gameState
+  )
 
   t.false(result.success)
   t.is(result.message, 'Trade offer not found')
   t.is(result.newGameState, gameState) // No changes
 })
 
-test('generateTradingDialogueTree creates complete dialogue tree', t => {
+test('generateTradingDialogueTree creates complete dialogue tree', (t) => {
   const trades: NPCTrade[] = [
     { offer: 'Sword', price: 500, quantity: 1, reputationRequirement: 0 },
-    { offer: 'Expensive Item', price: 2000, quantity: 1, reputationRequirement: 0 }
+    {
+      offer: 'Expensive Item',
+      price: 2000,
+      quantity: 1,
+      reputationRequirement: 0,
+    },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState({ cash: 600 })
 
-  const dialogueTree = DialogueTrading.generateTradingDialogueTree(npc, gameState)
+  const dialogueTree = DialogueTrading.generateTradingDialogueTree(
+    npc,
+    gameState
+  )
 
   // Should have trade menu
   t.truthy(dialogueTree['trade_menu'])
-  
+
   // Should have nodes for available trade (Sword)
   t.truthy(dialogueTree['trade_confirm_test_merchant_trade_0'])
   t.truthy(dialogueTree['trade_execute_test_merchant_trade_0'])
-  
+
   // Should have node for unavailable trade (Expensive Item)
   t.truthy(dialogueTree['trade_unavailable_test_merchant_trade_1'])
 })
 
-test('addTradingToDialogue integrates trading into existing dialogue', t => {
+test('addTradingToDialogue integrates trading into existing dialogue', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Test Item', price: 100, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Test Item', price: 100, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState()
@@ -292,38 +343,44 @@ test('addTradingToDialogue integrates trading into existing dialogue', t => {
 
   // Should have original dialogue nodes
   t.truthy(updatedNPC.dialogue.nodes['greeting'])
-  
+
   // Should have new trading nodes
   t.truthy(updatedNPC.dialogue.nodes['trade_menu'])
-  
+
   // Root node should have trade option
   const rootNode = updatedNPC.dialogue.nodes['greeting']
-  const tradeChoice = rootNode?.choices.find(choice => choice.nextNode === 'trade_menu')
+  const tradeChoice = rootNode?.choices.find(
+    (choice) => choice.nextNode === 'trade_menu'
+  )
   t.truthy(tradeChoice)
   t.true(tradeChoice?.text.includes('wares'))
 })
 
-test('addTradingToDialogue does not duplicate trade choices', t => {
+test('addTradingToDialogue does not duplicate trade choices', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Test Item', price: 100, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Test Item', price: 100, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState()
 
   // Add trading dialogue twice
   const updatedNPC1 = DialogueTrading.addTradingToDialogue(npc, gameState)
-  const updatedNPC2 = DialogueTrading.addTradingToDialogue(updatedNPC1, gameState)
+  const updatedNPC2 = DialogueTrading.addTradingToDialogue(
+    updatedNPC1,
+    gameState
+  )
 
   const rootNode = updatedNPC2.dialogue.nodes['greeting']
-  const tradeChoices = rootNode?.choices.filter(choice => choice.nextNode === 'trade_menu') || []
-  
+  const tradeChoices =
+    rootNode?.choices.filter((choice) => choice.nextNode === 'trade_menu') || []
+
   // Should only have one trade choice
   t.is(tradeChoices.length, 1)
 })
 
-test('shouldHaveTradingDialogue correctly identifies merchant NPCs with trades', t => {
+test('shouldHaveTradingDialogue correctly identifies merchant NPCs with trades', (t) => {
   const merchantWithTrades = createMerchantNPC([
-    { offer: 'Item', price: 100, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Item', price: 100, quantity: 1, reputationRequirement: 0 },
   ])
   const merchantWithoutTrades = createMerchantNPC([])
   const nonMerchant = { ...createMerchantNPC(), type: 'informant' as const }
@@ -333,9 +390,14 @@ test('shouldHaveTradingDialogue correctly identifies merchant NPCs with trades',
   t.false(DialogueTrading.shouldHaveTradingDialogue(nonMerchant))
 })
 
-test('getTradeChoices returns trade choices for merchants with available trades', t => {
+test('getTradeChoices returns trade choices for merchants with available trades', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Affordable Item', price: 100, quantity: 1, reputationRequirement: 0 }
+    {
+      offer: 'Affordable Item',
+      price: 100,
+      quantity: 1,
+      reputationRequirement: 0,
+    },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState()
@@ -347,9 +409,14 @@ test('getTradeChoices returns trade choices for merchants with available trades'
   t.is(choices[0]?.nextNode, 'trade_menu')
 })
 
-test('getTradeChoices returns empty array for NPCs without available trades', t => {
+test('getTradeChoices returns empty array for NPCs without available trades', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Expensive Item', price: 2000, quantity: 1, reputationRequirement: 0 }
+    {
+      offer: 'Expensive Item',
+      price: 2000,
+      quantity: 1,
+      reputationRequirement: 0,
+    },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState({ cash: 100 }) // Can't afford anything
@@ -359,9 +426,9 @@ test('getTradeChoices returns empty array for NPCs without available trades', t 
   t.is(choices.length, 0)
 })
 
-test('validateTradingDialogue identifies missing nodes', t => {
+test('validateTradingDialogue identifies missing nodes', (t) => {
   const trades: NPCTrade[] = [
-    { offer: 'Test Item', price: 100, quantity: 1, reputationRequirement: 0 }
+    { offer: 'Test Item', price: 100, quantity: 1, reputationRequirement: 0 },
   ]
   const npc = createMerchantNPC(trades)
   const gameState = createTestGameState()
@@ -371,30 +438,54 @@ test('validateTradingDialogue identifies missing nodes', t => {
   t.is(errors.length, 0)
 })
 
-test('formatTradeChoiceText formats buy and sell offers correctly', t => {
+test('formatTradeChoiceText formats buy and sell offers correctly', (t) => {
   const npc = createMerchantNPC()
   const gameState = createTestGameState()
 
   // Test through the menu generation which uses the private method
   const menuWithBuy = DialogueTrading.generateTradeMenuNode(
-    { ...npc, trades: [{ offer: 'Magic Sword', price: 500, quantity: 1, reputationRequirement: 0 }] },
-    gameState
-  )
-  
-  const menuWithSell = DialogueTrading.generateTradeMenuNode(
-    { ...npc, trades: [{ offer: 'Health Potion', price: -50, quantity: 3, reputationRequirement: 0 }] },
+    {
+      ...npc,
+      trades: [
+        {
+          offer: 'Magic Sword',
+          price: 500,
+          quantity: 1,
+          reputationRequirement: 0,
+        },
+      ],
+    },
     gameState
   )
 
-  const buyChoice = menuWithBuy.choices.find(choice => choice.text.includes('Buy'))
-  const sellChoice = menuWithSell.choices.find(choice => choice.text.includes('Sell'))
+  const menuWithSell = DialogueTrading.generateTradeMenuNode(
+    {
+      ...npc,
+      trades: [
+        {
+          offer: 'Health Potion',
+          price: -50,
+          quantity: 3,
+          reputationRequirement: 0,
+        },
+      ],
+    },
+    gameState
+  )
+
+  const buyChoice = menuWithBuy.choices.find((choice) =>
+    choice.text.includes('Buy')
+  )
+  const sellChoice = menuWithSell.choices.find((choice) =>
+    choice.text.includes('Sell')
+  )
 
   t.truthy(buyChoice)
   t.truthy(sellChoice)
   t.true(buyChoice?.text.includes('Buy'))
   t.true(buyChoice?.text.includes('Magic Sword'))
   t.true(buyChoice?.text.includes('500 gold'))
-  
+
   t.true(sellChoice?.text.includes('Sell'))
   t.true(sellChoice?.text.includes('3 Health Potion'))
   t.true(sellChoice?.text.includes('150 gold'))

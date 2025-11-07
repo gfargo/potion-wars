@@ -1,14 +1,15 @@
 import { locations, phrases } from '../../constants.js'
 import { type GameState } from '../../types/game.types.js'
 import { triggerRandomEvent } from '../events/index.js'
-import { generatePrices } from './economy.js'
+import { generateDynamicPrices } from './economy.js'
 import { EnhancedEconomyManager } from './enhancedEconomy.js'
 
 export const initializeGame = (): GameState => {
   const initialLocation =
     locations[Math.floor(Math.random() * locations.length)]
-  
-  return {
+
+  // Create initial state with market data first
+  const initialState: GameState = {
     day: 0, // Day 0 is the start of the game, initializing game handles setting the first day
     cash: 2000,
     debt: 5000,
@@ -18,16 +19,22 @@ export const initializeGame = (): GameState => {
     intelligence: Math.floor(Math.random() * 5) + 5,
     location: initialLocation!,
     inventory: {},
-    prices: generatePrices(),
+    prices: {}, // Temporary empty prices
     weather: 'sunny',
     // New features with default values
     reputation: {
       global: 0,
       locations: {},
-      npcRelationships: {}
+      npcRelationships: {},
     },
     marketData: EnhancedEconomyManager.initializeMarketData(),
-    tradeHistory: []
+    tradeHistory: [],
+  }
+
+  // Now generate dynamic prices based on the complete initial state
+  return {
+    ...initialState,
+    prices: generateDynamicPrices(initialState),
   }
 }
 

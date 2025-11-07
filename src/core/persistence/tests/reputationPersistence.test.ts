@@ -4,16 +4,16 @@ import { createGameState } from '../../state/tests/utils/testHelper.js'
 import { saveGame, loadGame } from '../saveLoad.js'
 import { SaveFileManager, SaveFileType } from '../utils.js'
 import {
-    isValidReputationState,
-    isValidReputationChange,
-    sanitizeReputationState,
-    createDefaultReputationState
+  isValidReputationState,
+  isValidReputationChange,
+  sanitizeReputationState,
+  createDefaultReputationState,
 } from '../reputationValidation.js'
 
 // Helper to clean up test files
 const cleanup = () => {
   const manager = SaveFileManager.getInstance()
-  for (let slot = 1; slot <= 3; slot++) {
+  for (let slot = 1; slot <= 5; slot++) {
     try {
       manager.clearSaveFile(slot, SaveFileType.GAME_SAVE)
       manager.clearSaveFile(slot, SaveFileType.GAME_LOG)
@@ -32,12 +32,12 @@ test('isValidReputationState validates correct reputation state', (t) => {
     global: 25,
     locations: {
       'Market Square': 10,
-      'Royal District': -5
+      'Royal District': -5,
     },
     npcRelationships: {
-      'merchant_aldric': 15,
-      'guard_captain': -10
-    }
+      merchant_aldric: 15,
+      guard_captain: -10,
+    },
   }
 
   t.true(isValidReputationState(validState))
@@ -55,37 +55,47 @@ test('isValidReputationState rejects invalid reputation state', (t) => {
   t.false(isValidReputationState({ global: 10, locations: {} }))
 
   // Test wrong types
-  t.false(isValidReputationState({
-    global: 'not a number',
-    locations: {},
-    npcRelationships: {}
-  }))
+  t.false(
+    isValidReputationState({
+      global: 'not a number',
+      locations: {},
+      npcRelationships: {},
+    })
+  )
 
-  t.false(isValidReputationState({
-    global: 10,
-    locations: 'not an object',
-    npcRelationships: {}
-  }))
+  t.false(
+    isValidReputationState({
+      global: 10,
+      locations: 'not an object',
+      npcRelationships: {},
+    })
+  )
 
-  t.false(isValidReputationState({
-    global: 10,
-    locations: {},
-    npcRelationships: null
-  }))
+  t.false(
+    isValidReputationState({
+      global: 10,
+      locations: {},
+      npcRelationships: null,
+    })
+  )
 
   // Test invalid location values
-  t.false(isValidReputationState({
-    global: 10,
-    locations: { 'location': 'not a number' },
-    npcRelationships: {}
-  }))
+  t.false(
+    isValidReputationState({
+      global: 10,
+      locations: { location: 'not a number' },
+      npcRelationships: {},
+    })
+  )
 
   // Test invalid NPC relationship values
-  t.false(isValidReputationState({
-    global: 10,
-    locations: {},
-    npcRelationships: { 'npc': 'not a number' }
-  }))
+  t.false(
+    isValidReputationState({
+      global: 10,
+      locations: {},
+      npcRelationships: { npc: 'not a number' },
+    })
+  )
 })
 
 test('isValidReputationChange validates correct reputation changes', (t) => {
@@ -93,26 +103,32 @@ test('isValidReputationChange validates correct reputation changes', (t) => {
   t.true(isValidReputationChange({ global: 5 }))
 
   // Test location change
-  t.true(isValidReputationChange({ 
-    location: 'Market Square', 
-    locationChange: 10 
-  }))
+  t.true(
+    isValidReputationChange({
+      location: 'Market Square',
+      locationChange: 10,
+    })
+  )
 
   // Test NPC change
-  t.true(isValidReputationChange({ 
-    npc: 'merchant_aldric', 
-    npcChange: -5 
-  }))
+  t.true(
+    isValidReputationChange({
+      npc: 'merchant_aldric',
+      npcChange: -5,
+    })
+  )
 
   // Test combined changes
-  t.true(isValidReputationChange({
-    global: 2,
-    location: 'Royal District',
-    locationChange: 5,
-    npc: 'guard_captain',
-    npcChange: -3,
-    reason: 'Successful trade'
-  }))
+  t.true(
+    isValidReputationChange({
+      global: 2,
+      location: 'Royal District',
+      locationChange: 5,
+      npc: 'guard_captain',
+      npcChange: -3,
+      reason: 'Successful trade',
+    })
+  )
 })
 
 test('isValidReputationChange rejects invalid reputation changes', (t) => {
@@ -144,12 +160,12 @@ test('sanitizeReputationState clamps values to valid ranges', (t) => {
     global: 150, // Should be clamped to 100
     locations: {
       'Market Square': -200, // Should be clamped to -100
-      'Royal District': 75   // Should remain 75
+      'Royal District': 75, // Should remain 75
     },
     npcRelationships: {
-      'merchant_aldric': 300,  // Should be clamped to 100
-      'guard_captain': -150    // Should be clamped to -100
-    }
+      merchant_aldric: 300, // Should be clamped to 100
+      guard_captain: -150, // Should be clamped to -100
+    },
   }
 
   const sanitized = sanitizeReputationState(extremeState)
@@ -177,13 +193,13 @@ test('saves and loads game state with reputation data', (t) => {
       global: 25,
       locations: {
         'Market Square': 15,
-        'Royal District': -10
+        'Royal District': -10,
       },
       npcRelationships: {
-        'merchant_aldric': 20,
-        'guard_captain': -5
-      }
-    }
+        merchant_aldric: 20,
+        guard_captain: -5,
+      },
+    },
   })
 
   saveGame(gameState, 1)
@@ -202,12 +218,12 @@ test('sanitizes reputation data when saving', (t) => {
     reputation: {
       global: 150, // Will be clamped to 100
       locations: {
-        'Market Square': -200 // Will be clamped to -100
+        'Market Square': -200, // Will be clamped to -100
       },
       npcRelationships: {
-        'merchant_aldric': 300 // Will be clamped to 100
-      }
-    }
+        merchant_aldric: 300, // Will be clamped to 100
+      },
+    },
   })
 
   saveGame(gameState, 1)
@@ -221,7 +237,7 @@ test('sanitizes reputation data when saving', (t) => {
 
 test('migrates legacy save file without reputation data', (t) => {
   const manager = SaveFileManager.getInstance()
-  
+
   // Create a legacy save file without reputation data
   const legacyState = {
     day: 5,
@@ -234,11 +250,11 @@ test('migrates legacy save file without reputation data', (t) => {
     location: {
       name: 'Market Square',
       description: 'A bustling marketplace',
-      dangerLevel: 2
+      dangerLevel: 2,
     },
     inventory: { 'Health Potion': 3 },
     prices: { 'Health Potion': 100 },
-    weather: 'rainy'
+    weather: 'rainy',
     // Note: No reputation, marketData, or tradeHistory fields
   }
 
@@ -251,13 +267,13 @@ test('migrates legacy save file without reputation data', (t) => {
   t.truthy(loadedState)
   t.is(loadedState!.day, 5)
   t.is(loadedState!.cash, 1500)
-  
+
   // Check that reputation data was added with defaults
   t.truthy(loadedState!.reputation)
   t.is(loadedState!.reputation.global, 0)
   t.deepEqual(loadedState!.reputation.locations, {})
   t.deepEqual(loadedState!.reputation.npcRelationships, {})
-  
+
   // Check that market data and trade history were added
   t.truthy(loadedState!.marketData)
   t.deepEqual(loadedState!.marketData, {})
@@ -267,7 +283,7 @@ test('migrates legacy save file without reputation data', (t) => {
 
 test('migrates legacy save file with invalid reputation data', (t) => {
   const manager = SaveFileManager.getInstance()
-  
+
   // Create a save file with invalid reputation data
   const invalidState = {
     day: 10,
@@ -280,14 +296,14 @@ test('migrates legacy save file with invalid reputation data', (t) => {
     location: {
       name: 'Royal District',
       description: 'The royal quarter',
-      dangerLevel: 3
+      dangerLevel: 3,
     },
     inventory: {},
     prices: {},
     weather: 'sunny',
     reputation: 'invalid reputation data', // Invalid type
     marketData: null, // Invalid type
-    tradeHistory: 'not an array' // Invalid type
+    tradeHistory: 'not an array', // Invalid type
   }
 
   // Write the invalid state directly
@@ -298,13 +314,13 @@ test('migrates legacy save file with invalid reputation data', (t) => {
 
   t.truthy(loadedState)
   t.is(loadedState!.day, 10)
-  
+
   // Check that invalid reputation data was replaced with defaults
   t.truthy(loadedState!.reputation)
   t.is(loadedState!.reputation.global, 0)
   t.deepEqual(loadedState!.reputation.locations, {})
   t.deepEqual(loadedState!.reputation.npcRelationships, {})
-  
+
   // Check that invalid market data and trade history were replaced
   t.deepEqual(loadedState!.marketData, {})
   t.deepEqual(loadedState!.tradeHistory, [])
@@ -312,7 +328,7 @@ test('migrates legacy save file with invalid reputation data', (t) => {
 
 test('preserves valid reputation data during migration', (t) => {
   const manager = SaveFileManager.getInstance()
-  
+
   // Create a save file with some valid reputation data but missing other fields
   const partialState = {
     day: 15,
@@ -325,7 +341,7 @@ test('preserves valid reputation data during migration', (t) => {
     location: {
       name: 'Merchant Quarter',
       description: 'Where traders gather',
-      dangerLevel: 1
+      dangerLevel: 1,
     },
     inventory: { 'Strength Potion': 2 },
     prices: { 'Strength Potion': 150 },
@@ -333,12 +349,12 @@ test('preserves valid reputation data during migration', (t) => {
     reputation: {
       global: 30,
       locations: {
-        'Market Square': 25
+        'Market Square': 25,
       },
       npcRelationships: {
-        'merchant_aldric': 40
-      }
-    }
+        merchant_aldric: 40,
+      },
+    },
     // Missing marketData and tradeHistory
   }
 
@@ -349,12 +365,12 @@ test('preserves valid reputation data during migration', (t) => {
   const loadedState = loadGame(1)
 
   t.truthy(loadedState)
-  
+
   // Check that valid reputation data was preserved
   t.is(loadedState!.reputation.global, 30)
   t.is(loadedState!.reputation.locations['Market Square'], 25)
   t.is(loadedState!.reputation.npcRelationships['merchant_aldric'], 40)
-  
+
   // Check that missing fields were added
   t.deepEqual(loadedState!.marketData, {})
   t.deepEqual(loadedState!.tradeHistory, [])

@@ -1,13 +1,37 @@
 import os from 'node:os'
 import path from 'node:path'
-import { DEFAULT_GAME_STATE } from '../../contexts/GameContext.js'
 import { type GameState } from '../../types/game.types.js'
+import { locations } from '../../constants.js'
 import { SaveFileManager, SaveFileType } from './utils.js'
 import {
-    isValidGameState,
-    migrateLegacySaveFile,
-    sanitizeGameState
+  isValidGameState,
+  migrateLegacySaveFile,
+  sanitizeGameState,
 } from './dataValidation.js'
+
+// Default game state for legacy save file migration
+const DEFAULT_GAME_STATE: GameState = {
+  day: 0,
+  cash: 2000,
+  debt: 5000,
+  health: 100,
+  strength: 10,
+  agility: 10,
+  intelligence: 10,
+  location: locations[0]!,
+  inventory: {},
+  prices: {},
+  weather: 'sunny',
+  reputation: {
+    global: 0,
+    locations: {},
+    npcRelationships: {},
+  },
+  marketData: {},
+  tradeHistory: [],
+  playerName: undefined,
+  lastSave: undefined,
+}
 
 export const getSaveDirectory = () => {
   const homeDirectory = os.homedir()
@@ -19,26 +43,22 @@ export const getSaveDirectory = () => {
   return path.join(homeDirectory, '.config', 'potion-wars')
 }
 
-
-
-
-
 export const saveGame = (state: GameState, slot: number) => {
   const saveManager = SaveFileManager.getInstance()
-  
+
   // Sanitize all data before saving
   const sanitizedState = {
     ...sanitizeGameState(state),
     lastSave: new Date().toISOString(),
   }
-  
+
   saveManager.writeSaveFile(slot, SaveFileType.GAME_SAVE, sanitizedState)
 }
 
 export const loadGame = (slot: number): GameState | undefined => {
   try {
     const saveManager = SaveFileManager.getInstance()
-    
+
     // First try to load with strict validation
     let gameState = saveManager.readSaveFile<GameState>(
       slot,
@@ -57,21 +77,20 @@ export const loadGame = (slot: number): GameState | undefined => {
         {
           createIfNotExists: true,
           defaultValue: DEFAULT_GAME_STATE,
-          validator: (state: any): state is any => (
+          validator: (state: any): state is any =>
             typeof state === 'object' &&
             state !== null &&
             typeof state.day === 'number' &&
             typeof state.cash === 'number' &&
             typeof state.debt === 'number' &&
-            typeof state.health === 'number'
-          )
+            typeof state.health === 'number',
         }
       )
 
       if (legacyState) {
         // Migrate the legacy state
         gameState = migrateLegacySaveFile(legacyState)
-        
+
         // Save the migrated state back to file
         saveManager.writeSaveFile(slot, SaveFileType.GAME_SAVE, {
           ...gameState,

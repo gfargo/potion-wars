@@ -4,7 +4,7 @@ import { render } from 'ink-testing-library'
 import PriceList from '../PriceList.js'
 import { TestWrapper } from '../../../../core/state/tests/utils/TestWrapper.js'
 
-test('Updated PriceList falls back to original when no market data', t => {
+test('Updated PriceList falls back to original when no market data', (t) => {
   const { lastFrame } = render(
     <TestWrapper>
       <PriceList />
@@ -17,7 +17,7 @@ test('Updated PriceList falls back to original when no market data', t => {
   t.true(output!.includes('🧪'))
 })
 
-test('Updated PriceList shows enhanced display when market data available', t => {
+test('Updated PriceList shows enhanced display when market data available', (t) => {
   // This test would need a TestWrapper with market data
   // For now, we'll test the fallback behavior
   const { lastFrame } = render(
@@ -32,7 +32,7 @@ test('Updated PriceList shows enhanced display when market data available', t =>
   t.true(output!.includes('Prices') || output!.includes('Market'))
 })
 
-test('Updated PriceList maintains price display functionality', t => {
+test('Updated PriceList maintains price display functionality', (t) => {
   const { lastFrame } = render(
     <TestWrapper>
       <PriceList />

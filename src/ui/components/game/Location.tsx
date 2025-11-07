@@ -1,17 +1,16 @@
 import { Box, Newline, Text } from 'ink'
 import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
+import { useStore } from '../../../store/appStore.js'
 import {
   selectLocationDanger,
   selectLocationDescription,
   selectLocationName,
-} from '../../../core/state/index.js'
+} from '../../../store/selectors.js'
 
 function Location() {
-  const { gameState } = useGame()
-  const locationName = selectLocationName(gameState)
-  const dangerLevel = selectLocationDanger(gameState)
-  const description = selectLocationDescription(gameState)
+  const locationName = useStore(selectLocationName)
+  const dangerLevel = useStore(selectLocationDanger)
+  const description = useStore(selectLocationDescription)
 
   return (
     <Box

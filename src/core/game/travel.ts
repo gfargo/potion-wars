@@ -1,11 +1,11 @@
 import { handleCombat } from '../combat/index.js'
 import { locations } from '../../constants.js'
 import { type GameState } from '../../types/game.types.js'
-import { generatePrices } from './economy.js'
 import { NPCEncounter } from '../npcs/NPCEncounter.js'
 import { type NPC } from '../../types/npc.types.js'
 import { createNPCEvent } from '../events/handlers/npc.js'
 import { type MultiStepEvent } from '../../types/events.types.js'
+import { generateDynamicPrices } from './economy.js'
 
 export const travel = (
   state: GameState,
@@ -18,9 +18,11 @@ export const travel = (
 
   const newState = {
     ...state,
-    prices: generatePrices(),
     location: newLocation,
   }
+
+  // Update prices based on new location's market data
+  newState.prices = generateDynamicPrices(newState)
 
   const message = `Traveled to ${newLocation.name}. ${newLocation.description}`
 
@@ -41,34 +43,34 @@ export const travelWithNPCEncounters = (
 } => {
   // First handle the basic travel
   const [travelState, travelMessage] = travel(state, newLocationName)
-  
+
   // Check for NPC encounters at the new location
   const encounteredNPC = checkNPCEncounter(travelState)
-  
+
   if (encounteredNPC) {
     // Create an NPC event for the encounter
     const npcEvent = createNPCEvent(encounteredNPC)
-    
+
     // Update the game state with the NPC event
     const stateWithEvent = {
       ...travelState,
       currentEvent: npcEvent,
-      currentStep: 0
+      currentStep: 0,
     }
-    
+
     const encounterMessage = `${travelMessage}\n\nYou encounter ${encounteredNPC.name}!`
-    
+
     return {
       newState: stateWithEvent,
       message: encounterMessage,
       npcEncounter: encounteredNPC,
-      npcEvent
+      npcEvent,
     }
   }
-  
+
   return {
     newState: travelState,
-    message: travelMessage
+    message: travelMessage,
   }
 }
 
@@ -93,7 +95,7 @@ export const travelCombat = (
 /**
  * Check for NPC encounters when arriving at a location
  */
-export const checkNPCEncounter = (state: GameState): NPC | null => {
+export const checkNPCEncounter = (state: GameState): NPC | undefined => {
   return NPCEncounter.checkForEncounter(state)
 }
 
@@ -107,6 +109,9 @@ export const getLocationNPCs = (state: GameState): NPC[] => {
 /**
  * Get NPCs of a specific type in the current location
  */
-export const getLocationNPCsByType = (state: GameState, type: string): NPC[] => {
+export const getLocationNPCsByType = (
+  state: GameState,
+  type: string
+): NPC[] => {
   return NPCEncounter.getNPCsByType(type, state)
 }

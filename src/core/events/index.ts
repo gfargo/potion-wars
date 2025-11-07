@@ -1,7 +1,7 @@
 import {
-    type Event,
-    type MultiStepEvent,
-    type RandomEventResponse,
+  type Event,
+  type MultiStepEvent,
+  type RandomEventResponse,
 } from '../../types/events.types.js'
 import { type GameState } from '../../types/game.types.js'
 import { standardEvents } from './handlers/standard.js'
@@ -17,7 +17,7 @@ export const triggerRandomEvent = (state: GameState): RandomEventResponse => {
   try {
     const rivalHandler = RivalEventHandler.getInstance()
     // Note: We'll initialize rivals elsewhere to avoid async issues
-    
+
     const rivalEvent = rivalHandler.checkForRivalEncounter(state)
     if (rivalEvent) {
       const firstStep = rivalEvent.steps[0]
@@ -69,7 +69,10 @@ export const triggerRandomEvent = (state: GameState): RandomEventResponse => {
   }
 
   if (!selectedEvent) {
-    return state
+    return {
+      ...state,
+      currentEvent: undefined,
+    }
   }
 
   if ('steps' in selectedEvent) {
@@ -112,15 +115,26 @@ export const handleMultiStepEventChoice = (
     return state
   }
 
-  const newState = selectedChoice.effect(state) as GameState & { message?: string }
+  // Defensive check for missing effect function
+  if (typeof selectedChoice.effect !== 'function') {
+    console.error('Choice effect is not a function:', selectedChoice)
+    return {
+      ...state,
+      message: 'Error: Invalid event choice configuration',
+    }
+  }
+
+  const newState = selectedChoice.effect(state) as GameState & {
+    message?: string
+  }
   const nextStep = (state.currentStep ?? 0) + 1
 
   if (nextStep >= state.currentEvent.steps.length) {
-    // Event is complete - preserve the outcome message from the effect
+    // Event is complete - set flag to show outcome but don't clear event yet
+    // This allows MultiStepEventScreen to display the outcome and wait for user acknowledgment
     return {
       ...newState,
-      currentEvent: undefined,
-      currentStep: undefined,
+      isShowingEventOutcome: true,
       message: newState.message, // Preserve the message from the effect
     }
   }

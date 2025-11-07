@@ -1,14 +1,14 @@
 import { Box, Text, useInput } from 'ink'
 import React, { useEffect, useMemo, useState } from 'react'
 import { ASCII_PORTRAITS } from '../constants.js'
-import { useGame } from '../contexts/GameContext.js'
+import { useStore } from '../store/appStore.js'
 import { EnhancedSelectInput } from '../ui/components/common/index.js'
 
 type EventScreenPhase =
-  | 'showing_choice'      // Display step description and choices
-  | 'processing_choice'   // Brief visual feedback that choice was made
-  | 'showing_outcome'     // Display the result/consequence message
-  | 'awaiting_continue'   // Wait for user to press key to continue
+  | 'showing_choice' // Display step description and choices
+  | 'processing_choice' // Brief visual feedback that choice was made
+  | 'showing_outcome' // Display the result/consequence message
+  | 'awaiting_continue' // Wait for user to press key to continue
 
 type EventScreenState = {
   phase: EventScreenPhase
@@ -16,20 +16,32 @@ type EventScreenState = {
   selectedChoiceText?: string
   outcomeMessage?: string
   isEventComplete?: boolean
+  eventName?: string // Store event name to display after event is cleared
 }
 
 export function MultiStepEventScreen() {
-  const { gameState, handleEventChoice } = useGame()
-  const { currentEvent } = gameState
-  const currentStep = gameState.currentStep ?? 0
+  // Get state and actions from Zustand store
+  const currentEvent = useStore((state) => state.events.current)
+  const currentStep = useStore((state) => state.events.currentStep)
+  const chooseEvent = useStore((state) => state.chooseEvent)
+  const acknowledgeEvent = useStore((state) => state.acknowledgeEvent)
 
   const [screenState, setScreenState] = useState<EventScreenState>({
-    phase: 'showing_choice'
+    phase: 'showing_choice',
+    eventName: currentEvent?.name,
   })
 
-  // Reset state when event changes
+  // Reset state when event changes (but not when it clears)
+  // Note: We only depend on currentEvent?.name, NOT currentStep
+  // This ensures we only reset when a new event appears, not when moving between steps
   useEffect(() => {
-    setScreenState({ phase: 'showing_choice' })
+    if (currentEvent?.name) {
+      console.error('[MultiStepEvent] Event changed, resetting to showing_choice:', currentEvent.name, 'step:', currentStep)
+      setScreenState({
+        phase: 'showing_choice',
+        eventName: currentEvent.name,
+      })
+    }
   }, [currentEvent?.name])
 
   // Memoize portrait selection to prevent re-randomizing on every render
@@ -39,84 +51,102 @@ export function MultiStepEventScreen() {
     return {
       portraitKey: key,
       portrait: ASCII_PORTRAITS[key as keyof typeof ASCII_PORTRAITS],
-      isPortraitLeft: Math.random() < 0.5
+      isPortraitLeft: Math.random() < 0.5,
     }
   }, [currentEvent?.name])
 
   // Handle choice selection
   const handleChoiceSelected = (choiceIndex: number, choiceText: string) => {
+    console.error('[MultiStepEvent] Choice selected:', choiceIndex, choiceText)
     setScreenState({
       phase: 'processing_choice',
       selectedChoiceIndex: choiceIndex,
-      selectedChoiceText: choiceText
+      selectedChoiceText: choiceText,
     })
   }
 
   // Process the choice when in processing phase
+  // IMPORTANT: Only depend on screenState.phase and screenState.selectedChoiceIndex
+  // Do NOT depend on eventPhase or currentEvent - those change DURING execution causing re-runs!
   useEffect(() => {
-    if (screenState.phase === 'processing_choice' && screenState.selectedChoiceIndex !== undefined) {
-      // Execute the choice
-      const result = handleEventChoice(screenState.selectedChoiceIndex)
+    if (
+      screenState.phase === 'processing_choice' &&
+      screenState.selectedChoiceIndex !== undefined
+    ) {
+      console.error('[MultiStepEvent] Processing choice effect triggered, index:', screenState.selectedChoiceIndex)
 
-      // Check if event is complete or continuing
-      const isComplete = result.isLastStep
+      // Execute the choice using store action (synchronous!)
+      chooseEvent(screenState.selectedChoiceIndex)
 
-      if (result.message) {
-        // Show outcome message
-        setScreenState({
-          phase: 'showing_outcome',
-          selectedChoiceIndex: screenState.selectedChoiceIndex,
-          selectedChoiceText: screenState.selectedChoiceText,
-          outcomeMessage: result.message,
-          isEventComplete: isComplete
-        })
-      } else if (isComplete) {
-        // Event complete but no message - this shouldn't happen but handle it
-        setScreenState({
-          phase: 'awaiting_continue',
-          isEventComplete: true
-        })
-      } else {
-        // No outcome message but event continues - reset for next step
-        setScreenState({
-          phase: 'showing_choice'
-        })
-      }
+      // Check the updated event phase from store - use getState() to get the CURRENT value
+      // after the synchronous update, not the subscribed value which updates on next render
+      const updatedPhase = useStore.getState().events.phase
+
+      const isComplete = updatedPhase === 'outcome'
+
+      console.error('[MultiStepEvent] Choice processed, isComplete:', isComplete, 'eventPhase:', updatedPhase)
+
+      // For now, show a simple outcome message
+      // The store already updated the game state with effects
+      setScreenState({
+        phase: 'showing_outcome',
+        selectedChoiceIndex: screenState.selectedChoiceIndex,
+        selectedChoiceText: screenState.selectedChoiceText,
+        outcomeMessage: 'Choice applied.', // Store handles the actual effects
+        isEventComplete: isComplete,
+        eventName: currentEvent?.name || screenState.eventName,
+      })
     }
-  }, [screenState.phase, screenState.selectedChoiceIndex, handleEventChoice])
+  }, [screenState.phase, screenState.selectedChoiceIndex])
 
   // Handle continuing after outcome is shown
   useInput((input, key) => {
-    if (screenState.phase === 'showing_outcome' && (key.return || input === ' ')) {
+    if (
+      screenState.phase === 'showing_outcome' &&
+      (key.return || input === ' ')
+    ) {
       if (screenState.isEventComplete) {
-        // Event is done - parent will handle transition back to game
-        setScreenState({
-          phase: 'awaiting_continue',
-          isEventComplete: true
-        })
+        // Event is done - acknowledge to clear event state
+        // The component will unmount naturally when GameScreen stops rendering it
+        console.error('[MultiStepEvent] Event complete, acknowledging')
+        acknowledgeEvent()
       } else {
         // Move to next step
+        console.error('[MultiStepEvent] Moving to next step, currentStep:', currentStep)
         setScreenState({
-          phase: 'showing_choice'
+          phase: 'showing_choice',
         })
       }
     }
   })
 
-  // If event is done and we're awaiting continue, don't render (let GameScreen take over)
-  if (!currentEvent || (screenState.phase === 'awaiting_continue' && screenState.isEventComplete)) {
+  // Only hide the screen if we're truly done showing everything
+  // Keep displaying if we're showing the outcome, even if currentEvent is cleared
+  const isDisplayingOutcome =
+    screenState.phase === 'showing_outcome' && screenState.isEventComplete
+
+  if (!currentEvent && !isDisplayingOutcome) {
     return null
   }
 
-  const step = currentEvent.steps[currentStep]
-  if (!step) {
+  // Get the current step if the event still exists
+  // Type guard: check if currentEvent is a MultiStepEvent
+  const step =
+    currentEvent && 'steps' in currentEvent
+      ? currentEvent.steps[currentStep]
+      : undefined
+
+  // If we have no step and we're not displaying the final outcome, bail out
+  if (!step && !isDisplayingOutcome) {
     return null
   }
 
   return (
     <Box flexDirection="column" height="100%" width="100%" padding={1}>
       <Box marginBottom={1} borderStyle="single" paddingX={1}>
-        <Text bold color="yellow">⚠️  Event: {currentEvent.name}</Text>
+        <Text bold color="yellow">
+          ⚠️ Event: {currentEvent?.name || screenState.eventName}
+        </Text>
       </Box>
 
       <Box flexDirection="row" width="100%" flexGrow={1}>
@@ -131,7 +161,9 @@ export function MultiStepEventScreen() {
           {/* Processing Phase */}
           {screenState.phase === 'processing_choice' && (
             <Box flexDirection="column" marginBottom={1}>
-              <Text bold color="cyan">➤ You chose: {screenState.selectedChoiceText}</Text>
+              <Text bold color="cyan">
+                ➤ You chose: {screenState.selectedChoiceText}
+              </Text>
               <Text dimColor>Processing...</Text>
             </Box>
           )}
@@ -139,9 +171,13 @@ export function MultiStepEventScreen() {
           {/* Outcome Phase */}
           {screenState.phase === 'showing_outcome' && (
             <Box flexDirection="column" marginBottom={2}>
-              <Text bold color="cyan">➤ You chose: {screenState.selectedChoiceText}</Text>
+              <Text bold color="cyan">
+                ➤ You chose: {screenState.selectedChoiceText}
+              </Text>
               <Box marginTop={1} marginBottom={1}>
-                <Text bold color="yellow">Result:</Text>
+                <Text bold color="yellow">
+                  Result:
+                </Text>
               </Box>
               <Text>{screenState.outcomeMessage}</Text>
               <Box marginTop={2}>
@@ -151,22 +187,22 @@ export function MultiStepEventScreen() {
           )}
 
           {/* Choice Phase */}
-          {screenState.phase === 'showing_choice' && (
+          {screenState.phase === 'showing_choice' && step && (
             <>
               <Box marginBottom={1}>
                 <Text>{step.description}</Text>
               </Box>
               <Box>
                 <EnhancedSelectInput
-                  items={step.choices.map((choice) => ({
+                  items={step.choices.map((choice: any) => ({
                     label: choice.text,
                     value: choice.text,
                   }))}
                   onSelect={({ value }) => {
                     const index = step.choices.findIndex(
-                      (choice) => choice.text === value
+                      (choice: any) => choice.text === value
                     )
-                    handleChoiceSelected(index, value)
+                    handleChoiceSelected(index, value as string)
                   }}
                 />
               </Box>

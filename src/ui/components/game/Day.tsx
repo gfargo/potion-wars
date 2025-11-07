@@ -1,11 +1,11 @@
 import { Box, Text } from 'ink'
 import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
-import { selectDayInfo } from '../../../core/state/index.js'
+import { useShallow } from 'zustand/react/shallow'
+import { useStore } from '../../../store/appStore.js'
+import { selectDayInfo } from '../../../store/selectors.js'
 
 function Day() {
-  const { gameState } = useGame()
-  const { current, total } = selectDayInfo(gameState)
+  const { current, total } = useStore(useShallow(selectDayInfo))
 
   return (
     <Box>

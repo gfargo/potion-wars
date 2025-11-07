@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink'
 import React, { useEffect, useMemo, useState } from 'react'
-import { useMessage } from '../../../contexts/MessageContext.js'
+import { useStore } from '../../../store/appStore.js'
 import {
   selectMessageColor,
   selectMessageNavigation,
@@ -10,7 +10,7 @@ import {
 const MAX_HISTORY = 6
 
 function GameLog() {
-  const { messages } = useMessage()
+  const messages = useStore((state) => state.messages)
   const [currentIndex, setCurrentIndex] = useState(0)
 
   useInput((input) => {

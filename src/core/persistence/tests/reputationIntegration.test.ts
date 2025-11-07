@@ -7,7 +7,7 @@ import { SaveFileManager, SaveFileType } from '../utils.js'
 // Helper to clean up test files
 const cleanup = () => {
   const manager = SaveFileManager.getInstance()
-  for (let slot = 1; slot <= 3; slot++) {
+  for (let slot = 1; slot <= 5; slot++) {
     try {
       manager.clearSaveFile(slot, SaveFileType.GAME_SAVE)
       manager.clearSaveFile(slot, SaveFileType.GAME_LOG)
@@ -24,7 +24,11 @@ test('full reputation persistence workflow', (t) => {
   // Create a game state with some reputation changes
   let gameState = createGameState({
     cash: 5000,
-    location: { name: 'Market Square', description: 'A busy marketplace', dangerLevel: 2 }
+    location: {
+      name: 'Market Square',
+      description: 'A busy marketplace',
+      dangerLevel: 2,
+    },
   })
 
   // Apply some reputation changes using ReputationManager
@@ -34,13 +38,13 @@ test('full reputation persistence workflow', (t) => {
     locationChange: 15,
     npc: 'merchant_aldric',
     npcChange: 20,
-    reason: 'Successful trade'
+    reason: 'Successful trade',
   })
 
   gameState = ReputationManager.applyReputationChange(gameState, {
     location: 'Royal District',
     locationChange: -5,
-    reason: 'Minor incident'
+    reason: 'Minor incident',
   })
 
   // Save the game
@@ -50,7 +54,7 @@ test('full reputation persistence workflow', (t) => {
   const loadedState = loadGame(1)
 
   t.truthy(loadedState)
-  
+
   // Verify all reputation data was preserved
   t.is(loadedState!.reputation.global, 10)
   t.is(loadedState!.reputation.locations['Market Square'], 15)
@@ -58,20 +62,26 @@ test('full reputation persistence workflow', (t) => {
   t.is(loadedState!.reputation.npcRelationships['merchant_aldric'], 20)
 
   // Verify ReputationManager functions work with loaded data
-  const locationReputation = ReputationManager.getLocationReputation(loadedState!.reputation, 'Market Square')
+  const locationReputation = ReputationManager.getLocationReputation(
+    loadedState!.reputation,
+    'Market Square'
+  )
   t.is(locationReputation, 13) // Should be weighted: location(15) * 0.6 + global(10) * 0.4 = 9 + 4 = 13
-  
-  const priceModifier = ReputationManager.calculatePriceModifier(locationReputation)
-  t.true(priceModifier <= 1.0) // Should get a discount or neutral due to positive reputation
 
-  const reputationLevel = ReputationManager.getReputationLevel(loadedState!.reputation.global)
+  const priceModifier =
+    ReputationManager.calculatePriceModifier(locationReputation)
+  t.true(priceModifier <= 1) // Should get a discount or neutral due to positive reputation
+
+  const reputationLevel = ReputationManager.getReputationLevel(
+    loadedState!.reputation.global
+  )
   t.truthy(reputationLevel) // Should return a valid reputation level
 
   // Test that extreme values get sanitized
   gameState = ReputationManager.applyReputationChange(loadedState!, {
     global: 200, // This should be clamped to 100
     location: 'Market Square',
-    locationChange: -300 // This should be clamped to make total not exceed -100
+    locationChange: -300, // This should be clamped to make total not exceed -100
   })
 
   saveGame(gameState, 2)
@@ -80,7 +90,7 @@ test('full reputation persistence workflow', (t) => {
   t.truthy(sanitizedState)
   t.true(sanitizedState!.reputation.global <= 100)
   t.true(sanitizedState!.reputation.global >= -100)
-  
+
   const marketSquareRep = sanitizedState!.reputation.locations['Market Square']
   if (marketSquareRep !== undefined) {
     t.true(marketSquareRep <= 100)
@@ -99,7 +109,7 @@ test('reputation data survives multiple save/load cycles', (t) => {
       locationChange: i * 3,
       npc: `npc_${i}`,
       npcChange: i * 2,
-      reason: `Action ${i}`
+      reason: `Action ${i}`,
     })
 
     saveGame(gameState, 1)
@@ -126,7 +136,7 @@ test('reputation persistence handles concurrent location and NPC changes', (t) =
     locationChange: 10,
     npc: 'merchant_aldric',
     npcChange: 15,
-    reason: 'Excellent trade'
+    reason: 'Excellent trade',
   })
 
   gameState = ReputationManager.applyReputationChange(gameState, {
@@ -134,7 +144,7 @@ test('reputation persistence handles concurrent location and NPC changes', (t) =
     locationChange: 5, // Should accumulate with previous
     npc: 'merchant_aldric',
     npcChange: -3, // Should accumulate with previous
-    reason: 'Minor disagreement'
+    reason: 'Minor disagreement',
   })
 
   saveGame(gameState, 1)

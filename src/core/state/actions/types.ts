@@ -1,7 +1,10 @@
 import { type MultiStepEvent } from '../../../types/events.types.js'
 import { type Weather } from '../../../types/weather.types.js'
 import { type ReputationChange } from '../../../types/reputation.types.js'
-import { type LocationMarketState, type SupplyDemandFactor } from '../../../types/economy.types.js'
+import {
+  type LocationMarketState,
+  type SupplyDemandFactor,
+} from '../../../types/economy.types.js'
 
 // Game Actions
 export const BREW_POTION = 'game/brewPotion'
@@ -12,6 +15,7 @@ export const ADVANCE_DAY = 'game/advanceDay'
 export const UPDATE_WEATHER = 'game/updateWeather'
 export const TRIGGER_EVENT = 'game/triggerEvent'
 export const HANDLE_EVENT_CHOICE = 'game/handleEventChoice'
+export const ACKNOWLEDGE_EVENT_OUTCOME = 'game/acknowledgeEventOutcome'
 
 // Reputation Actions
 export const UPDATE_REPUTATION = 'reputation/updateReputation'
@@ -95,6 +99,10 @@ export type HandleEventChoiceAction = {
   payload: {
     choiceIndex: number
   }
+}
+
+export type AcknowledgeEventOutcomeAction = {
+  type: typeof ACKNOWLEDGE_EVENT_OUTCOME
 }
 
 export type InitializeGameAction = {
@@ -202,6 +210,7 @@ export type GameAction =
   | UpdateWeatherAction
   | TriggerEventAction
   | HandleEventChoiceAction
+  | AcknowledgeEventOutcomeAction
   | InitializeGameAction
   | SaveGameAction
   | LoadGameAction

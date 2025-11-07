@@ -2,13 +2,18 @@ import { Box, Text, useApp, useInput } from 'ink'
 import Gradient from 'ink-gradient'
 import React, { useMemo, useState } from 'react'
 import { TITLE_ART } from '../../constants.js'
-import { useGame } from '../../contexts/GameContext.js'
-import { useUI } from '../../contexts/UIContext.js'
+import { useStore } from '../../store/appStore.js'
 import { getSaveSlots } from '../../core/persistence/saveLoad.js'
 import { EnhancedSelectInput } from '../../ui/components/common/index.js'
 
 export function TitleScreenMenu() {
-  const { toggleHelp, setScreen } = useUI()
+  const toggleHelp = useStore((state) => state.toggleHelp)
+  const setScreen = useStore((state) => state.setScreen)
+  const initializeGame = useStore((state) => state.initializeGame)
+  const loadGame = useStore((state) => state.loadGame)
+  const activeSlot = useStore((state) => state.persistence.activeSlot)
+  const { exit } = useApp()
+
   // eslint-disable-next-line react/hook-use-state
   const [displaySaveSlots, toggleSaveSlotDisplay] = useState<
     'load' | 'new' | false
@@ -16,8 +21,6 @@ export function TitleScreenMenu() {
   const [confirmOverwrite, setConfirmOverwrite] = useState(false)
   const [confirmRestartGameOver, setConfirmRestartGameOver] = useState(false)
   const [pendingSlotIndex, setPendingSlotIndex] = useState<number>(-1)
-  const { handleAction, activeSlot } = useGame()
-  const { exit } = useApp()
 
   const saveSlots = getSaveSlots()
 
@@ -54,18 +57,18 @@ export function TitleScreenMenu() {
       },
     ]
 
-    if (activeSlot < 0) {
-      return defaultItems
+    if (activeSlot > 0) {
+      return [
+        {
+          label: 'Continue',
+          value: 'continue',
+          hotkey: 'c',
+        },
+        ...defaultItems,
+      ]
     }
 
-    return [
-      {
-        label: 'Continue',
-        value: 'continue',
-        hotkey: 'c',
-      },
-      ...defaultItems,
-    ]
+    return defaultItems
   }, [activeSlot])
 
   return (
@@ -95,7 +98,7 @@ export function TitleScreenMenu() {
             onSelect={(item) => {
               if (item.value === 'yes' && pendingSlotIndex >= 0) {
                 setScreen('loading')
-                handleAction('startGame', { slot: pendingSlotIndex })
+                initializeGame('Player', pendingSlotIndex)
               }
 
               setConfirmRestartGameOver(false)
@@ -127,7 +130,7 @@ export function TitleScreenMenu() {
 
               if (item.value === 'yes' && pendingSlotIndex >= 0) {
                 setScreen('loading')
-                handleAction('startGame', { slot: pendingSlotIndex })
+                initializeGame('Player', pendingSlotIndex)
               }
 
               setConfirmOverwrite(false)
@@ -143,7 +146,7 @@ export function TitleScreenMenu() {
               : 'Select a saved game to continue'}
           </Text>
           <EnhancedSelectInput
-            initialIndex={activeSlot < 0 ? 0 : activeSlot}
+            initialIndex={activeSlot > 0 ? activeSlot - 1 : 0}
             indicatorComponent={({ isSelected, item }) =>
               isSelected && item.value === 'back' ? (
                 <Text color="red">✘ </Text>
@@ -201,7 +204,7 @@ export function TitleScreenMenu() {
                 }
 
                 setScreen('loading')
-                handleAction('startGame', { slot: slotIndex })
+                initializeGame('Player', slotIndex)
                 return
               }
 
@@ -213,7 +216,7 @@ export function TitleScreenMenu() {
               }
 
               setScreen('loading')
-              handleAction('loadGame', { slot: slotIndex })
+              loadGame(slotIndex)
             }}
           />
         </Box>
@@ -257,7 +260,7 @@ export function TitleScreenMenu() {
 
               if (item.value === 'continue') {
                 setScreen('loading')
-                handleAction('loadGame', { slot: activeSlot })
+                loadGame(activeSlot)
               }
             }}
           />

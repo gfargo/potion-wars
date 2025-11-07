@@ -1,8 +1,7 @@
 import type * as test from 'ava'
 import { render } from 'ink-testing-library'
 import React from 'react'
-import { type Message } from '../../../../contexts/MessageContext.js'
-import { type Screen } from '../../../../contexts/UIContext.js'
+import { type Message, type Screen } from '../../../../store/appStore.js'
 import { type GameState } from '../../../../types/game.types.js'
 import { TestWrapper } from './TestWrapper.js'
 

@@ -1,11 +1,11 @@
 import { Box, Text } from 'ink'
 import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
-import { selectWeatherUI } from '../../../core/state/index.js'
+import { useShallow } from 'zustand/react/shallow'
+import { useStore } from '../../../store/appStore.js'
+import { selectWeatherUI } from '../../../store/selectors.js'
 
 function Weather() {
-  const { gameState } = useGame()
-  const { icon, color, text } = selectWeatherUI(gameState)
+  const { icon, color, text } = useStore(useShallow(selectWeatherUI))
 
   return (
     <Box width={9}>

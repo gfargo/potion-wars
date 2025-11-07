@@ -1,13 +1,13 @@
 import { Box, Text, useInput } from 'ink'
 import React from 'react'
-import { useUI } from '../contexts/UIContext.js'
+import { useStore } from '../store/appStore.js'
 
 type GameOverProperties = {
   readonly finalScore: number
 }
 
 export function GameOver({ finalScore }: GameOverProperties) {
-  const { setScreen } = useUI()
+  const setScreen = useStore((state) => state.setScreen)
 
   useInput((_, key) => {
     if (key.return) {

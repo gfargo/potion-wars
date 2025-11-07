@@ -1,4 +1,4 @@
-import { type Message } from '../../contexts/MessageContext.js'
+import { type Message } from '../../store/appStore.js'
 import { SaveFileManager, SaveFileType } from './utils.js'
 
 const isValidMessage = (message: any): message is Message => {

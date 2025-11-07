@@ -2,7 +2,10 @@ import test from 'ava'
 import React from 'react'
 import { render } from 'ink-testing-library'
 import { EnhancedMarketDisplay } from '../EnhancedMarketDisplay.js'
-import type { MarketState, MarketData } from '../../../../types/economy.types.js'
+import type {
+  MarketState,
+  MarketData,
+} from '../../../../types/economy.types.js'
 import type { ReputationState } from '../../../../types/reputation.types.js'
 
 // Test market data
@@ -15,10 +18,10 @@ const mockMarketData: MarketData = {
   history: [
     { day: 1, price: 100, volume: 10, playerTransaction: false },
     { day: 2, price: 110, volume: 15, playerTransaction: true },
-    { day: 3, price: 120, volume: 8, playerTransaction: false }
+    { day: 3, price: 120, volume: 8, playerTransaction: false },
   ],
   volatility: 0.2,
-  lastUpdated: 3
+  lastUpdated: 3,
 }
 
 const testMarkets: MarketState = {
@@ -29,7 +32,7 @@ const testMarkets: MarketState = {
     currentPrice: 140,
     trend: 'falling',
     demand: 0.3,
-    supply: 0.8
+    supply: 0.8,
   },
   'Magic Potion': {
     ...mockMarketData,
@@ -37,34 +40,41 @@ const testMarkets: MarketState = {
     currentPrice: 200,
     trend: 'stable',
     demand: 0.5,
-    supply: 0.5
-  }
+    supply: 0.5,
+  },
 }
 
 const neutralReputation: ReputationState = {
   global: 0,
   locations: { 'Market Square': 0 },
-  npcRelationships: {}
+  npcRelationships: {},
 }
 
 const highReputation: ReputationState = {
   global: 60,
   locations: { 'Market Square': 75 },
-  npcRelationships: {}
+  npcRelationships: {},
 }
 
 const lowReputation: ReputationState = {
   global: -40,
   locations: { 'Market Square': -60 },
-  npcRelationships: {}
+  npcRelationships: {},
 }
 
-test('EnhancedMarketDisplay renders basic market information', t => {
+const testPrices: Record<string, number> = {
+  'Healing Potion': 120,
+  'Strength Potion': 140,
+  'Magic Potion': 200,
+}
+
+test('EnhancedMarketDisplay renders basic market information', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
+    <EnhancedMarketDisplay
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -77,13 +87,14 @@ test('EnhancedMarketDisplay renders basic market information', t => {
   t.true(output!.includes('Magic Potion'))
 })
 
-test('EnhancedMarketDisplay shows compact format', t => {
+test('EnhancedMarketDisplay shows compact format', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
-      compact={true}
+    <EnhancedMarketDisplay
+      compact
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -96,28 +107,34 @@ test('EnhancedMarketDisplay shows compact format', t => {
   t.false(output!.includes('Market Intelligence'))
 })
 
-test('EnhancedMarketDisplay shows trend indicators', t => {
+test('EnhancedMarketDisplay shows trend indicators', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
-      showTrends={true}
+    <EnhancedMarketDisplay
+      showTrends
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
   const output = lastFrame()
   t.truthy(output)
   t.true(output!.includes('Market Trends'))
-  t.true(output!.includes('RISING') || output!.includes('FALLING') || output!.includes('STABLE'))
+  t.true(
+    output!.includes('RISING') ||
+      output!.includes('FALLING') ||
+      output!.includes('STABLE')
+  )
 })
 
-test('EnhancedMarketDisplay applies reputation price modifiers', t => {
+test('EnhancedMarketDisplay applies reputation price modifiers', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={highReputation} 
-      currentLocation="Market Square" 
+    <EnhancedMarketDisplay
+      markets={testMarkets}
+      reputation={highReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -127,13 +144,14 @@ test('EnhancedMarketDisplay applies reputation price modifiers', t => {
   t.true(output!.includes('Discount'))
 })
 
-test('EnhancedMarketDisplay shows price history when requested', t => {
+test('EnhancedMarketDisplay shows price history when requested', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
-      showHistory={true}
+    <EnhancedMarketDisplay
+      showHistory
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -143,12 +161,13 @@ test('EnhancedMarketDisplay shows price history when requested', t => {
   t.true(output!.includes('your trades'))
 })
 
-test('EnhancedMarketDisplay shows market intelligence', t => {
+test('EnhancedMarketDisplay shows market intelligence', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
+    <EnhancedMarketDisplay
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -156,15 +175,20 @@ test('EnhancedMarketDisplay shows market intelligence', t => {
   t.truthy(output)
   t.true(output!.includes('Market Intelligence'))
   // Should contain some intelligence insights
-  t.true(output!.includes('demand') || output!.includes('supply') || output!.includes('prices'))
+  t.true(
+    output!.includes('demand') ||
+      output!.includes('supply') ||
+      output!.includes('prices')
+  )
 })
 
-test('EnhancedMarketDisplay handles low reputation markup', t => {
+test('EnhancedMarketDisplay handles low reputation markup', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={lowReputation} 
-      currentLocation="Market Square" 
+    <EnhancedMarketDisplay
+      markets={testMarkets}
+      reputation={lowReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -174,12 +198,13 @@ test('EnhancedMarketDisplay handles low reputation markup', t => {
   t.true(output!.includes('Markup'))
 })
 
-test('EnhancedMarketDisplay shows supply/demand indicators', t => {
+test('EnhancedMarketDisplay shows supply/demand indicators', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
+    <EnhancedMarketDisplay
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -187,21 +212,22 @@ test('EnhancedMarketDisplay shows supply/demand indicators', t => {
   t.truthy(output)
   // Should show supply/demand status
   t.true(
-    output!.includes('High Demand') || 
-    output!.includes('Low Demand') || 
-    output!.includes('Balanced') ||
-    output!.includes('Oversupply')
+    output!.includes('High Demand') ||
+      output!.includes('Low Demand') ||
+      output!.includes('Balanced') ||
+      output!.includes('Oversupply')
   )
 })
 
-test('EnhancedMarketDisplay handles empty market data', t => {
+test('EnhancedMarketDisplay handles empty market data', (t) => {
   const emptyMarkets: MarketState = {}
-  
+
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={emptyMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
+    <EnhancedMarketDisplay
+      markets={emptyMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -212,29 +238,36 @@ test('EnhancedMarketDisplay handles empty market data', t => {
   t.true(output!.includes('Market Intelligence'))
 })
 
-test('EnhancedMarketDisplay shows trend arrows', t => {
+test('EnhancedMarketDisplay shows trend arrows', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
-      compact={true}
+    <EnhancedMarketDisplay
+      compact
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
   const output = lastFrame()
   t.truthy(output)
   // Should show trend indicators (arrows)
-  t.true(output!.includes('↗') || output!.includes('↘') || output!.includes('→') || output!.includes('↕'))
+  t.true(
+    output!.includes('↗') ||
+      output!.includes('↘') ||
+      output!.includes('→') ||
+      output!.includes('↕')
+  )
 })
 
-test('EnhancedMarketDisplay shows percentage changes', t => {
+test('EnhancedMarketDisplay shows percentage changes', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
-      showTrends={true}
+    <EnhancedMarketDisplay
+      showTrends
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 
@@ -244,13 +277,14 @@ test('EnhancedMarketDisplay shows percentage changes', t => {
   t.true(output!.includes('%'))
 })
 
-test('EnhancedMarketDisplay highlights player transactions in history', t => {
+test('EnhancedMarketDisplay highlights player transactions in history', (t) => {
   const { lastFrame } = render(
-    <EnhancedMarketDisplay 
-      markets={testMarkets} 
-      reputation={neutralReputation} 
-      currentLocation="Market Square" 
-      showHistory={true}
+    <EnhancedMarketDisplay
+      showHistory
+      markets={testMarkets}
+      reputation={neutralReputation}
+      currentLocation="Market Square"
+      prices={testPrices}
     />
   )
 

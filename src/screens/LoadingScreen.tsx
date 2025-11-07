@@ -1,15 +1,14 @@
 import { Box, Text, useInput } from 'ink'
 import Gradient from 'ink-gradient'
 import React, { useEffect, useState } from 'react'
-import { useGame } from '../contexts/GameContext.js'
+import { useStore } from '../store/appStore.js'
 import { TitleScreenAnimation } from './TitleScreen/TitleScreenAnimation.js'
 
 type LoadingScreenProperties = { readonly onFinish?: () => void }
 
 export function LoadingScreen({ onFinish }: LoadingScreenProperties) {
   const [timeLeft, setTimeLeft] = useState(4)
-
-  const { gameState } = useGame()
+  const day = useStore((state) => state.game.day)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,7 +43,7 @@ export function LoadingScreen({ onFinish }: LoadingScreenProperties) {
         <TitleScreenAnimation />
       </Gradient>
       <Box flexDirection="column" gap={1} alignItems="center" marginTop={1}>
-        <Text>Day {gameState?.day}</Text>
+        <Text>Day {day}</Text>
         <Text dimColor>Press Enter to skip ({timeLeft}s)</Text>
       </Box>
     </Box>

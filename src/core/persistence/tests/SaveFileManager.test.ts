@@ -7,7 +7,7 @@ import { SaveFileManager, SaveFileType } from '../utils.js'
 // Helper to clean up test files
 const cleanup = () => {
   const manager = SaveFileManager.getInstance()
-  for (let slot = 1; slot <= 3; slot++) {
+  for (let slot = 1; slot <= 5; slot++) {
     try {
       manager.clearSaveFile(slot, SaveFileType.GAME_SAVE)
       manager.clearSaveFile(slot, SaveFileType.GAME_LOG)

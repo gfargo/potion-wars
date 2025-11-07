@@ -1,4 +1,4 @@
-import { type Message } from '../../../../contexts/MessageContext.js'
+import { type Message } from '../../../../store/appStore.js'
 import { type GameState } from '../../../../types/game.types.js'
 
 /**
@@ -26,7 +26,7 @@ export const createGameState = (
   reputation: {
     global: 0,
     locations: {},
-    npcRelationships: {}
+    npcRelationships: {},
   },
   marketData: {},
   tradeHistory: [],

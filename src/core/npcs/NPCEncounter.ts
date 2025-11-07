@@ -1,7 +1,7 @@
-import { NPCManager } from './NPCManager.js'
-import { NPCDataLoader } from './NPCDataLoader.js'
 import { type NPC } from '../../types/npc.types.js'
 import { type GameState } from '../../types/game.types.js'
+import { NPCManager } from './NPCManager.js'
+import { NPCDataLoader } from './NPCDataLoader.js'
 
 export class NPCEncounter {
   private static initialized = false
@@ -16,7 +16,7 @@ export class NPCEncounter {
 
     const manager = NPCManager.getInstance()
     const defaultNPCs = NPCDataLoader.getDefaultNPCs()
-    
+
     for (const npc of defaultNPCs) {
       manager.registerNPC(npc)
     }
@@ -27,9 +27,9 @@ export class NPCEncounter {
   /**
    * Check for NPC encounters when traveling to a location
    */
-  static checkForEncounter(gameState: GameState): NPC | null {
+  static checkForEncounter(gameState: GameState): NPC | undefined {
     this.initialize()
-    
+
     const manager = NPCManager.getInstance()
     return manager.rollForEncounter(gameState.location.name, gameState)
   }
@@ -39,7 +39,7 @@ export class NPCEncounter {
    */
   static getAvailableNPCs(gameState: GameState): NPC[] {
     this.initialize()
-    
+
     const manager = NPCManager.getInstance()
     return manager.getNPCsForLocation(gameState.location.name, gameState)
   }
@@ -49,7 +49,7 @@ export class NPCEncounter {
    */
   static getNPC(id: string): NPC | undefined {
     this.initialize()
-    
+
     const manager = NPCManager.getInstance()
     return manager.getNPC(id)
   }
@@ -59,10 +59,10 @@ export class NPCEncounter {
    */
   static isNPCAvailable(npcId: string, gameState: GameState): boolean {
     this.initialize()
-    
+
     const manager = NPCManager.getInstance()
     const npc = manager.getNPC(npcId)
-    
+
     if (!npc) {
       return false
     }
@@ -75,11 +75,14 @@ export class NPCEncounter {
    */
   static getNPCsByType(type: string, gameState: GameState): NPC[] {
     this.initialize()
-    
+
     const manager = NPCManager.getInstance()
-    const locationNPCs = manager.getNPCsForLocation(gameState.location.name, gameState)
-    
-    return locationNPCs.filter(npc => npc.type === type)
+    const locationNPCs = manager.getNPCsForLocation(
+      gameState.location.name,
+      gameState
+    )
+
+    return locationNPCs.filter((npc) => npc.type === type)
   }
 
   /**

@@ -1,39 +1,45 @@
 import { Box, Text, useInput } from 'ink'
 import React, { useEffect } from 'react'
 import { ReputationManager } from '../../../core/reputation/ReputationManager.js'
-import { ReputationLevel } from '../../../types/reputation.types.js'
+import {
+  ReputationLevel,
+  type ReputationState,
+} from '../../../types/reputation.types.js'
 import { useContextualHelp, ContextualHelp } from '../common/index.js'
-import type { ReputationState } from '../../../types/reputation.types.js'
 
-type ReputationDisplayProps = {
+type ReputationDisplayProperties = {
   readonly reputation: ReputationState
   readonly currentLocation: string
   readonly showDetails?: boolean
   readonly compact?: boolean
 }
 
-export function ReputationDisplay({ 
-  reputation, 
-  currentLocation, 
+export function ReputationDisplay({
+  reputation,
+  currentLocation,
   showDetails = false,
-  compact = false 
-}: ReputationDisplayProps) {
+  compact = false,
+}: ReputationDisplayProperties) {
   const globalLevel = ReputationManager.getReputationLevel(reputation.global)
-  const locationReputation = ReputationManager.getLocationReputation(reputation, currentLocation)
+  const locationReputation = ReputationManager.getLocationReputation(
+    reputation,
+    currentLocation
+  )
   const locationLevel = ReputationManager.getReputationLevel(locationReputation)
-  const priceModifier = ReputationManager.calculatePriceModifier(locationReputation)
+  const priceModifier =
+    ReputationManager.calculatePriceModifier(locationReputation)
   const accessLevel = ReputationManager.getAccessLevel(locationReputation)
-  
+
   // Contextual help system
   const { currentHint, showHint, dismissHint } = useContextualHelp()
-  
+
   // Show help hint when reputation display is first shown
   useEffect(() => {
     if (!compact && showDetails) {
       showHint('reputation_explained')
     }
   }, [showDetails, compact, showHint])
-  
+
   // Handle help dismissal
   useInput((input) => {
     if (input === 'x' && currentHint) {
@@ -46,11 +52,13 @@ export function ReputationDisplay({
       <Box flexDirection="row" gap={2}>
         <Text color="cyan">Rep:</Text>
         <Text color={getReputationColor(locationLevel)}>
-          {locationLevel} ({locationReputation >= 0 ? '+' : ''}{locationReputation})
+          {locationLevel} ({locationReputation >= 0 ? '+' : ''}
+          {locationReputation})
         </Text>
-        {priceModifier !== 1.0 && (
-          <Text color={priceModifier < 1.0 ? 'green' : 'red'}>
-            {priceModifier < 1.0 ? '↓' : '↑'}{Math.round((Math.abs(1 - priceModifier)) * 100)}%
+        {priceModifier !== 1 && (
+          <Text color={priceModifier < 1 ? 'green' : 'red'}>
+            {priceModifier < 1 ? '↓' : '↑'}
+            {Math.round(Math.abs(1 - priceModifier) * 100)}%
           </Text>
         )}
       </Box>
@@ -59,15 +67,18 @@ export function ReputationDisplay({
 
   return (
     <Box flexDirection="column" borderStyle="single" paddingX={1}>
-      <Text bold color="cyan">Reputation Status</Text>
-      
+      <Text bold color="cyan">
+        Reputation Status
+      </Text>
+
       {/* Global Reputation */}
       <Box flexDirection="row" justifyContent="space-between">
         <Text>Global:</Text>
         <Box flexDirection="row" gap={1}>
           <Text color={getReputationColor(globalLevel)}>{globalLevel}</Text>
           <Text dimColor>
-            ({reputation.global >= 0 ? '+' : ''}{reputation.global})
+            ({reputation.global >= 0 ? '+' : ''}
+            {reputation.global})
           </Text>
         </Box>
       </Box>
@@ -78,17 +89,19 @@ export function ReputationDisplay({
         <Box flexDirection="row" gap={1}>
           <Text color={getReputationColor(locationLevel)}>{locationLevel}</Text>
           <Text dimColor>
-            ({locationReputation >= 0 ? '+' : ''}{locationReputation})
+            ({locationReputation >= 0 ? '+' : ''}
+            {locationReputation})
           </Text>
         </Box>
       </Box>
 
       {/* Price Modifier */}
-      {priceModifier !== 1.0 && (
+      {priceModifier !== 1 && (
         <Box flexDirection="row" justifyContent="space-between">
           <Text>Price Effect:</Text>
-          <Text color={priceModifier < 1.0 ? 'green' : 'red'}>
-            {priceModifier < 1.0 ? 'Discount' : 'Markup'} {Math.round((Math.abs(1 - priceModifier)) * 100)}%
+          <Text color={priceModifier < 1 ? 'green' : 'red'}>
+            {priceModifier < 1 ? 'Discount' : 'Markup'}{' '}
+            {Math.round(Math.abs(1 - priceModifier) * 100)}%
           </Text>
         </Box>
       )}
@@ -104,15 +117,27 @@ export function ReputationDisplay({
           {/* Location-specific reputations */}
           {Object.keys(reputation.locations).length > 0 && (
             <Box flexDirection="column" marginTop={1}>
-              <Text bold dimColor>Location Details:</Text>
+              <Text bold dimColor>
+                Location Details:
+              </Text>
               {Object.entries(reputation.locations)
                 .filter(([location]) => location !== currentLocation)
                 .slice(0, 3) // Show max 3 other locations
                 .map(([location, rep]) => (
-                  <Box key={location} flexDirection="row" justifyContent="space-between">
+                  <Box
+                    key={location}
+                    flexDirection="row"
+                    justifyContent="space-between"
+                  >
                     <Text dimColor>{location}:</Text>
-                    <Text color={getReputationColor(ReputationManager.getReputationLevel(rep))}>
-                      {ReputationManager.getReputationLevel(rep)} ({rep >= 0 ? '+' : ''}{rep})
+                    <Text
+                      color={getReputationColor(
+                        ReputationManager.getReputationLevel(rep)
+                      )}
+                    >
+                      {ReputationManager.getReputationLevel(rep)} (
+                      {rep >= 0 ? '+' : ''}
+                      {rep})
                     </Text>
                   </Box>
                 ))}
@@ -122,14 +147,26 @@ export function ReputationDisplay({
           {/* NPC relationships */}
           {Object.keys(reputation.npcRelationships).length > 0 && (
             <Box flexDirection="column" marginTop={1}>
-              <Text bold dimColor>NPC Relations:</Text>
+              <Text bold dimColor>
+                NPC Relations:
+              </Text>
               {Object.entries(reputation.npcRelationships)
                 .slice(0, 3) // Show max 3 NPC relationships
                 .map(([npcId, rep]) => (
-                  <Box key={npcId} flexDirection="row" justifyContent="space-between">
+                  <Box
+                    key={npcId}
+                    flexDirection="row"
+                    justifyContent="space-between"
+                  >
                     <Text dimColor>{formatNPCName(npcId)}:</Text>
-                    <Text color={getReputationColor(ReputationManager.getReputationLevel(rep))}>
-                      {ReputationManager.getReputationLevel(rep)} ({rep >= 0 ? '+' : ''}{rep})
+                    <Text
+                      color={getReputationColor(
+                        ReputationManager.getReputationLevel(rep)
+                      )}
+                    >
+                      {ReputationManager.getReputationLevel(rep)} (
+                      {rep >= 0 ? '+' : ''}
+                      {rep})
                     </Text>
                   </Box>
                 ))}
@@ -138,19 +175,24 @@ export function ReputationDisplay({
 
           {/* Reputation effects explanation */}
           <Box flexDirection="column" marginTop={1}>
-            <Text bold dimColor>Effects:</Text>
-            <Text dimColor>• {getReputationEffectDescription(locationLevel, priceModifier, accessLevel)}</Text>
+            <Text bold dimColor>
+              Effects:
+            </Text>
+            <Text dimColor>
+              •{' '}
+              {getReputationEffectDescription(
+                locationLevel,
+                priceModifier,
+                accessLevel
+              )}
+            </Text>
           </Box>
         </>
       )}
-      
+
       {/* Contextual Help */}
       {currentHint && !compact && (
-        <ContextualHelp 
-          hint={currentHint} 
-          visible={true}
-          onDismiss={dismissHint}
-        />
+        <ContextualHelp visible hint={currentHint} onDismiss={dismissHint} />
       )}
     </Box>
   )
@@ -161,20 +203,33 @@ export function ReputationDisplay({
  */
 function getReputationColor(level: ReputationLevel): string {
   switch (level) {
-    case ReputationLevel.DESPISED:
+    case ReputationLevel.DESPISED: {
       return 'red'
-    case ReputationLevel.DISLIKED:
+    }
+
+    case ReputationLevel.DISLIKED: {
       return 'redBright'
-    case ReputationLevel.NEUTRAL:
+    }
+
+    case ReputationLevel.NEUTRAL: {
       return 'white'
-    case ReputationLevel.LIKED:
+    }
+
+    case ReputationLevel.LIKED: {
       return 'green'
-    case ReputationLevel.RESPECTED:
+    }
+
+    case ReputationLevel.RESPECTED: {
       return 'greenBright'
-    case ReputationLevel.REVERED:
+    }
+
+    case ReputationLevel.REVERED: {
       return 'cyan'
-    default:
+    }
+
+    default: {
       return 'white'
+    }
   }
 }
 
@@ -183,8 +238,8 @@ function getReputationColor(level: ReputationLevel): string {
  */
 function formatNPCName(npcId: string): string {
   return npcId
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, l => l.toUpperCase())
+    .replaceAll('_', ' ')
+    .replaceAll(/\b\w/g, (l) => l.toUpperCase())
     .slice(0, 12) // Truncate long names
 }
 
@@ -192,15 +247,15 @@ function formatNPCName(npcId: string): string {
  * Get description of reputation effects
  */
 function getReputationEffectDescription(
-  level: ReputationLevel, 
-  priceModifier: number, 
+  level: ReputationLevel,
+  priceModifier: number,
   accessLevel: number
 ): string {
   const effects: string[] = []
 
-  if (priceModifier < 1.0) {
+  if (priceModifier < 1) {
     effects.push(`${Math.round((1 - priceModifier) * 100)}% better prices`)
-  } else if (priceModifier > 1.0) {
+  } else if (priceModifier > 1) {
     effects.push(`${Math.round((priceModifier - 1) * 100)}% worse prices`)
   }
 
@@ -213,21 +268,30 @@ function getReputationEffectDescription(
   }
 
   switch (level) {
-    case ReputationLevel.DESPISED:
+    case ReputationLevel.DESPISED: {
       effects.push('NPCs avoid you')
       break
-    case ReputationLevel.DISLIKED:
+    }
+
+    case ReputationLevel.DISLIKED: {
       effects.push('NPCs are wary')
       break
-    case ReputationLevel.LIKED:
+    }
+
+    case ReputationLevel.LIKED: {
       effects.push('NPCs are friendly')
       break
-    case ReputationLevel.RESPECTED:
+    }
+
+    case ReputationLevel.RESPECTED: {
       effects.push('NPCs seek you out')
       break
-    case ReputationLevel.REVERED:
+    }
+
+    case ReputationLevel.REVERED: {
       effects.push('NPCs revere you')
       break
+    }
   }
 
   return effects.join(', ') || 'standard interactions'

@@ -1,52 +1,57 @@
 import { type MultiStepEvent } from '../../../types/events.types.js'
 import { type Weather } from '../../../types/weather.types.js'
 import { type ReputationChange } from '../../../types/reputation.types.js'
-import { type LocationMarketState, type SupplyDemandFactor } from '../../../types/economy.types.js'
 import {
-    ADVANCE_DAY,
-    type AdvanceDayAction,
-    BREW_POTION,
-    type BrewPotionAction,
-    HANDLE_EVENT_CHOICE,
-    type HandleEventChoiceAction,
-    INITIALIZE_GAME,
-    type InitializeGameAction,
-    LOAD_GAME,
-    type LoadGameAction,
-    REPAY_DEBT,
-    type RepayDebtAction,
-    SAVE_GAME,
-    type SaveGameAction,
-    SELL_POTION,
-    type SellPotionAction,
-    TRAVEL,
-    type TravelAction,
-    TRIGGER_EVENT,
-    type TriggerEventAction,
-    UPDATE_WEATHER,
-    type UpdateWeatherAction,
-    UPDATE_REPUTATION,
-    type UpdateReputationAction,
-    RESET_REPUTATION,
-    type ResetReputationAction,
-    UPDATE_MARKET_DATA,
-    type UpdateMarketDataAction,
-    RECORD_TRANSACTION,
-    type RecordTransactionAction,
-    UPDATE_DAILY_MARKETS,
-    type UpdateDailyMarketsAction,
-    APPLY_SUPPLY_DEMAND_FACTORS,
-    type ApplySupplyDemandFactorsAction,
-    START_NPC_INTERACTION,
-    type StartNPCInteractionAction,
-    END_NPC_INTERACTION,
-    type EndNPCInteractionAction,
-    PROCESS_NPC_DIALOGUE,
-    type ProcessNPCDialogueAction,
-    TRIGGER_ANIMATION,
-    type TriggerAnimationAction,
-    COMPLETE_ANIMATION,
-    type CompleteAnimationAction
+  type LocationMarketState,
+  type SupplyDemandFactor,
+} from '../../../types/economy.types.js'
+import {
+  ADVANCE_DAY,
+  type AdvanceDayAction,
+  BREW_POTION,
+  type BrewPotionAction,
+  HANDLE_EVENT_CHOICE,
+  type HandleEventChoiceAction,
+  ACKNOWLEDGE_EVENT_OUTCOME,
+  type AcknowledgeEventOutcomeAction,
+  INITIALIZE_GAME,
+  type InitializeGameAction,
+  LOAD_GAME,
+  type LoadGameAction,
+  REPAY_DEBT,
+  type RepayDebtAction,
+  SAVE_GAME,
+  type SaveGameAction,
+  SELL_POTION,
+  type SellPotionAction,
+  TRAVEL,
+  type TravelAction,
+  TRIGGER_EVENT,
+  type TriggerEventAction,
+  UPDATE_WEATHER,
+  type UpdateWeatherAction,
+  UPDATE_REPUTATION,
+  type UpdateReputationAction,
+  RESET_REPUTATION,
+  type ResetReputationAction,
+  UPDATE_MARKET_DATA,
+  type UpdateMarketDataAction,
+  RECORD_TRANSACTION,
+  type RecordTransactionAction,
+  UPDATE_DAILY_MARKETS,
+  type UpdateDailyMarketsAction,
+  APPLY_SUPPLY_DEMAND_FACTORS,
+  type ApplySupplyDemandFactorsAction,
+  START_NPC_INTERACTION,
+  type StartNPCInteractionAction,
+  END_NPC_INTERACTION,
+  type EndNPCInteractionAction,
+  PROCESS_NPC_DIALOGUE,
+  type ProcessNPCDialogueAction,
+  TRIGGER_ANIMATION,
+  type TriggerAnimationAction,
+  COMPLETE_ANIMATION,
+  type CompleteAnimationAction,
 } from './types.js'
 
 export const brewPotion = (
@@ -119,6 +124,10 @@ export const handleEventChoice = (
   },
 })
 
+export const acknowledgeEventOutcome = (): AcknowledgeEventOutcomeAction => ({
+  type: ACKNOWLEDGE_EVENT_OUTCOME,
+})
+
 export const initializeGame = (): InitializeGameAction => ({
   type: INITIALIZE_GAME,
 })
@@ -137,7 +146,9 @@ export const loadGame = (slot: number): LoadGameAction => ({
   },
 })
 
-export const updateReputation = (change: ReputationChange): UpdateReputationAction => ({
+export const updateReputation = (
+  change: ReputationChange
+): UpdateReputationAction => ({
   type: UPDATE_REPUTATION,
   payload: change,
 })
@@ -146,7 +157,9 @@ export const resetReputation = (): ResetReputationAction => ({
   type: RESET_REPUTATION,
 })
 
-export const updateMarketData = (marketData: LocationMarketState): UpdateMarketDataAction => ({
+export const updateMarketData = (
+  marketData: LocationMarketState
+): UpdateMarketDataAction => ({
   type: UPDATE_MARKET_DATA,
   payload: {
     marketData,
@@ -174,7 +187,9 @@ export const updateDailyMarkets = (): UpdateDailyMarketsAction => ({
   type: UPDATE_DAILY_MARKETS,
 })
 
-export const applySupplyDemandFactors = (factors: SupplyDemandFactor[]): ApplySupplyDemandFactorsAction => ({
+export const applySupplyDemandFactors = (
+  factors: SupplyDemandFactor[]
+): ApplySupplyDemandFactorsAction => ({
   type: APPLY_SUPPLY_DEMAND_FACTORS,
   payload: {
     factors,
@@ -223,7 +238,9 @@ export const triggerAnimation = (
   },
 })
 
-export const completeAnimation = (animationType: string): CompleteAnimationAction => ({
+export const completeAnimation = (
+  animationType: string
+): CompleteAnimationAction => ({
   type: COMPLETE_ANIMATION,
   payload: {
     animationType,

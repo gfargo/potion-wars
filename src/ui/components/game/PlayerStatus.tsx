@@ -1,18 +1,19 @@
 import { Box, Text } from 'ink'
 import React from 'react'
-import { useGame } from '../../../contexts/GameContext.js'
+import { useStore } from '../../../store/appStore.js'
 import {
-    selectHealth,
-    selectCash,
-    selectDebt,
-} from '../../../core/state/index.js'
+  selectHealth,
+  selectCash,
+  selectDebt,
+} from '../../../store/selectors.js'
 import { ReputationDisplay } from './ReputationDisplay.js'
 
 function PlayerStatus() {
-  const { gameState } = useGame()
-  const health = selectHealth(gameState)
-  const cash = selectCash(gameState)
-  const debt = selectDebt(gameState)
+  const health = useStore(selectHealth)
+  const cash = useStore(selectCash)
+  const debt = useStore(selectDebt)
+  const reputation = useStore((state) => state.game.reputation)
+  const locationName = useStore((state) => state.game.location.name)
 
   return (
     <Box gap={1}>
@@ -24,11 +25,16 @@ function PlayerStatus() {
         <Text>{` | `}</Text>
         <Text>Debt: {debt}g</Text>
       </Box>
-      <Box borderDimColor borderStyle="single" borderColor="magenta" paddingX={1}>
-        <ReputationDisplay 
-          reputation={gameState.reputation}
-          currentLocation={gameState.location.name}
-          compact={true}
+      <Box
+        borderDimColor
+        borderStyle="single"
+        borderColor="magenta"
+        paddingX={1}
+      >
+        <ReputationDisplay
+          compact
+          reputation={reputation}
+          currentLocation={locationName}
         />
       </Box>
     </Box>

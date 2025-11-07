@@ -8,16 +8,18 @@ export const DEFAULT_NPCS: NPC[] = [
     id: 'merchant_aldric',
     name: 'Aldric the Merchant',
     type: 'merchant',
-    description: 'A wealthy merchant with connections to rare potion ingredients',
+    description:
+      'A wealthy merchant with connections to rare potion ingredients',
     personality: {
       greeting: 'Greetings, alchemist! I have some interesting wares today.',
       farewell: 'Safe travels, and may your potions brew true!',
       tradeAccept: 'Excellent! A fair deal for both of us.',
       tradeDecline: 'Perhaps another time, then.',
-      lowReputation: 'I don\'t deal with those of ill repute.',
-      highReputation: 'Ah, my most valued customer! Let me show you my finest goods.',
+      lowReputation: "I don't deal with those of ill repute.",
+      highReputation:
+        'Ah, my most valued customer! Let me show you my finest goods.',
     },
-    location: 'Merchant\'s District',
+    location: "Merchant's District",
     availability: {
       probability: 0.6,
       timeRestriction: [1, 30],
@@ -69,23 +71,41 @@ export const DEFAULT_NPCS: NPC[] = [
             {
               text: 'Tell me more',
               nextNode: 'market_detail',
-              effects: [{ type: 'reputation', value: 5, location: 'Merchant\'s District' }],
+              effects: [
+                {
+                  type: 'reputation',
+                  value: 5,
+                  location: "Merchant's District",
+                },
+              ],
             },
             {
               text: 'Thanks for the tip',
               nextNode: undefined,
-              effects: [{ type: 'reputation', value: 2, location: 'Merchant\'s District' }],
+              effects: [
+                {
+                  type: 'reputation',
+                  value: 2,
+                  location: "Merchant's District",
+                },
+              ],
             },
           ],
         },
         market_detail: {
           id: 'market_detail',
-          text: 'Between you and me, I\'ve heard the Enchanted Forest is running low on mana potions. Could be a good opportunity for a savvy alchemist.',
+          text: "Between you and me, I've heard the Enchanted Forest is running low on mana potions. Could be a good opportunity for a savvy alchemist.",
           choices: [
             {
               text: 'I appreciate the information',
               nextNode: undefined,
-              effects: [{ type: 'reputation', value: 5, location: 'Merchant\'s District' }],
+              effects: [
+                {
+                  type: 'reputation',
+                  value: 5,
+                  location: "Merchant's District",
+                },
+              ],
             },
           ],
         },
@@ -96,16 +116,17 @@ export const DEFAULT_NPCS: NPC[] = [
     id: 'informant_sara',
     name: 'Sara the Informant',
     type: 'informant',
-    description: 'A well-connected information broker who knows the city\'s secrets',
+    description:
+      "A well-connected information broker who knows the city's secrets",
     personality: {
-      greeting: 'Looking for information? You\'ve come to the right place.',
+      greeting: "Looking for information? You've come to the right place.",
       farewell: 'Remember, knowledge is power... and profit.',
       tradeAccept: 'This information will serve you well.',
       tradeDecline: 'Your loss. Others will pay for what I know.',
-      lowReputation: 'I don\'t share secrets with those who can\'t be trusted.',
+      lowReputation: "I don't share secrets with those who can't be trusted.",
       highReputation: 'For you, my friend, I have some truly valuable intel.',
     },
-    location: 'Alchemist\'s Quarter',
+    location: "Alchemist's Quarter",
     availability: {
       probability: 0.4,
       timeRestriction: [5, 30],
@@ -146,18 +167,30 @@ export const DEFAULT_NPCS: NPC[] = [
             {
               text: 'Thanks for the tip',
               nextNode: undefined,
-              effects: [{ type: 'reputation', value: 3, location: 'Alchemist\'s Quarter' }],
+              effects: [
+                {
+                  type: 'reputation',
+                  value: 3,
+                  location: "Alchemist's Quarter",
+                },
+              ],
             },
           ],
         },
         rival_info: {
           id: 'rival_info',
-          text: 'Your competition is tough, but they make mistakes. Watch the market trends, and you\'ll find their weak spots.',
+          text: "Your competition is tough, but they make mistakes. Watch the market trends, and you'll find their weak spots.",
           choices: [
             {
               text: 'Good to know',
               nextNode: undefined,
-              effects: [{ type: 'reputation', value: 5, location: 'Alchemist\'s Quarter' }],
+              effects: [
+                {
+                  type: 'reputation',
+                  value: 5,
+                  location: "Alchemist's Quarter",
+                },
+              ],
             },
           ],
         },
@@ -174,8 +207,8 @@ export const DEFAULT_NPCS: NPC[] = [
       farewell: 'Move along.',
       tradeAccept: 'This will do.',
       tradeDecline: 'Not good enough.',
-      lowReputation: 'I\'ve got my eye on you, troublemaker.',
-      highReputation: 'You\'re alright in my book. Stay out of trouble.',
+      lowReputation: "I've got my eye on you, troublemaker.",
+      highReputation: "You're alright in my book. Stay out of trouble.",
     },
     location: 'Royal Castle',
     availability: {
@@ -192,15 +225,17 @@ export const DEFAULT_NPCS: NPC[] = [
       nodes: {
         greeting: {
           id: 'greeting',
-          text: 'Keep your nose clean, alchemist. We don\'t want any trouble here.',
+          text: "Keep your nose clean, alchemist. We don't want any trouble here.",
           choices: [
             {
-              text: 'Of course, I\'m just here to trade',
+              text: "Of course, I'm just here to trade",
               nextNode: 'respectful',
-              effects: [{ type: 'reputation', value: 2, location: 'Royal Castle' }],
+              effects: [
+                { type: 'reputation', value: 2, location: 'Royal Castle' },
+              ],
             },
             {
-              text: 'I\'ll be on my way',
+              text: "I'll be on my way",
               nextNode: undefined,
               effects: [],
             },
@@ -213,7 +248,9 @@ export const DEFAULT_NPCS: NPC[] = [
             {
               text: 'Thank you, officer',
               nextNode: undefined,
-              effects: [{ type: 'reputation', value: 3, location: 'Royal Castle' }],
+              effects: [
+                { type: 'reputation', value: 3, location: 'Royal Castle' },
+              ],
             },
           ],
         },

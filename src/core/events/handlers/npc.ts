@@ -1,4 +1,7 @@
-import { type MultiStepEvent, type Choice } from '../../../types/events.types.js'
+import {
+  type MultiStepEvent,
+  type Choice,
+} from '../../../types/events.types.js'
 import { type GameState } from '../../../types/game.types.js'
 import { type NPC, type DialogueChoice } from '../../../types/npc.types.js'
 import { DialogueEngine, DialogueTreeManager } from '../../dialogue/index.js'
@@ -16,36 +19,41 @@ export const createNPCEvent = (npc: NPC): MultiStepEvent => {
     weatherSpecific: npc.availability.weatherRestriction,
     timeSpecific: npc.availability.timeRestriction,
     type: 'neutral',
-    steps: [] // Steps will be generated dynamically during dialogue
+    steps: [], // Steps will be generated dynamically during dialogue
   }
 }
 
 /**
  * Start an NPC dialogue event
  */
-export const startNPCDialogue = (npc: NPC, gameState: GameState): {
+export const startNPCDialogue = (
+  npc: NPC,
+  gameState: GameState
+): {
   event: MultiStepEvent
   newGameState: GameState
 } => {
   const manager = DialogueTreeManager.getInstance()
-  
+
   // Start the dialogue
   const initialNode = manager.startDialogue(npc, gameState)
-  
+
   // Create the initial event step
   const initialStep = {
     description: `${npc.name}: "${initialNode.text}"`,
-    choices: initialNode.choices.map(choice => createEventChoiceFromDialogue(choice, npc))
+    choices: initialNode.choices.map((choice) =>
+      createEventChoiceFromDialogue(choice, npc)
+    ),
   }
 
   const event: MultiStepEvent = {
     id: `npc_dialogue_${npc.id}`,
     name: `Talking to ${npc.name}`,
     description: npc.description,
-    probability: 1.0, // Always happens when triggered
+    probability: 1, // Always happens when triggered
     locationSpecific: [npc.location],
     type: 'neutral',
-    steps: [initialStep]
+    steps: [initialStep],
   }
 
   return {
@@ -53,8 +61,8 @@ export const startNPCDialogue = (npc: NPC, gameState: GameState): {
     newGameState: {
       ...gameState,
       currentEvent: event,
-      currentStep: 0
-    }
+      currentStep: 0,
+    },
   }
 }
 
@@ -67,20 +75,20 @@ export const handleNPCDialogueChoice = (
   gameState: GameState
 ): GameState => {
   const manager = DialogueTreeManager.getInstance()
-  
+
   if (!manager.isDialogueActive()) {
     throw new Error('No active dialogue to handle choice')
   }
 
   // Process the dialogue choice
   const result = manager.processChoice(npc, dialogueChoice, gameState)
-  
+
   if (result.isDialogueComplete) {
     // End the event
     return {
       ...result.newGameState,
       currentEvent: undefined,
-      currentStep: undefined
+      currentStep: undefined,
     }
   }
 
@@ -88,19 +96,21 @@ export const handleNPCDialogueChoice = (
   if (result.nextNode) {
     const nextStep = {
       description: `${npc.name}: "${result.nextNode.text}"`,
-      choices: result.nextNode.choices.map(choice => createEventChoiceFromDialogue(choice, npc))
+      choices: result.nextNode.choices.map((choice) =>
+        createEventChoiceFromDialogue(choice, npc)
+      ),
     }
 
     // Update the current event with the new step
     const updatedEvent: MultiStepEvent = {
-      ...gameState.currentEvent as MultiStepEvent,
-      steps: [...(gameState.currentEvent as MultiStepEvent).steps, nextStep]
+      ...gameState.currentEvent!,
+      steps: [...gameState.currentEvent!.steps, nextStep],
     }
 
     return {
       ...result.newGameState,
       currentEvent: updatedEvent,
-      currentStep: (gameState.currentStep || 0) + 1
+      currentStep: (gameState.currentStep || 0) + 1,
     }
   }
 
@@ -108,19 +118,22 @@ export const handleNPCDialogueChoice = (
   return {
     ...result.newGameState,
     currentEvent: undefined,
-    currentStep: undefined
+    currentStep: undefined,
   }
 }
 
 /**
  * Convert a dialogue choice to an event choice
  */
-function createEventChoiceFromDialogue(dialogueChoice: DialogueChoice, npc: NPC): Choice {
+function createEventChoiceFromDialogue(
+  dialogueChoice: DialogueChoice,
+  npc: NPC
+): Choice {
   return {
     text: dialogueChoice.text,
-    effect: (gameState: GameState) => {
+    effect(gameState: GameState) {
       return handleNPCDialogueChoice(npc, dialogueChoice, gameState)
-    }
+    },
   }
 }
 
@@ -143,31 +156,31 @@ export const createSimpleNPCEncounter = (npc: NPC): MultiStepEvent => {
         choices: [
           {
             text: 'Talk to them',
-            effect: (gameState: GameState) => {
+            effect(gameState: GameState) {
               const dialogueResult = startNPCDialogue(npc, gameState)
               return dialogueResult.newGameState
-            }
+            },
           },
           {
             text: 'Walk away',
             effect: (gameState: GameState) => ({
               ...gameState,
               currentEvent: undefined,
-              currentStep: undefined
-            })
-          }
-        ]
-      }
-    ]
+              currentStep: undefined,
+            }),
+          },
+        ],
+      },
+    ],
   }
 }
 
 /**
  * Create an NPC trading event
  */
-export const createNPCTradingEvent = (npc: NPC): MultiStepEvent | null => {
+export const createNPCTradingEvent = (npc: NPC): MultiStepEvent | undefined => {
   if (!npc.trades || npc.trades.length === 0) {
-    return null
+    return undefined
   }
 
   return {
@@ -181,70 +194,114 @@ export const createNPCTradingEvent = (npc: NPC): MultiStepEvent | null => {
     type: 'positive',
     steps: [
       {
-        description: `${npc.name}: "${npc.personality.tradeAccept}"\n\nAvailable trades:${npc.trades.map(trade => 
-          `\n- ${trade.offer}: ${trade.price} gold (${trade.quantity} available)`
-        ).join('')}`,
+        description: `${npc.name}: "${
+          npc.personality.tradeAccept
+        }"\n\nAvailable trades:${npc.trades
+          .map(
+            (trade) =>
+              `\n- ${trade.offer}: ${trade.price} gold (${trade.quantity} available)`
+          )
+          .join('')}`,
         choices: [
           ...npc.trades.map((trade) => ({
             text: `Buy ${trade.offer} for ${trade.price} gold`,
-            effect: (gameState: GameState) => {
+            effect(gameState: GameState) {
               if (gameState.cash < trade.price) {
                 return {
                   ...gameState,
-                  _result: { message: "You don't have enough gold for this trade." }
+                  _result: {
+                    message: "You don't have enough gold for this trade.",
+                  },
                 }
               }
 
               // Check reputation requirement
               if (trade.reputationRequirement !== undefined) {
-                const reputation = gameState.reputation.locations[npc.location] || 0
+                const reputation =
+                  gameState.reputation.locations[npc.location] || 0
                 if (reputation < trade.reputationRequirement) {
                   return {
                     ...gameState,
-                    _result: { message: "You don't meet the reputation requirements for this trade." }
+                    _result: {
+                      message:
+                        "You don't meet the reputation requirements for this trade.",
+                    },
                   }
                 }
               }
 
               // Apply trade conditions if any
               if (trade.conditions) {
-                const conditionsMet = trade.conditions.every(condition => {
+                const conditionsMet = trade.conditions.every((condition) => {
                   switch (condition.type) {
-                    case 'reputation':
-                      const reputation = gameState.reputation.locations[npc.location] || 0
-                      return DialogueEngine.compareValues(reputation, condition.operator, condition.value)
-                    case 'cash':
-                      return DialogueEngine.compareValues(gameState.cash, condition.operator, condition.value)
-                    case 'inventory':
+                    case 'reputation': {
+                      const reputation =
+                        gameState.reputation.locations[npc.location] || 0
+                      return DialogueEngine.compareValues(
+                        reputation,
+                        condition.operator,
+                        condition.value
+                      )
+                    }
+
+                    case 'cash': {
+                      return DialogueEngine.compareValues(
+                        gameState.cash,
+                        condition.operator,
+                        condition.value
+                      )
+                    }
+
+                    case 'inventory': {
                       if (typeof condition.value === 'string') {
-                        const itemCount = gameState.inventory[condition.value] || 0
-                        return DialogueEngine.compareValues(itemCount, condition.operator, 0)
+                        const itemCount =
+                          gameState.inventory[condition.value] || 0
+                        return DialogueEngine.compareValues(
+                          itemCount,
+                          condition.operator,
+                          0
+                        )
                       }
+
                       return false
-                    case 'day':
-                      return DialogueEngine.compareValues(gameState.day, condition.operator, condition.value)
-                    default:
+                    }
+
+                    case 'day': {
+                      return DialogueEngine.compareValues(
+                        gameState.day,
+                        condition.operator,
+                        condition.value
+                      )
+                    }
+
+                    default: {
                       return true
+                    }
                   }
                 })
 
                 if (!conditionsMet) {
                   return {
                     ...gameState,
-                    _result: { message: "You don't meet the requirements for this trade." }
+                    _result: {
+                      message:
+                        "You don't meet the requirements for this trade.",
+                    },
                   }
                 }
               }
 
               // Execute the trade
               const newInventory = { ...gameState.inventory }
-              newInventory[trade.offer] = (newInventory[trade.offer] || 0) + trade.quantity
+              newInventory[trade.offer] =
+                (newInventory[trade.offer] || 0) + trade.quantity
 
               // Apply reputation bonus for successful trade
               const newReputation = { ...gameState.reputation }
               newReputation.locations = { ...newReputation.locations }
-              newReputation.locations[npc.location] = (newReputation.locations[npc.location] || 0) + 1
-              newReputation.global = newReputation.global + 0.1
+              newReputation.locations[npc.location] =
+                (newReputation.locations[npc.location] || 0) + 1
+              newReputation.global += 0.1
 
               return {
                 ...gameState,
@@ -253,9 +310,11 @@ export const createNPCTradingEvent = (npc: NPC): MultiStepEvent | null => {
                 reputation: newReputation,
                 currentEvent: undefined,
                 currentStep: undefined,
-                _result: { message: `You successfully traded for ${trade.offer}!` }
+                _result: {
+                  message: `You successfully traded for ${trade.offer}!`,
+                },
               }
-            }
+            },
           })),
           {
             text: 'Not interested',
@@ -263,12 +322,12 @@ export const createNPCTradingEvent = (npc: NPC): MultiStepEvent | null => {
               ...gameState,
               currentEvent: undefined,
               currentStep: undefined,
-              _result: { message: npc.personality.tradeDecline }
-            })
-          }
-        ]
-      }
-    ]
+              _result: { message: npc.personality.tradeDecline },
+            }),
+          },
+        ],
+      },
+    ],
   }
 }
 
@@ -313,10 +372,11 @@ export const validateNPCEvent = (npc: NPC, gameState: GameState): boolean => {
   }
 
   // Check weather restrictions
-  if (npc.availability.weatherRestriction) {
-    if (!npc.availability.weatherRestriction.includes(gameState.weather)) {
-      return false
-    }
+  if (
+    npc.availability.weatherRestriction &&
+    !npc.availability.weatherRestriction.includes(gameState.weather)
+  ) {
+    return false
   }
 
   return true
@@ -325,7 +385,10 @@ export const validateNPCEvent = (npc: NPC, gameState: GameState): boolean => {
 /**
  * Get all possible NPC events for the current game state
  */
-export const getAvailableNPCEvents = (npcs: NPC[], gameState: GameState): MultiStepEvent[] => {
+export const getAvailableNPCEvents = (
+  npcs: NPC[],
+  gameState: GameState
+): MultiStepEvent[] => {
   const events: MultiStepEvent[] = []
 
   for (const npc of npcs) {

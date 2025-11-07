@@ -2,8 +2,12 @@ import { Box, Text } from 'ink'
 import Gradient from 'ink-gradient'
 import React, { useEffect, useState } from 'react'
 import { HELP_TEXT, locations, potions } from '../constants.js'
-import { useGame } from '../contexts/GameContext.js'
-import { useUI } from '../contexts/UIContext.js'
+import { useStore } from '../store/appStore.js'
+import {
+  selectShouldShowEvent,
+  selectShouldShowNPC,
+  selectActiveScreen,
+} from '../store/selectors.js'
 import {
   ActionMenu,
   Day,
@@ -15,34 +19,44 @@ import {
   QuitMenu,
   Weather,
 } from '../ui/components/game/index.js'
+import { NPCManager } from '../core/npcs/NPCManager.js'
 import MultiStepEventScreen from './MultiStepEventScreen.js'
 import NPCInteractionScreen from './NPCInteractionScreen.js'
 import TravelingScreen from './TravelingScreen.js'
-import { NPCManager } from '../core/npcs/NPCManager.js'
 
 export function GameScreen() {
-  const { showHelp, quitConfirmation, currentScreen } = useUI()
-  const {
-    gameState,
-    handleAction,
-  } = useGame()
-  const [isTraveling, setIsTraveling] = useState(false)
-  const [previousLocation, setPreviousLocation] = useState<string | undefined>(undefined)
+  // Get state from Zustand store using selectors
+  const showHelp = useStore((state) => state.ui.showHelp)
+  const quitConfirmation = useStore((state) => state.ui.quitConfirmation)
+  const activeScreen = useStore(selectActiveScreen)
+  const showEvent = useStore(selectShouldShowEvent)
+  const showNPC = useStore(selectShouldShowNPC)
+  const locationName = useStore((state) => state.game.location.name)
+  const currentNPCId = useStore((state) => state.npc.current?.npcId)
+  const endNPCInteraction = useStore((state) => state.endNPCInteraction)
+  const currentEvent = useStore((state) => state.events.current)
+  const eventPhase = useStore((state) => state.events.phase)
 
-  // Derive showEvent directly from gameState instead of using local state
-  // This ensures we always have the latest event status
-  const showEvent = Boolean(gameState.currentEvent)
+  // Debug logging
+  if (currentEvent || showEvent) {
+    console.error('[GameScreen] showEvent:', showEvent, 'currentEvent:', currentEvent?.name, 'phase:', eventPhase)
+  }
+
+  const [isTraveling, setIsTraveling] = useState(false)
+  const [previousLocation, setPreviousLocation] = useState<string | undefined>(
+    undefined
+  )
 
   // Track location changes for travel animation
   useEffect(() => {
-    if (currentScreen === 'traveling' && !previousLocation) {
+    if (activeScreen === 'traveling' && !previousLocation) {
       // When entering traveling screen, capture the current location as "from"
-      setPreviousLocation(gameState.location.name)
-    } else if (currentScreen === 'game' && previousLocation) {
+      setPreviousLocation(locationName)
+    } else if (activeScreen === 'game' && previousLocation) {
       // When returning to game screen, clear the previous location
       setPreviousLocation(undefined)
     }
-  }, [currentScreen, gameState.location.name, previousLocation])
+  }, [activeScreen, locationName, previousLocation])
 
   // Const handleSave = (slot: number) => {
   //   handleAction('saveGame', { slot })
@@ -85,7 +99,7 @@ export function GameScreen() {
   // ]
 
   // Show traveling screen when screen state is 'traveling'
-  if (currentScreen === 'traveling' || isTraveling) {
+  if (activeScreen === 'traveling' || isTraveling) {
     return (
       <TravelingScreen
         fromLocation={previousLocation}
@@ -103,28 +117,31 @@ export function GameScreen() {
 
   if (quitConfirmation) {
     return (
-      <Box flexDirection="column" height="100%" alignItems="center" justifyContent="center">
+      <Box
+        flexDirection="column"
+        height="100%"
+        alignItems="center"
+        justifyContent="center"
+      >
         <QuitMenu />
       </Box>
     )
   }
 
   // Check for NPC interaction
-  if (gameState.currentNPCInteraction) {
+  if (showNPC && currentNPCId) {
     const npcManager = NPCManager.getInstance()
-    const npc = npcManager.getNPC(gameState.currentNPCInteraction.npcId)
+    const npc = npcManager.getNPC(currentNPCId)
 
     if (npc) {
       return (
         <NPCInteractionScreen
           npc={npc}
           onComplete={() => {
-            // End the NPC interaction
-            handleAction('npcInteraction', {
-              npcId: npc.id,
-              action: 'end',
-              data: {}
-            })
+            // End the NPC interaction using store action
+            console.error('[GameScreen] onComplete callback triggered')
+            endNPCInteraction()
+            console.error('[GameScreen] endNPCInteraction called')
           }}
         />
       )
@@ -165,11 +182,7 @@ export function GameScreen() {
               <Location />
             </Box>
             <GameLog />
-            <Box
-              marginTop={1}
-              flexDirection="column"
-              justifyContent="flex-end"
-            >
+            <Box marginTop={1} flexDirection="column" justifyContent="flex-end">
               <Box>
                 <ActionMenu
                   potions={potions.map((potion) => potion.name)}
