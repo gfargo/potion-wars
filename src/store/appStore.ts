@@ -567,7 +567,16 @@ export const useStore = create<AppStore>()(
       },
 
       chooseEvent(choiceIndex: number) {
+        // TODO: Remove debug logging before v1.0 release
+        // These logs were added to debug a timing issue with the middleware stack
         console.error('[Store] chooseEvent called with index:', choiceIndex)
+
+        // CRITICAL: This get() call MUST happen before set() to "warm up" the store
+        // Issue: With subscribeWithSelector + devtools + immer middleware, calling set()
+        // then immediately get() was returning stale state. Calling get() first ensures
+        // proper state synchronization through the middleware layers.
+        // TODO: Investigate if this can be replaced with a silent get() call (no logging)
+        // or if the middleware configuration can be adjusted to avoid this requirement.
         console.error('[Store] BEFORE set() - phase:', get().events.phase)
 
         set((state) => {
@@ -621,6 +630,7 @@ export const useStore = create<AppStore>()(
           }
         })
 
+        // TODO: Remove debug logging before v1.0 release
         console.error('[Store] AFTER set() - phase:', get().events.phase)
       },
 
