@@ -126,8 +126,6 @@ export function TitleScreenMenu() {
             ]}
             orientation="horizontal"
             onSelect={(item) => {
-              console.log(item)
-
               if (item.value === 'yes' && pendingSlotIndex >= 0) {
                 setScreen('loading')
                 initializeGame('Player', pendingSlotIndex)

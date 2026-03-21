@@ -36,7 +36,6 @@ export function MultiStepEventScreen() {
   // This ensures we only reset when a new event appears, not when moving between steps
   useEffect(() => {
     if (currentEvent?.name) {
-      console.error('[MultiStepEvent] Event changed, resetting to showing_choice:', currentEvent.name, 'step:', currentStep)
       setScreenState({
         phase: 'showing_choice',
         eventName: currentEvent.name,
@@ -57,7 +56,6 @@ export function MultiStepEventScreen() {
 
   // Handle choice selection
   const handleChoiceSelected = (choiceIndex: number, choiceText: string) => {
-    console.error('[MultiStepEvent] Choice selected:', choiceIndex, choiceText)
     setScreenState({
       phase: 'processing_choice',
       selectedChoiceIndex: choiceIndex,
@@ -73,26 +71,19 @@ export function MultiStepEventScreen() {
       screenState.phase === 'processing_choice' &&
       screenState.selectedChoiceIndex !== undefined
     ) {
-      console.error('[MultiStepEvent] Processing choice effect triggered, index:', screenState.selectedChoiceIndex)
-
       // Execute the choice using store action (synchronous!)
       chooseEvent(screenState.selectedChoiceIndex)
 
       // Check the updated event phase from store - use getState() to get the CURRENT value
       // after the synchronous update, not the subscribed value which updates on next render
       const updatedPhase = useStore.getState().events.phase
-
       const isComplete = updatedPhase === 'outcome'
 
-      console.error('[MultiStepEvent] Choice processed, isComplete:', isComplete, 'eventPhase:', updatedPhase)
-
-      // For now, show a simple outcome message
-      // The store already updated the game state with effects
       setScreenState({
         phase: 'showing_outcome',
         selectedChoiceIndex: screenState.selectedChoiceIndex,
         selectedChoiceText: screenState.selectedChoiceText,
-        outcomeMessage: 'Choice applied.', // Store handles the actual effects
+        outcomeMessage: 'Choice applied.',
         isEventComplete: isComplete,
         eventName: currentEvent?.name || screenState.eventName,
       })
@@ -106,13 +97,8 @@ export function MultiStepEventScreen() {
       (key.return || input === ' ')
     ) {
       if (screenState.isEventComplete) {
-        // Event is done - acknowledge to clear event state
-        // The component will unmount naturally when GameScreen stops rendering it
-        console.error('[MultiStepEvent] Event complete, acknowledging')
         acknowledgeEvent()
       } else {
-        // Move to next step
-        console.error('[MultiStepEvent] Moving to next step, currentStep:', currentStep)
         setScreenState({
           phase: 'showing_choice',
         })

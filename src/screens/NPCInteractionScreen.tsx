@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useStore } from '../store/appStore.js'
 import { DialogueEngine } from '../core/dialogue/DialogueEngine.js'
 import {
-  EnhancedSelectInput,
-  ContextualHelp,
-  useContextualHelp,
+    EnhancedSelectInput,
+    ContextualHelp,
+    useContextualHelp,
 } from '../ui/components/common/index.js'
 import { NPCPortrait } from '../ui/components/common/NPCPortrait.js'
 import type { NPC, DialogueNode, DialogueChoice } from '../types/npc.types.js'
@@ -89,7 +89,6 @@ export function NPCInteractionScreen({
         (choice) => choice.text === value
       )
       if (!selectedChoice) {
-        console.error('Selected choice not found:', value)
         return
       }
 
@@ -110,8 +109,7 @@ export function NPCInteractionScreen({
         // Update game state if there were changes
         if (newGameState !== gameState) {
           // Note: In a real implementation, we'd need to update the game state through the context
-          // For now, we'll just log the changes
-          console.log('Dialogue effects applied:', selectedChoice.effects)
+          // For now, we'll just apply the changes
         }
 
         // Get next dialogue node
@@ -123,7 +121,6 @@ export function NPCInteractionScreen({
 
         if (!nextNode) {
           // End of conversation - immediately end the interaction
-          console.error('[NPCInteraction] Conversation ending')
           setConversationHistory((previous) => [
             ...previous,
             npc.personality.farewell,
@@ -134,7 +131,6 @@ export function NPCInteractionScreen({
           setCurrentNode(undefined)
 
           // Immediately call onComplete without waiting
-          console.error('[NPCInteraction] Calling onComplete immediately')
           onComplete()
           return
         }
@@ -148,13 +144,11 @@ export function NPCInteractionScreen({
 
         // If the next node has no choices, end the conversation
         if (nextNode.choices.length === 0) {
-          console.error('[NPCInteraction] Reached node with no choices, ending conversation')
           setAnimationType('idle')
 
           // Clear the current node after a brief delay to show the final message
           setTimeout(() => {
             setCurrentNode(undefined)
-            console.error('[NPCInteraction] Calling onComplete after farewell node')
             onComplete()
           }, 1500)
           return

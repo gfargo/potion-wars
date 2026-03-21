@@ -1,11 +1,11 @@
 import type {
-  AnimationLibrary,
-  NPCAnimation,
-  TravelAnimation,
-  EncounterAnimation,
-  AnimationFrame,
-  AnimationValidationResult,
-  AnimationOptimization,
+    AnimationLibrary,
+    NPCAnimation,
+    TravelAnimation,
+    EncounterAnimation,
+    AnimationFrame,
+    AnimationValidationResult,
+    AnimationOptimization,
 } from '../../types/animation.types.js'
 
 export class AnimationManager {
@@ -85,13 +85,24 @@ export class AnimationManager {
     }
 
     const npcAnimation = this.animations.npcs[npcId]
-    let frames: AnimationFrame[]
+    let frames: AnimationFrame[] | undefined
 
     if (npcAnimation) {
-      frames = npcAnimation[type] || this.getDefaultNPCAnimation(type)
-    } else {
-      // Return default animation if specific NPC animation not found
+      frames = npcAnimation[type]
+    }
+
+    // Fall back to default animation for the type, then to idle
+    if (!frames) {
       frames = this.getDefaultNPCAnimation(type)
+    }
+
+    if (!frames) {
+      frames = this.getDefaultNPCAnimation('idle')
+    }
+
+    // Ultimate fallback
+    if (!frames || frames.length === 0) {
+      frames = [['  ?  ', ' /|\\ ', ' / \\ ']]
     }
 
     // Cache the frames

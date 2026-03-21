@@ -4,20 +4,20 @@ import React, { useEffect, useState } from 'react'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useStore } from '../store/appStore.js'
 import {
-  selectShouldShowEvent,
-  selectShouldShowNPC,
-  selectActiveScreen,
+    selectShouldShowEvent,
+    selectShouldShowNPC,
+    selectActiveScreen,
 } from '../store/selectors.js'
 import {
-  ActionMenu,
-  Day,
-  GameLog,
-  InventoryDisplay,
-  Location,
-  PlayerStatus,
-  PriceList,
-  QuitMenu,
-  Weather,
+    ActionMenu,
+    Day,
+    GameLog,
+    InventoryDisplay,
+    Location,
+    PlayerStatus,
+    PriceList,
+    QuitMenu,
+    Weather,
 } from '../ui/components/game/index.js'
 import { NPCManager } from '../core/npcs/NPCManager.js'
 import MultiStepEventScreen from './MultiStepEventScreen.js'
@@ -34,13 +34,6 @@ export function GameScreen() {
   const locationName = useStore((state) => state.game.location.name)
   const currentNPCId = useStore((state) => state.npc.current?.npcId)
   const endNPCInteraction = useStore((state) => state.endNPCInteraction)
-  const currentEvent = useStore((state) => state.events.current)
-  const eventPhase = useStore((state) => state.events.phase)
-
-  // Debug logging
-  if (currentEvent || showEvent) {
-    console.error('[GameScreen] showEvent:', showEvent, 'currentEvent:', currentEvent?.name, 'phase:', eventPhase)
-  }
 
   const [isTraveling, setIsTraveling] = useState(false)
   const [previousLocation, setPreviousLocation] = useState<string | undefined>(
@@ -138,10 +131,7 @@ export function GameScreen() {
         <NPCInteractionScreen
           npc={npc}
           onComplete={() => {
-            // End the NPC interaction using store action
-            console.error('[GameScreen] onComplete callback triggered')
             endNPCInteraction()
-            console.error('[GameScreen] endNPCInteraction called')
           }}
         />
       )
