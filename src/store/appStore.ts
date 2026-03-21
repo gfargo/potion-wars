@@ -5,12 +5,12 @@ import { type Location } from '../types/game.types.js'
 import { type MultiStepEvent, type Event } from '../types/events.types.js'
 import { type Weather } from '../types/weather.types.js'
 import {
-  type ReputationState,
-  type ReputationChange,
+    type ReputationState,
+    type ReputationChange,
 } from '../types/reputation.types.js'
 import {
-  type LocationMarketState,
-  type TradeTransaction,
+    type LocationMarketState,
+    type TradeTransaction,
 } from '../types/economy.types.js'
 import { potions, locations } from '../constants.js'
 
@@ -24,11 +24,12 @@ export type MessageType =
   | 'error'
 
 import { generateDynamicPrices } from '../core/game/economy.js'
+import { EnhancedEconomyManager } from '../core/game/enhancedEconomy.js'
 import { triggerRandomEvent } from '../core/events/index.js'
-import { checkNPCEncounter } from '../core/game/travel.js'
+import { checkNPCEncounter, travelCombat } from '../core/game/travel.js'
 import {
-  saveGame as saveToDisk,
-  loadGame as loadFromDisk,
+    saveGame as saveToDisk,
+    loadGame as loadFromDisk,
 } from '../core/persistence/saveLoad.js'
 import { setActiveSlot, getActiveSlot } from '../core/persistence/activeSlot.js'
 
@@ -399,22 +400,48 @@ export const useStore = create<AppStore>()(
           // 4. Trigger event check and add to queue inline
           const eventResult = triggerRandomEvent(state.game)
           if (eventResult.currentEvent) {
-            console.log('[Travel] Event triggered:', eventResult.currentEvent.name)
-
-            // Add event to queue inline (don't use get().triggerEvent() - nested set() issue)
             const queuedEvent: QueuedEvent = {
               event: eventResult.currentEvent,
               priority: 1,
               triggeredOnDay: state.game.day,
             }
             state.events.queue.push(queuedEvent)
-            // Sort by priority (higher first)
             state.events.queue.sort(
               (a: QueuedEvent, b: QueuedEvent) => b.priority - a.priority
             )
-            console.log('[Travel] Added event to queue, new length:', state.events.queue.length)
-          } else {
-            console.log('[Travel] No event triggered')
+          }
+
+          // 4b. Check for combat encounter based on location danger
+          const [combatState, combatMessage] = travelCombat(state.game)
+          if (combatMessage) {
+            Object.assign(state.game, combatState)
+            state.messages.push({
+              type: 'combat',
+              content: combatMessage,
+              timestamp: Date.now(),
+            })
+          }
+
+          // 4c. Check for NPC encounter at new location
+          const npcEncounter = checkNPCEncounter(state.game)
+          if (npcEncounter) {
+            state.npc.current = {
+              npcId: npcEncounter.id,
+              type: 'dialogue',
+              active: true,
+            }
+            state.messages.push({
+              type: 'info',
+              content: `You encounter ${npcEncounter.name}!`,
+              timestamp: Date.now(),
+            })
+          }
+
+          // 4d. Randomize weather
+          const weatherOptions: Weather[] = ['sunny', 'rainy', 'stormy', 'windy', 'foggy']
+          const weatherRoll = Math.random()
+          if (weatherRoll < 0.3) {
+            state.game.weather = weatherOptions[Math.floor(Math.random() * weatherOptions.length)]!
           }
 
           // 5. Complete travel
@@ -433,12 +460,9 @@ export const useStore = create<AppStore>()(
           })
 
           // 7. Process event queue inline (before setting screen)
-          console.log('[CompleteTravel] Processing queue inline, length:', state.events.queue.length)
           if (state.events.queue.length > 0 && !state.events.current) {
             const nextEvent = state.events.queue.shift()
             if (nextEvent) {
-              console.log('[CompleteTravel] Setting event as current:', nextEvent.event.name)
-
               if ('steps' in nextEvent.event) {
                 // Multi-step event: set as current
                 state.events.current = nextEvent.event
@@ -524,9 +548,6 @@ export const useStore = create<AppStore>()(
 
       processEventQueue() {
         set((state) => {
-          console.log('[ProcessQueue] Current event:', state.events.current?.name || 'none')
-          console.log('[ProcessQueue] Queue length:', state.events.queue.length)
-
           // If already showing an event, don't process queue
           if (state.events.current) return
 
@@ -534,16 +555,12 @@ export const useStore = create<AppStore>()(
           const nextEvent = state.events.queue.shift()
           if (!nextEvent) return
 
-          console.log('[ProcessQueue] Processing event:', nextEvent.event.name)
-
           // Check if multi-step event
           if ('steps' in nextEvent.event) {
             // Multi-step event: set as current
             state.events.current = nextEvent.event
             state.events.phase = 'choice'
             state.events.currentStep = 0
-
-            console.log('[ProcessQueue] Set multi-step event as current')
 
             state.messages.push({
               type:
@@ -567,39 +584,27 @@ export const useStore = create<AppStore>()(
       },
 
       chooseEvent(choiceIndex: number) {
-        // TODO: Remove debug logging before v1.0 release
-        // These logs were added to debug a timing issue with the middleware stack
-        console.error('[Store] chooseEvent called with index:', choiceIndex)
-
-        // CRITICAL: This get() call MUST happen before set() to "warm up" the store
-        // Issue: With subscribeWithSelector + devtools + immer middleware, calling set()
-        // then immediately get() was returning stale state. Calling get() first ensures
-        // proper state synchronization through the middleware layers.
-        // TODO: Investigate if this can be replaced with a silent get() call (no logging)
-        // or if the middleware configuration can be adjusted to avoid this requirement.
-        console.error('[Store] BEFORE set() - phase:', get().events.phase)
+        // CRITICAL: This get() call MUST happen before set() to ensure proper state
+        // synchronization through the subscribeWithSelector + devtools + immer middleware stack.
+        // Without it, set() followed by get() can return stale state.
+        get().events.phase
 
         set((state) => {
           const { current, currentStep } = state.events
 
           if (!current || !('steps' in current)) {
-            console.error('[Store] Early return: no current event or not multi-step')
             return
           }
 
           const step = current.steps[currentStep]
           if (!step) {
-            console.error('[Store] Early return: no step at index', currentStep)
             return
           }
 
           const choice = step.choices[choiceIndex]
           if (!choice) {
-            console.error('[Store] Early return: no choice at index', choiceIndex)
             return
           }
-
-          console.error('[Store] Inside set() draft callback - applying choice')
 
           // Apply choice effect
           const newGameState = choice.effect(state.game)
@@ -607,11 +612,8 @@ export const useStore = create<AppStore>()(
 
           // Check if this was the last step
           const isLastStep = currentStep >= current.steps.length - 1
-          console.error('[Store] isLastStep:', isLastStep, 'currentStep:', currentStep, 'totalSteps:', current.steps.length)
 
           if (isLastStep) {
-            // Move to outcome phase
-            console.error('[Store] Setting phase to outcome')
             state.events.phase = 'outcome'
             state.messages.push({
               type: current.type === 'negative' ? 'error' : 'random_event',
@@ -619,8 +621,6 @@ export const useStore = create<AppStore>()(
               timestamp: Date.now(),
             })
           } else {
-            // Move to next step
-            console.error('[Store] Moving to next step')
             state.events.currentStep += 1
             state.messages.push({
               type: 'info',
@@ -629,9 +629,6 @@ export const useStore = create<AppStore>()(
             })
           }
         })
-
-        // TODO: Remove debug logging before v1.0 release
-        console.error('[Store] AFTER set() - phase:', get().events.phase)
       },
 
       acknowledgeEvent() {
@@ -650,10 +647,10 @@ export const useStore = create<AppStore>()(
               timestamp: Date.now(),
             })
           }
-
-          // Process next event in queue if any
-          get().processEventQueue()
         })
+
+        // Process next event in queue after clearing current event
+        get().processEventQueue()
 
         // Auto-save after event completes
         const activeSlot = get().persistence.activeSlot
@@ -748,10 +745,8 @@ export const useStore = create<AppStore>()(
       },
 
       endNPCInteraction() {
-        console.error('[Store] endNPCInteraction called')
         set((state) => {
           state.npc.current = undefined
-          console.error('[Store] NPC interaction cleared, current:', state.npc.current)
         })
 
         // Auto-save after NPC interaction ends
@@ -844,6 +839,9 @@ export const useStore = create<AppStore>()(
           // Generate initial prices
           state.game.prices = generateDynamicPrices(state.game)
 
+          // Initialize enhanced market data for all locations
+          state.game.marketData = EnhancedEconomyManager.initializeMarketData()
+
           // Set screen to loading, then game
           state.ui.activeScreen = 'loading'
 
@@ -871,17 +869,10 @@ export const useStore = create<AppStore>()(
 
       saveGame(slot: number) {
         const state = get()
-        console.log('[SaveGame] Attempting to save to slot', slot)
-        console.log('[SaveGame] Game state:', {
-          day: state.game.day,
-          cash: state.game.cash,
-          location: state.game.location.name,
-        })
 
         try {
           saveToDisk(state.game, slot)
           setActiveSlot(slot)
-          console.log('[SaveGame] Save successful')
 
           set((state) => {
             state.messages.push({
@@ -891,7 +882,6 @@ export const useStore = create<AppStore>()(
             })
           })
         } catch (error) {
-          console.error('[SaveGame] Save failed:', error)
           set((state) => {
             state.messages.push({
               type: 'error',

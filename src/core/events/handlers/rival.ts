@@ -1,10 +1,10 @@
 import { type MultiStepEvent } from '../../../types/events.types.js'
 import { type GameState } from '../../../types/game.types.js'
 import {
-  RivalAlchemistManager,
-  RivalDataLoader,
-  type RivalAlchemist,
-  type RivalEncounterType,
+    RivalAlchemistManager,
+    RivalDataLoader,
+    type RivalAlchemist,
+    type RivalEncounterType,
 } from '../../rivals/index.js'
 import { ReputationManager } from '../../reputation/ReputationManager.js'
 import { EnhancedEconomyManager } from '../../game/enhancedEconomy.js'
@@ -25,36 +25,22 @@ export class RivalEventHandler {
     this.dataLoader = RivalDataLoader.getInstance()
   }
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     if (!this.initialized) {
-      await this.dataLoader.loadRivals()
+      this.dataLoader.loadRivals()
       this.initialized = true
     }
   }
 
   private ensureInitialized(): void {
-    if (!this.initialized && !this.dataLoader.isLoaded()) {
-      // Synchronous initialization - load rivals immediately
-      // This is a simplified approach for the current implementation
-      try {
-        // For now, we'll just mark as initialized and let the data loader handle it
-        this.initialized = true
-        // The data loader will be initialized asynchronously in the background
-        this.dataLoader.loadRivals().catch(console.error)
-      } catch (error) {
-        console.error('Failed to initialize rival system:', error)
-      }
+    if (!this.initialized || !this.dataLoader.isLoaded()) {
+      this.dataLoader.loadRivals()
+      this.initialized = true
     }
   }
 
-  // Check for rival encounters during travel or other activities
   checkForRivalEncounter(gameState: GameState): MultiStepEvent | undefined {
     this.ensureInitialized()
-
-    // If still not loaded, return null (rivals will be available after async load completes)
-    if (!this.dataLoader.isLoaded()) {
-      return undefined
-    }
 
     const rival = this.rivalManager.rollForRivalEncounter(
       gameState.location.name,
@@ -121,16 +107,6 @@ export class RivalEventHandler {
           choice.value || 'default'
         ),
     }))
-
-    // Debug logging
-    console.log(
-      `[RivalEventHandler] Creating event for ${rival.personality.name}:`,
-      {
-        encounterType,
-        choiceCount: mappedChoices.length,
-        hasEffects: mappedChoices.every((c) => typeof c.effect === 'function'),
-      }
-    )
 
     steps.push({
       description: this.getEncounterDescription(rival, encounterType),

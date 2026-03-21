@@ -9,7 +9,7 @@ export class RivalDataLoader {
     return RivalDataLoader.instance
   }
 
-  async loadRivals(): Promise<void> {
+  loadRivals(): void {
     if (this.loaded) return
 
     const rivals = this.getDefaultRivals()

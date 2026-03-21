@@ -122,8 +122,7 @@ function ActionMenu({ potions, locations }: ActionMenuProperties) {
         }
 
         case 'n': {
-          // TODO: Implement NPC search in store
-          console.warn('NPC search not yet implemented in Zustand store')
+          searchForNPCs()
           break
         }
 

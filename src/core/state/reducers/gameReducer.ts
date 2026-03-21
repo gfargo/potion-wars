@@ -2,12 +2,12 @@ import { locations } from '../../../constants.js'
 import { type GameState } from '../../../types/game.types.js'
 import { handleCombat } from '../../combat/index.js'
 import {
-  handleMultiStepEventChoice,
-  triggerRandomEvent,
+    handleMultiStepEventChoice,
+    triggerRandomEvent,
 } from '../../events/index.js'
 import {
-  generateDynamicPrices,
-  initializeGameMarkets,
+    generateDynamicPrices,
+    initializeGameMarkets,
 } from '../../game/economy.js'
 import { brewPotion, sellPotion, travel } from '../../game/index.js'
 import { type GameAction } from '../actions/types.js'
@@ -21,32 +21,29 @@ export const gameReducer = (
 ): GameState => {
   switch (action.type) {
     case 'game/brewPotion': {
-      const [newState, actionResponseMessage] = brewPotion(
+      const [newState] = brewPotion(
         state,
         action.payload.potionName,
         action.payload.quantity
       )
-      console.log(actionResponseMessage)
       return newState
     }
 
     case 'game/sellPotion': {
-      const [newState, actionResponseMessage] = sellPotion(
+      const [newState] = sellPotion(
         state,
         action.payload.potionName,
         action.payload.quantity
       )
-      console.log(actionResponseMessage)
 
       return newState
     }
 
     case 'game/travel': {
-      const [travelState, actionResponseMessage] = travel(
+      const [travelState] = travel(
         state,
         action.payload.location
       )
-      console.log(actionResponseMessage)
 
       // Check for combat
       if (Math.random() < travelState.location.dangerLevel / 20) {
@@ -296,28 +293,14 @@ export const gameReducer = (
     }
 
     case 'save/loadGame': {
-      // Load game from persistence
       const loadedState = loadPersistedGame(action.payload.slot)
       if (loadedState) {
-        console.log(`Loaded game from slot ${action.payload.slot}:`, {
-          day: loadedState.day,
-          cash: loadedState.cash,
-          debt: loadedState.debt,
-          location: loadedState.location.name,
-          inventory: Object.keys(loadedState.inventory).length,
-        })
-
-        // Regenerate prices based on current market data and reputation
-        // This ensures prices are always in sync with the enhanced economy system
         return {
           ...loadedState,
           prices: generateDynamicPrices(loadedState),
         }
       }
 
-      console.warn(
-        `Failed to load game from slot ${action.payload.slot}, keeping current state`
-      )
       return state
     }
 

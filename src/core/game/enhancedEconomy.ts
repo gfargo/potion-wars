@@ -1,13 +1,13 @@
-import { potions } from '../../constants.js'
-import { type GameState } from '../../types/game.types.js'
+import { potions } from '../../constants.js';
+import { type GameState } from '../../types/game.types.js';
 import {
-  type MarketData,
-  type MarketState,
-  type LocationMarketState,
-  type PriceHistoryEntry,
-  type MarketTrend,
-  type SupplyDemandFactor,
-} from '../../types/economy.types.js'
+    type MarketData,
+    type MarketState,
+    type LocationMarketState,
+    type PriceHistoryEntry,
+    type MarketTrend,
+    type SupplyDemandFactor,
+} from '../../types/economy.types.js';
 
 export class EnhancedEconomyManager {
   // Performance optimization caches
@@ -178,7 +178,8 @@ export class EnhancedEconomyManager {
     }
 
     // Base price calculation using supply and demand
-    const supplyDemandMultiplier = marketData.demand / marketData.supply
+    const supplyDemandMultiplier =
+      marketData.supply > 0 ? marketData.demand / marketData.supply : 1
 
     // Add some volatility (use deterministic randomness based on market data)
     const seed = marketData.basePrice + marketData.lastUpdated
@@ -191,6 +192,14 @@ export class EnhancedEconomyManager {
       supplyDemandMultiplier *
       volatilityFactor *
       reputationModifier
+
+    // Handle edge case where basePrice is 0
+    if (marketData.basePrice <= 0 || !Number.isFinite(newPrice)) {
+      const result = 0
+      this.priceCalculationCache.set(cacheKey, { price: result, timestamp: now })
+      this.cleanupCache(this.priceCalculationCache)
+      return result
+    }
 
     // Ensure price doesn't go too extreme
     const minPrice = marketData.basePrice * 0.3
