@@ -1,10 +1,10 @@
 import test from 'ava'
 import { AnimationManager } from '../AnimationManager.js'
 import type {
-  NPCAnimation,
-  TravelAnimation,
-  EncounterAnimation,
-  AnimationFrame,
+    NPCAnimation,
+    TravelAnimation,
+    EncounterAnimation,
+    AnimationFrame,
 } from '../../../types/animation.types.js'
 
 // Test data setup
@@ -58,6 +58,10 @@ test.beforeEach(async () => {
   AnimationManager.resetInstance()
   const manager = AnimationManager.getInstance()
   await manager.loadAnimations()
+})
+
+test.afterEach(() => {
+  AnimationManager.getInstance().destroy()
 })
 
 test('AnimationManager NPC animation caching improves performance', async (t) => {

@@ -43,6 +43,7 @@ export class AnimationManager {
 
   // For testing purposes only
   static resetInstance(): void {
+    AnimationManager.instance?.destroy()
     AnimationManager.instance = new AnimationManager()
   }
 
@@ -512,6 +513,8 @@ export class AnimationManager {
     this.cleanupTimer = setInterval(() => {
       this.cleanupExpiredFrames()
     }, AnimationManager.CACHE_CLEANUP_INTERVAL)
+    // Don't let this timer prevent Node.js from exiting
+    this.cleanupTimer.unref()
   }
 
   /**

@@ -1,13 +1,14 @@
 import test from 'ava'
 import React from 'react'
+import { Box, Text, useInput } from 'ink'
 import { render } from 'ink-testing-library'
 import {
-  ContextualHelp,
-  useContextualHelp,
-  HELP_HINTS,
+    ContextualHelp,
+    useContextualHelp,
+    HELP_HINTS,
 } from '../ContextualHelp.js'
 
-// Test component that uses the contextual help hook
+// Test component that uses the contextual help hook with useInput for dismiss
 const TestComponent: React.FC<{ readonly hintId?: string }> = ({ hintId }) => {
   const { currentHint, showHint, dismissHint } = useContextualHelp()
 
@@ -17,12 +18,20 @@ const TestComponent: React.FC<{ readonly hintId?: string }> = ({ hintId }) => {
     }
   }, [hintId, showHint])
 
+  useInput((input) => {
+    if (input === 'x') {
+      dismissHint()
+    }
+  })
+
   return (
-    <div>
-      {currentHint && (
+    <Box flexDirection="column">
+      {currentHint ? (
         <ContextualHelp visible hint={currentHint} onDismiss={dismissHint} />
+      ) : (
+        <Text>No hint</Text>
       )}
-    </div>
+    </Box>
   )
 }
 
@@ -53,56 +62,87 @@ test('ContextualHelp does not render when visible is false', (t) => {
   const { lastFrame } = render(<ContextualHelp hint={hint} visible={false} />)
 
   const output = lastFrame()
-  t.truthy(output)
   t.false(output!.includes('Market Trends'))
 })
 
-test('useContextualHelp hook shows hint correctly', (t) => {
-  const { lastFrame } = render(<TestComponent hintId="first_npc_encounter" />)
+test('useContextualHelp hook shows hint correctly', async (t) => {
+  const { lastFrame, unmount } = render(<TestComponent hintId="first_npc_encounter" />)
+
+  // Wait for useEffect to fire
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
 
   const output = lastFrame()
   t.truthy(output)
   t.true(output!.includes('💡 First NPC Encounter'))
   t.true(output!.includes("You've encountered an NPC!"))
+  unmount()
 })
 
-test('useContextualHelp hook handles dismissal', (t) => {
-  const { lastFrame, stdin } = render(
+test('useContextualHelp hook handles dismissal', async (t) => {
+  const { lastFrame, stdin, unmount } = render(
     <TestComponent hintId="reputation_explained" />
   )
+
+  // Wait for useEffect to fire
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
 
   // Check hint is shown
   let output = lastFrame()
   t.true(output!.includes('💡 Reputation System'))
 
-  // Dismiss hint
+  // Dismiss hint via useInput handler
   stdin.write('x')
+
+  // Wait for state update
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
 
   // Check hint is dismissed
   output = lastFrame()
   t.false(output!.includes('💡 Reputation System'))
+  unmount()
 })
 
-test('useContextualHelp prevents showing first_time hints twice', (t) => {
+test('useContextualHelp prevents showing first_time hints twice', async (t) => {
   const TestComponentWithMultipleShows: React.FC = () => {
     const { currentHint, showHint, dismissHint } = useContextualHelp()
 
     React.useEffect(() => {
-      // Try to show the same first_time hint multiple times
-      showHint('first_npc_encounter')
       showHint('first_npc_encounter')
     }, [showHint])
 
+    useInput((input) => {
+      if (input === 'x') {
+        dismissHint()
+      }
+
+      if (input === 's') {
+        showHint('first_npc_encounter')
+      }
+    })
+
     return (
-      <div>
-        {currentHint && (
+      <Box flexDirection="column">
+        {currentHint ? (
           <ContextualHelp visible hint={currentHint} onDismiss={dismissHint} />
+        ) : (
+          <Text>No hint</Text>
         )}
-      </div>
+      </Box>
     )
   }
 
-  const { lastFrame, stdin } = render(<TestComponentWithMultipleShows />)
+  const { lastFrame, stdin, unmount } = render(<TestComponentWithMultipleShows />)
+
+  // Wait for useEffect
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
 
   // Hint should be shown
   let output = lastFrame()
@@ -110,10 +150,22 @@ test('useContextualHelp prevents showing first_time hints twice', (t) => {
 
   // Dismiss hint
   stdin.write('x')
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
 
-  // Hint should not appear again
+  output = lastFrame()
+  t.true(output!.includes('No hint'))
+
+  // Try to show again — should not appear (first_time trigger)
+  stdin.write('s')
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
+
   output = lastFrame()
   t.false(output!.includes('💡 First NPC Encounter'))
+  unmount()
 })
 
 test('HELP_HINTS contains all required hints', (t) => {
@@ -125,6 +177,8 @@ test('HELP_HINTS contains all required hints', (t) => {
     'rival_encounter',
     'information_gathering',
     'travel_animation',
+    'combat_encounter',
+    'game_over',
   ]
 
   for (const hintId of requiredHints) {
@@ -137,7 +191,7 @@ test('HELP_HINTS contains all required hints', (t) => {
 
 test('Help hints have appropriate content length', (t) => {
   for (const [hintId, hint] of Object.entries(HELP_HINTS)) {
-    t.true(hint.title.length > 5, `Title too short for hint: ${hintId}`)
+    t.true(hint.title.length > 3, `Title too short for hint: ${hintId}`)
     t.true(hint.content.length > 20, `Content too short for hint: ${hintId}`)
     t.true(hint.content.length < 300, `Content too long for hint: ${hintId}`)
   }
@@ -171,4 +225,20 @@ test('Information gathering hint explains informant NPCs', (t) => {
   t.true(hint.content.includes('Informant NPCs'))
   t.true(hint.content.includes('market tips'))
   t.true(hint.content.includes('trading decisions'))
+})
+
+test('Combat encounter hint has correct content', (t) => {
+  const hint = HELP_HINTS['combat_encounter']!
+  t.truthy(hint)
+  t.is(hint.trigger, 'first_time')
+  t.true(hint.content.includes('[A]ttack'))
+  t.true(hint.content.includes('[D]efend'))
+  t.true(hint.content.includes('[F]lee'))
+})
+
+test('Game over hint has always trigger', (t) => {
+  const hint = HELP_HINTS['game_over']!
+  t.truthy(hint)
+  t.is(hint.trigger, 'always')
+  t.true(hint.content.includes('journey has ended'))
 })

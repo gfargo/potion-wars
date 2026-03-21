@@ -13,8 +13,8 @@ test.beforeEach(() => {
 })
 
 test.afterEach(() => {
-  // Clean up after each test
-  AnimationManager.resetInstance()
+  // Destroy the instance to clear the cache cleanup interval
+  AnimationManager.getInstance().destroy()
 })
 
 test('AnimationManager is a singleton', (t) => {

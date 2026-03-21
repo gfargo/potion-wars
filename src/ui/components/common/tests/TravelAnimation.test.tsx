@@ -2,12 +2,12 @@ import test from 'ava'
 import React from 'react'
 import { render } from 'ink-testing-library'
 import {
-  TravelAnimation,
-  getLocationSpecificAnimation,
+    TravelAnimation,
+    getLocationSpecificAnimation,
 } from '../TravelAnimation.js'
 
 test('TravelAnimation renders with loading animation initially', (t) => {
-  const { lastFrame } = render(
+  const { lastFrame, unmount } = render(
     <TravelAnimation
       fromLocation="Market Square"
       toLocation="Alchemist Quarter"
@@ -19,10 +19,11 @@ test('TravelAnimation renders with loading animation initially', (t) => {
   // Should show loading animation immediately
   const frame = lastFrame()
   t.true(frame?.includes('Preparing') || frame?.includes('→') || false)
+  unmount()
 })
 
 test('TravelAnimation renders with location information', async (t) => {
-  const { lastFrame } = render(
+  const { lastFrame, unmount } = render(
     <TravelAnimation
       fromLocation="Market Square"
       toLocation="Alchemist Quarter"
@@ -37,12 +38,13 @@ test('TravelAnimation renders with location information', async (t) => {
   // Should render some content
   const frame = lastFrame()
   t.true((frame?.length ?? 0) > 0)
+  unmount()
 })
 
 test('TravelAnimation calls onComplete callback', (t) => {
   let completed = false
 
-  render(
+  const { unmount } = render(
     <TravelAnimation
       fromLocation="Test Location A"
       toLocation="Test Location B"
@@ -55,10 +57,11 @@ test('TravelAnimation calls onComplete callback', (t) => {
 
   // The callback should be passed through (we can't easily test if it's called without starting the animation)
   t.false(completed) // Should not be called yet since autoStart is false
+  unmount()
 })
 
 test('TravelAnimation handles different location combinations', async (t) => {
-  const { lastFrame: frame1 } = render(
+  const { lastFrame: frame1, unmount: unmount1 } = render(
     <TravelAnimation
       fromLocation="Location A"
       toLocation="Location B"
@@ -67,7 +70,7 @@ test('TravelAnimation handles different location combinations', async (t) => {
     />
   )
 
-  const { lastFrame: frame2 } = render(
+  const { lastFrame: frame2, unmount: unmount2 } = render(
     <TravelAnimation
       fromLocation="Different Place"
       toLocation="Another Place"
@@ -82,10 +85,12 @@ test('TravelAnimation handles different location combinations', async (t) => {
   // Both should render content
   t.true((frame1()?.length ?? 0) > 0)
   t.true((frame2()?.length ?? 0) > 0)
+  unmount1()
+  unmount2()
 })
 
 test('TravelAnimation handles autoStart prop', async (t) => {
-  const { lastFrame: frame1 } = render(
+  const { lastFrame: frame1, unmount: unmount1 } = render(
     <TravelAnimation
       autoStart
       fromLocation="Start"
@@ -94,7 +99,7 @@ test('TravelAnimation handles autoStart prop', async (t) => {
     />
   )
 
-  const { lastFrame: frame2 } = render(
+  const { lastFrame: frame2, unmount: unmount2 } = render(
     <TravelAnimation
       fromLocation="Start"
       toLocation="End"
@@ -106,11 +111,13 @@ test('TravelAnimation handles autoStart prop', async (t) => {
   // Both should render content
   t.true((frame1()?.length ?? 0) > 0)
   t.true((frame2()?.length ?? 0) > 0)
+  unmount1()
+  unmount2()
 })
 
 test('TravelAnimation gracefully handles animation loading errors', async (t) => {
   // This should still work even if there are issues loading animations
-  const { lastFrame } = render(
+  const { lastFrame, unmount } = render(
     <TravelAnimation
       fromLocation="Problematic Location With Very Long Name That Might Cause Issues"
       toLocation="Another Problematic Location"
@@ -125,6 +132,7 @@ test('TravelAnimation gracefully handles animation loading errors', async (t) =>
   // Should still render something (fallback animation)
   const frame = lastFrame()
   t.true((frame?.length ?? 0) > 0)
+  unmount()
 })
 
 test('getLocationSpecificAnimation returns specific animation for known pairs', (t) => {
@@ -156,7 +164,7 @@ test('getLocationSpecificAnimation returns null for unknown pairs', (t) => {
 })
 
 test('TravelAnimation shows travel progression', async (t) => {
-  const { lastFrame } = render(
+  const { lastFrame, unmount } = render(
     <TravelAnimation
       fromLocation="Start Point"
       toLocation="End Point"
@@ -179,4 +187,5 @@ test('TravelAnimation shows travel progression', async (t) => {
       frame?.includes('o') || // Character representation
       false
   )
+  unmount()
 })

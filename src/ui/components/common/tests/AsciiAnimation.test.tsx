@@ -2,8 +2,8 @@ import test from 'ava'
 import React from 'react'
 import { render } from 'ink-testing-library'
 import {
-  AsciiAnimation,
-  type AsciiAnimationControls,
+    AsciiAnimation,
+    type AsciiAnimationControls,
 } from '../AsciiAnimation.js'
 import type { AnimationFrame } from '../../../../types/animation.types.js'
 
@@ -42,15 +42,17 @@ test('AsciiAnimation validateFrames prop is respected', (t) => {
   // Test that the validateFrames prop is accepted without errors
   const frames = ['frame1', 'frame2']
 
-  const { lastFrame: frame1 } = render(
+  const { lastFrame: frame1, unmount: unmount1 } = render(
     <AsciiAnimation validateFrames frames={frames} />
   )
-  const { lastFrame: frame2 } = render(
+  const { lastFrame: frame2, unmount: unmount2 } = render(
     <AsciiAnimation frames={frames} validateFrames={false} />
   )
 
   t.is(frame1(), 'frame1')
   t.is(frame2(), 'frame1')
+  unmount1()
+  unmount2()
 })
 
 test('AsciiAnimation ref provides control methods', (t) => {
@@ -86,10 +88,11 @@ test('AsciiAnimation ref reports correct state when autoStart=true', (t) => {
   const frames = ['frame1', 'frame2', 'frame3']
   const reference = React.createRef<AsciiAnimationControls>()
 
-  render(<AsciiAnimation ref={reference} autoStart frames={frames} />)
+  const { unmount } = render(<AsciiAnimation ref={reference} autoStart frames={frames} />)
 
   t.true(reference.current?.isPlaying)
   t.false(reference.current?.isCompleted)
+  unmount()
 })
 
 test('AsciiAnimation handles function-based frames', (t) => {

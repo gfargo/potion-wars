@@ -25,16 +25,17 @@ function renderTravelScreen(fromLocation?: string) {
 }
 
 test('Updated TravelingScreen shows travel animation', (t) => {
-  const { lastFrame } = renderTravelScreen('Market Square')
+  const { lastFrame, unmount } = renderTravelScreen('Market Square')
 
   const output = lastFrame()
   t.truthy(output)
   t.true(output!.includes('Traveling to'))
   t.true(output!.includes('From Market Square'))
+  unmount()
 })
 
 test('Updated TravelingScreen shows progress indicator', (t) => {
-  const { lastFrame } = renderTravelScreen()
+  const { lastFrame, unmount } = renderTravelScreen()
 
   const output = lastFrame()
   t.truthy(output)
@@ -42,29 +43,33 @@ test('Updated TravelingScreen shows progress indicator', (t) => {
   t.true(
     output!.includes('█') || output!.includes('░') || output!.includes('%')
   )
+  unmount()
 })
 
 test('Updated TravelingScreen shows flavor text', (t) => {
-  const { lastFrame } = renderTravelScreen('Market Square')
+  const { lastFrame, unmount } = renderTravelScreen('Market Square')
 
   const output = lastFrame()
   t.truthy(output)
   // Should show some descriptive text about the journey
   t.true(output!.length > 100) // Flavor text should make output longer
+  unmount()
 })
 
 test('Updated TravelingScreen maintains skip functionality', (t) => {
-  const { lastFrame } = renderTravelScreen()
+  const { lastFrame, unmount } = renderTravelScreen()
 
   const output = lastFrame()
   t.truthy(output)
   t.true(output!.includes('Press Enter to skip'))
+  unmount()
 })
 
 test('Updated TravelingScreen shows day information', (t) => {
-  const { lastFrame } = renderTravelScreen()
+  const { lastFrame, unmount } = renderTravelScreen()
 
   const output = lastFrame()
   t.truthy(output)
   t.true(output!.includes('Day'))
+  unmount()
 })

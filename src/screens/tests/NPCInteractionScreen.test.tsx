@@ -98,25 +98,27 @@ function renderNPCScreen(npc: NPC = mockNPC) {
 }
 
 test('NPCInteractionScreen renders correctly', (t) => {
-  const { lastFrame } = renderNPCScreen()
+  const { lastFrame, unmount } = renderNPCScreen()
   const frame = lastFrame()!
 
   // Should show NPC name somewhere in the output
   t.true(frame.includes('Test Merchant'))
+  unmount()
 })
 
 test('NPCInteractionScreen shows loading state initially', (t) => {
-  const { lastFrame } = renderNPCScreen()
+  const { lastFrame, unmount } = renderNPCScreen()
 
   // Should show loading or conversation content
   t.true(
     lastFrame()!.includes('Starting conversation') ||
       lastFrame()!.includes('Test Merchant')
   )
+  unmount()
 })
 
 test('NPCInteractionScreen displays dialogue choices', (t) => {
-  const { lastFrame } = renderNPCScreen()
+  const { lastFrame, unmount } = renderNPCScreen()
 
   // Should show dialogue choices from the greeting node or NPC name
   t.true(
@@ -124,6 +126,7 @@ test('NPCInteractionScreen displays dialogue choices', (t) => {
       lastFrame()!.includes('saying hello') ||
       lastFrame()!.includes('Test Merchant')
   )
+  unmount()
 })
 
 test('NPCInteractionScreen handles invalid NPC gracefully', (t) => {
@@ -153,7 +156,7 @@ test('NPCInteractionScreen handles invalid NPC gracefully', (t) => {
 })
 
 test('NPCInteractionScreen shows conversation history', (t) => {
-  const { lastFrame } = renderNPCScreen()
+  const { lastFrame, unmount } = renderNPCScreen()
   const frame = lastFrame()!
 
   // Should show conversation section or NPC content
@@ -162,17 +165,19 @@ test('NPCInteractionScreen shows conversation history', (t) => {
       frame.includes('Welcome to my shop') ||
       frame.includes('Test Merchant')
   )
+  unmount()
 })
 
 test('NPCInteractionScreen displays NPC portrait area', (t) => {
-  const { lastFrame } = renderNPCScreen()
+  const { lastFrame, unmount } = renderNPCScreen()
 
   // Should show NPC name
   t.true(lastFrame()!.includes('Test Merchant'))
+  unmount()
 })
 
 test('NPCInteractionScreen shows instructions', (t) => {
-  const { lastFrame } = renderNPCScreen()
+  const { lastFrame, unmount } = renderNPCScreen()
   const frame = lastFrame()!
 
   // Should show user instructions or NPC content
@@ -182,4 +187,5 @@ test('NPCInteractionScreen shows instructions', (t) => {
       frame.includes('Test Merchant') ||
       frame.includes('Starting conversation')
   )
+  unmount()
 })
