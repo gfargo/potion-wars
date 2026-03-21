@@ -4,7 +4,7 @@
 
 Potion Wars is a TypeScript + Ink CLI. Source lives in `src/`: entry `cli.tsx`, UI `ui/`, screen flows `screens/`, and Zustand store in `store/appStore.ts`. Core mechanics live in `core/` (combat, events, game, persistence, reputation, npcs, rivals, dialogue) with shared definitions in `types/`. Tests sit in `src/tests` (unit, integration, snapshots); mirror that layout. Compiled output goes to `dist/`—keep it generated-only.
 
-**Documentation**: Project docs live in `docs/` (primer, persistence, testing, roadmap) and `.kiro/steering/` (product, structure, tech). See `CLAUDE.md` for architecture details and `docs/primer.md` for system design. Historical architecture decisions archived in `docs/archive/`.
+**Documentation**: Project docs live in `docs/` (primer, persistence, testing) and `.kiro/steering/` (product, structure, tech). See `CLAUDE.md` for architecture details and `docs/primer.md` for system design. Historical architecture decisions archived in `docs/archive/`.
 
 ## Build, Test, and Development Commands
 
@@ -33,7 +33,6 @@ Ship via `yarn release` (release-it). Select semantic version bumps that match p
 - `docs/primer.md` - Game mechanics, system design, and architecture evolution
 - `docs/persistence.md` - Save system design and migration strategies
 - `docs/testing.md` - Testing scenarios and patterns with AVA + ink-testing-library
-- `docs/roadmap.md` - Feature roadmap and pre-release cleanup tasks
 
 **Steering Documents** (`.kiro/steering/`):
 - `product.md` - Core gameplay mechanics and target experience
