@@ -4,10 +4,14 @@ import { createGameState } from '../../state/tests/utils/testHelper.js'
 import { saveGame, loadGame } from '../saveLoad.js'
 import { SaveFileManager, SaveFileType } from '../utils.js'
 
-// Helper to clean up test files
+// This file exclusively uses slots 4 and 5 to avoid cross-file filesystem contamination.
+// Other persistence test files use different slots:
+//   SaveFileManager → slot 1
+//   saveLoadSystemUpdates → slot 2
+//   reputationPersistence → slot 3
 const cleanup = () => {
   const manager = SaveFileManager.getInstance()
-  for (let slot = 1; slot <= 5; slot++) {
+  for (const slot of [4, 5]) {
     try {
       manager.clearSaveFile(slot, SaveFileType.GAME_SAVE)
       manager.clearSaveFile(slot, SaveFileType.GAME_LOG)
@@ -20,7 +24,7 @@ const cleanup = () => {
 test.after(cleanup)
 test.beforeEach(cleanup)
 
-test('full reputation persistence workflow', (t) => {
+test.serial('full reputation persistence workflow', (t) => {
   // Create a game state with some reputation changes
   let gameState = createGameState({
     cash: 5000,
@@ -48,10 +52,10 @@ test('full reputation persistence workflow', (t) => {
   })
 
   // Save the game
-  saveGame(gameState, 1)
+  saveGame(gameState, 4)
 
   // Load the game
-  const loadedState = loadGame(1)
+  const loadedState = loadGame(4)
 
   t.truthy(loadedState)
 
@@ -84,8 +88,8 @@ test('full reputation persistence workflow', (t) => {
     locationChange: -300, // This should be clamped to make total not exceed -100
   })
 
-  saveGame(gameState, 2)
-  const sanitizedState = loadGame(2)
+  saveGame(gameState, 5)
+  const sanitizedState = loadGame(5)
 
   t.truthy(sanitizedState)
   t.true(sanitizedState!.reputation.global <= 100)
@@ -98,7 +102,7 @@ test('full reputation persistence workflow', (t) => {
   }
 })
 
-test('reputation data survives multiple save/load cycles', (t) => {
+test.serial('reputation data survives multiple save/load cycles', (t) => {
   let gameState = createGameState()
 
   // Perform multiple reputation changes and save/load cycles
@@ -112,8 +116,8 @@ test('reputation data survives multiple save/load cycles', (t) => {
       reason: `Action ${i}`,
     })
 
-    saveGame(gameState, 1)
-    const reloadedState = loadGame(1)
+    saveGame(gameState, 4)
+    const reloadedState = loadGame(4)
     t.truthy(reloadedState)
     gameState = reloadedState!
   }
@@ -126,7 +130,7 @@ test('reputation data survives multiple save/load cycles', (t) => {
   t.is(gameState.reputation.npcRelationships['npc_4'], 8) // 4 * 2 = 8
 })
 
-test('reputation persistence handles concurrent location and NPC changes', (t) => {
+test.serial('reputation persistence handles concurrent location and NPC changes', (t) => {
   let gameState = createGameState()
 
   // Apply complex reputation changes
@@ -147,8 +151,8 @@ test('reputation persistence handles concurrent location and NPC changes', (t) =
     reason: 'Minor disagreement',
   })
 
-  saveGame(gameState, 1)
-  const loadedState = loadGame(1)
+  saveGame(gameState, 4)
+  const loadedState = loadGame(4)
 
   t.truthy(loadedState)
   t.is(loadedState!.reputation.global, 5)

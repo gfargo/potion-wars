@@ -19,7 +19,7 @@ const testNPC: NPC = {
     lowReputation: "I don't trust you.",
     highReputation: 'My valued customer!',
   },
-  location: 'Market Square',
+  location: "Merchant's District",
   availability: {
     probability: 0.8,
     timeRestriction: [1, 30],
@@ -28,7 +28,7 @@ const testNPC: NPC = {
   reputation: {
     minimum: 0,
     maximum: undefined,
-    location: 'Market Square',
+    location: "Merchant's District",
   },
   dialogue: {
     rootNode: 'greeting',
@@ -71,7 +71,7 @@ const createTestGameState = (): GameState => ({
   reputation: {
     global: 0,
     locations: {
-      'Market Square': 10,
+      "Merchant's District": 10,
     },
     npcRelationships: {},
   },
@@ -80,23 +80,32 @@ const createTestGameState = (): GameState => ({
 })
 
 test.beforeEach(() => {
-  // Reset NPC system before each test
+  // Reset NPC system, then initialize to set the flag,
+  // then clear NPCs so only test-registered NPCs exist
   NPCEncounter.reset()
-  NPCManager.resetInstance()
+  // Force re-initialization so the initialized flag is set to true
+  // (prevents lazy-init from loading defaults during test execution)
+  const manager = NPCManager.getInstance()
+  manager.clearNPCs()
+  manager.clearCaches()
+  // Mark as initialized to prevent default NPC loading
+  NPCEncounter.initialize()
+  manager.clearNPCs()
+  manager.clearCaches()
 })
 
-test('travelWithNPCEncounters - basic travel without encounter', (t) => {
+test.serial('travelWithNPCEncounters - basic travel without encounter', (t) => {
   const gameState = createTestGameState()
 
-  const result = travelWithNPCEncounters(gameState, 'Market Square')
+  const result = travelWithNPCEncounters(gameState, "Merchant's District")
 
-  t.is(result.newState.location.name, 'Market Square')
-  t.true(result.message.includes('Traveled to Market Square'))
+  t.is(result.newState.location.name, "Merchant's District")
+  t.true(result.message.includes("Traveled to Merchant's District"))
   t.is(result.npcEncounter, undefined)
   t.is(result.npcEvent, undefined)
 })
 
-test('travelWithNPCEncounters - travel with NPC encounter', (t) => {
+test.serial('travelWithNPCEncounters - travel with NPC encounter', (t) => {
   const gameState = createTestGameState()
 
   // Register the test NPC
@@ -108,9 +117,9 @@ test('travelWithNPCEncounters - travel with NPC encounter', (t) => {
   Math.random = () => 0.1 // Low value to trigger encounter
 
   try {
-    const result = travelWithNPCEncounters(gameState, 'Market Square')
+    const result = travelWithNPCEncounters(gameState, "Merchant's District")
 
-    t.is(result.newState.location.name, 'Market Square')
+    t.is(result.newState.location.name, "Merchant's District")
     t.true(result.message.includes('You encounter Test Merchant!'))
     t.truthy(result.npcEncounter)
     t.is(result.npcEncounter?.id, 'test_merchant')
@@ -121,7 +130,7 @@ test('travelWithNPCEncounters - travel with NPC encounter', (t) => {
   }
 })
 
-test('checkNPCEncounter - returns null when no NPCs available', (t) => {
+test.serial('checkNPCEncounter - returns null when no NPCs available', (t) => {
   const gameState = createTestGameState()
 
   const encounter = checkNPCEncounter(gameState)
@@ -129,9 +138,9 @@ test('checkNPCEncounter - returns null when no NPCs available', (t) => {
   t.is(encounter, undefined)
 })
 
-test('checkNPCEncounter - returns NPC when available and probability met', (t) => {
+test.serial('checkNPCEncounter - returns NPC when available and probability met', (t) => {
   const gameState = createTestGameState()
-  gameState.location.name = 'Market Square'
+  gameState.location.name = "Merchant's District"
 
   // Register the test NPC
   const manager = NPCManager.getInstance()
@@ -151,10 +160,10 @@ test('checkNPCEncounter - returns NPC when available and probability met', (t) =
   }
 })
 
-test('checkNPCEncounter - respects reputation gates', (t) => {
+test.serial('checkNPCEncounter - respects reputation gates', (t) => {
   const gameState = createTestGameState()
-  gameState.location.name = 'Market Square'
-  gameState.reputation.locations['Market Square'] = -10 // Low reputation
+  gameState.location.name = "Merchant's District"
+  gameState.reputation.locations["Merchant's District"] = -10 // Low reputation
 
   // Create NPC with high reputation requirement
   const highRepNPC: NPC = {
@@ -174,7 +183,7 @@ test('checkNPCEncounter - respects reputation gates', (t) => {
   t.is(encounter, undefined)
 })
 
-test('travelWithNPCEncounters - handles invalid location', (t) => {
+test.serial('travelWithNPCEncounters - handles invalid location', (t) => {
   const gameState = createTestGameState()
 
   const result = travelWithNPCEncounters(gameState, 'Invalid Location')
@@ -183,29 +192,29 @@ test('travelWithNPCEncounters - handles invalid location', (t) => {
   t.is(result.npcEncounter, undefined)
 })
 
-test('travelWithNPCEncounters - preserves existing game state properties', (t) => {
+test.serial('travelWithNPCEncounters - preserves existing game state properties', (t) => {
   const gameState = createTestGameState()
   gameState.cash = 1500
   gameState.inventory = { 'Health Potion': 5 }
 
-  const result = travelWithNPCEncounters(gameState, 'Market Square')
+  const result = travelWithNPCEncounters(gameState, "Merchant's District")
 
   t.is(result.newState.cash, 1500)
   t.deepEqual(result.newState.inventory, { 'Health Potion': 5 })
   t.deepEqual(result.newState.reputation, gameState.reputation)
 })
 
-test('travelWithNPCEncounters - updates prices on travel', (t) => {
+test.serial('travelWithNPCEncounters - updates prices on travel', (t) => {
   const gameState = createTestGameState()
   const originalPrices = gameState.prices
 
-  const result = travelWithNPCEncounters(gameState, 'Market Square')
+  const result = travelWithNPCEncounters(gameState, "Merchant's District")
 
   // Prices should be updated (different object reference)
   t.not(result.newState.prices, originalPrices)
 })
 
-test('travelWithNPCEncounters - creates proper event structure', (t) => {
+test.serial('travelWithNPCEncounters - creates proper event structure', (t) => {
   const gameState = createTestGameState()
 
   const manager = NPCManager.getInstance()
@@ -216,13 +225,13 @@ test('travelWithNPCEncounters - creates proper event structure', (t) => {
   Math.random = () => 0.1
 
   try {
-    const result = travelWithNPCEncounters(gameState, 'Market Square')
+    const result = travelWithNPCEncounters(gameState, "Merchant's District")
 
     t.truthy(result.npcEvent)
     t.is(result.npcEvent?.id, 'npc_encounter_test_merchant')
     t.is(result.npcEvent?.name, 'Encounter: Test Merchant')
     t.is(result.npcEvent?.description, 'Welcome, traveler!')
-    t.deepEqual(result.npcEvent?.locationSpecific, ['Market Square'])
+    t.deepEqual(result.npcEvent?.locationSpecific, ["Merchant's District"])
 
     // Check that the event is set in game state
     t.is(result.newState.currentEvent, result.npcEvent)

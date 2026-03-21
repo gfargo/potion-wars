@@ -10,6 +10,15 @@ const getState = () => useStore.getState()
 test.beforeEach(() => {
   getState().resetGame()
   getState().initializeGame('TestPlayer')
+  // Clear events and side effects from initializeGame
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+    state.events.phase = 'choice'
+    state.events.currentStep = 0
+    state.npc.current = undefined
+    state.persistence.activeSlot = 0
+  })
 })
 
 // ==========================================
@@ -180,6 +189,12 @@ test('advanceDay: increments day and applies debt interest', (t) => {
 // ==========================================
 
 test('triggerEvent: adds event to queue', (t) => {
+  // Clear any pre-existing events
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+  })
+
   const mockEvent: MultiStepEvent = {
     name: 'Test Event',
     description: 'A test event',
@@ -210,6 +225,12 @@ test('triggerEvent: adds event to queue', (t) => {
 })
 
 test('processEventQueue: processes multi-step event', (t) => {
+  // Clear any pre-existing events
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+  })
+
   const mockEvent: MultiStepEvent = {
     name: 'Test Multi-Step',
     description: 'A multi-step test event',
@@ -244,6 +265,12 @@ test('processEventQueue: processes multi-step event', (t) => {
 })
 
 test('processEventQueue: processes single-step event immediately', (t) => {
+  // Clear any pre-existing events
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+  })
+
   let effectApplied = false
 
   const mockEvent: Event = {
@@ -277,6 +304,12 @@ test('processEventQueue: processes single-step event immediately', (t) => {
 })
 
 test('chooseEvent: applies choice effect and advances step', (t) => {
+  // Clear any pre-existing events
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+  })
+
   const mockEvent: MultiStepEvent = {
     name: 'Test Choice Event',
     description: 'An event with choices',
@@ -318,6 +351,12 @@ test('chooseEvent: applies choice effect and advances step', (t) => {
 })
 
 test('acknowledgeEvent: clears event and processes next in queue', (t) => {
+  // Clear any pre-existing events
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+  })
+
   const event1: MultiStepEvent = {
     name: 'Event 1',
     description: 'First event',
@@ -362,6 +401,12 @@ test('acknowledgeEvent: clears event and processes next in queue', (t) => {
 })
 
 test('event queue: processes events by priority', (t) => {
+  // Clear any pre-existing events
+  setState((state) => {
+    state.events.queue = []
+    state.events.current = undefined
+  })
+
   const lowPriorityEvent: MultiStepEvent = {
     name: 'Low Priority',
     description: 'Low',

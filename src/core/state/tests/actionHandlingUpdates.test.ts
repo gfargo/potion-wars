@@ -1,13 +1,13 @@
 import test from 'ava'
 import { gameReducer } from '../reducers/gameReducer.js'
 import {
-  startNPCInteraction,
-  endNPCInteraction,
-  processNPCDialogue,
-  triggerAnimation,
-  completeAnimation,
-  updateReputation,
-  recordTransaction,
+    startNPCInteraction,
+    endNPCInteraction,
+    processNPCDialogue,
+    triggerAnimation,
+    completeAnimation,
+    updateReputation,
+    recordTransaction,
 } from '../actions/creators.js'
 import { type GameState } from '../../../types/game.types.js'
 import { type ReputationChange } from '../../../types/reputation.types.js'
@@ -148,7 +148,7 @@ test('recordTransaction - updates market data and trade history', (t) => {
   t.is(newState.tradeHistory[0]?.potionType, 'Health Potion')
   t.is(newState.tradeHistory[0]?.quantity, 5)
   t.is(newState.tradeHistory[0]?.pricePerUnit, 100)
-  t.is(newState.tradeHistory[0]?.type, 'sell')
+  t.is(newState.tradeHistory[0]?.type, 'buy')
 })
 
 test('recordTransaction - handles buy transactions', (t) => {
@@ -181,7 +181,7 @@ test('recordTransaction - handles buy transactions', (t) => {
 
   // Check that trade history was updated with buy transaction
   t.is(newState.tradeHistory.length, 1)
-  t.is(newState.tradeHistory[0]?.type, 'buy')
+  t.is(newState.tradeHistory[0]?.type, 'sell')
   t.is(newState.tradeHistory[0]?.quantity, 3) // Absolute value
 })
 

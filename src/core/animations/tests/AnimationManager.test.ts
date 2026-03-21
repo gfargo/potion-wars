@@ -1,10 +1,10 @@
 import test from 'ava'
 import { AnimationManager } from '../AnimationManager.js'
 import type {
-  NPCAnimation,
-  TravelAnimation,
-  EncounterAnimation,
-  AnimationFrame,
+    NPCAnimation,
+    TravelAnimation,
+    EncounterAnimation,
+    AnimationFrame,
 } from '../../../types/animation.types.js'
 
 test.beforeEach(() => {
@@ -24,7 +24,7 @@ test('AnimationManager is a singleton', (t) => {
   t.is(instance1, instance2)
 })
 
-test('loadAnimations initializes default animations', async (t) => {
+test.serial('loadAnimations initializes default animations', async (t) => {
   const manager = AnimationManager.getInstance()
 
   // Verify no animations before loading
@@ -59,7 +59,7 @@ test('loadAnimations initializes default animations', async (t) => {
   )
 })
 
-test('loadAnimations is idempotent', async (t) => {
+test.serial('loadAnimations is idempotent', async (t) => {
   const manager = AnimationManager.getInstance()
 
   await manager.loadAnimations()
@@ -75,7 +75,7 @@ test('loadAnimations is idempotent', async (t) => {
   t.true(stats1.encounterCount > 0)
 })
 
-test('getNPCAnimation returns default animation for unknown NPC', async (t) => {
+test.serial('getNPCAnimation returns default animation for unknown NPC', async (t) => {
   const manager = AnimationManager.getInstance()
   await manager.loadAnimations()
 
@@ -86,7 +86,7 @@ test('getNPCAnimation returns default animation for unknown NPC', async (t) => {
   t.true(Array.isArray(idleFrames[0]))
 })
 
-test('getNPCAnimation returns specific animation when registered', async (t) => {
+test.serial('getNPCAnimation returns specific animation when registered', async (t) => {
   const manager = AnimationManager.getInstance()
   await manager.loadAnimations()
 
@@ -108,7 +108,7 @@ test('getNPCAnimation returns specific animation when registered', async (t) => 
   t.deepEqual(tradingFrames, [['custom', 'trading']])
 })
 
-test('getRandomTravelAnimation returns valid animation', async (t) => {
+test.serial('getRandomTravelAnimation returns valid animation', async (t) => {
   const manager = AnimationManager.getInstance()
   await manager.loadAnimations()
 
@@ -121,7 +121,7 @@ test('getRandomTravelAnimation returns valid animation', async (t) => {
   t.true(animation.frames.length > 0)
 })
 
-test('getEncounterAnimation returns frames for known encounter type', async (t) => {
+test.serial('getEncounterAnimation returns frames for known encounter type', async (t) => {
   const manager = AnimationManager.getInstance()
   await manager.loadAnimations()
 
@@ -137,7 +137,7 @@ test('getEncounterAnimation returns frames for known encounter type', async (t) 
   t.deepEqual(frames, [['test', 'frame']])
 })
 
-test('getEncounterAnimation returns default for unknown encounter type', async (t) => {
+test.serial('getEncounterAnimation returns default for unknown encounter type', async (t) => {
   const manager = AnimationManager.getInstance()
   await manager.loadAnimations()
 

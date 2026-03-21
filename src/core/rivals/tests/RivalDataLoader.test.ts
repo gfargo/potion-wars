@@ -2,28 +2,36 @@ import test from 'ava'
 import { RivalDataLoader } from '../RivalDataLoader.js'
 import { RivalAlchemistManager } from '../RivalAlchemist.js'
 
-test('RivalDataLoader singleton pattern', (t) => {
+// All tests must be serial — both singletons (RivalDataLoader + RivalAlchemistManager)
+// are shared mutable state that causes cross-test contamination when run concurrently.
+
+function resetSingletons() {
+  const loader = RivalDataLoader.getInstance()
+  const manager = RivalAlchemistManager.getInstance()
+  manager.clearAllRivals()
+  loader.reset()
+}
+
+test.serial('RivalDataLoader singleton pattern', (t) => {
   const loader1 = RivalDataLoader.getInstance()
   const loader2 = RivalDataLoader.getInstance()
 
   t.is(loader1, loader2, 'Should return the same instance')
 })
 
-test('RivalDataLoader initial state', (t) => {
+test.serial('RivalDataLoader initial state', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
 
   t.false(loader.isLoaded(), 'Should not be loaded initially')
 })
 
-test('RivalDataLoader loads default rivals', async (t) => {
+test.serial('RivalDataLoader loads default rivals', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  // Clear any existing rivals from previous tests and reset loader
-  manager.clearAllRivals()
-  loader.reset()
-
-  await loader.loadRivals()
+  loader.loadRivals()
 
   t.true(loader.isLoaded(), 'Should be marked as loaded')
 
@@ -60,21 +68,17 @@ test('RivalDataLoader loads default rivals', async (t) => {
   t.is(borisRival!.type, 'aggressive', 'Boris should be aggressive type')
 })
 
-test('RivalDataLoader prevents duplicate loading', async (t) => {
+test.serial('RivalDataLoader prevents duplicate loading', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  // Clear any existing rivals from previous tests and reset loader
-  manager.clearAllRivals()
-  loader.reset()
-
-  await loader.loadRivals()
+  loader.loadRivals()
   const firstLoadCount = manager.getAllRivals().length
 
-  // Check that we have some rivals loaded
   t.true(firstLoadCount >= 6, 'Should load at least 6 default rivals')
 
-  await loader.loadRivals() // Second load attempt
+  loader.loadRivals() // Second load attempt — should be a no-op
   const secondLoadCount = manager.getAllRivals().length
 
   t.is(
@@ -84,16 +88,16 @@ test('RivalDataLoader prevents duplicate loading', async (t) => {
   )
 })
 
-test('RivalDataLoader rival stats validation', async (t) => {
+test.serial('RivalDataLoader rival stats validation', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const allRivals = manager.getAllRivals()
 
   for (const rival of allRivals) {
-    // Validate stat ranges
     t.true(
       rival.strength >= 1 && rival.strength <= 10,
       `${rival.personality.name} strength should be 1-10`
@@ -107,7 +111,6 @@ test('RivalDataLoader rival stats validation', async (t) => {
       `${rival.personality.name} wealth should be 1-10`
     )
 
-    // Validate required fields
     t.truthy(rival.id, `${rival.personality.name} should have ID`)
     t.truthy(rival.personality.name, 'Rival should have name')
     t.truthy(
@@ -127,13 +130,11 @@ test('RivalDataLoader rival stats validation', async (t) => {
       `${rival.personality.name} should have defeat message`
     )
 
-    // Validate active locations
     t.true(
       rival.activeLocations.length > 0,
       `${rival.personality.name} should have active locations`
     )
 
-    // Validate encounter history is initialized
     t.true(
       Array.isArray(rival.encounterHistory),
       `${rival.personality.name} should have encounter history array`
@@ -146,11 +147,12 @@ test('RivalDataLoader rival stats validation', async (t) => {
   }
 })
 
-test('RivalDataLoader rival type distribution', async (t) => {
+test.serial('RivalDataLoader rival type distribution', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const allRivals = manager.getAllRivals()
   const typeCount = {
@@ -170,11 +172,12 @@ test('RivalDataLoader rival type distribution', async (t) => {
   t.true(typeCount.saboteur > 0, 'Should have saboteur rivals')
 })
 
-test('RivalDataLoader location coverage', async (t) => {
+test.serial('RivalDataLoader location coverage', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const allRivals = manager.getAllRivals()
   const locationCoverage = new Set<string>()
@@ -185,7 +188,6 @@ test('RivalDataLoader location coverage', async (t) => {
     }
   }
 
-  // Check that major locations have rival coverage
   const expectedLocations = [
     "Alchemist's Quarter",
     'Royal Castle',
@@ -197,10 +199,11 @@ test('RivalDataLoader location coverage', async (t) => {
   }
 })
 
-test('RivalDataLoader getRivalsInLocation', async (t) => {
+test.serial('RivalDataLoader getRivalsInLocation', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const alchemistQuarterRivals = loader.getRivalsInLocation(
     "Alchemist's Quarter"
@@ -225,11 +228,12 @@ test('RivalDataLoader getRivalsInLocation', async (t) => {
   )
 })
 
-test('RivalDataLoader addCustomRival', async (t) => {
+test.serial('RivalDataLoader addCustomRival', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const customRival = {
     id: 'custom_test_rival',
@@ -261,18 +265,19 @@ test('RivalDataLoader addCustomRival', async (t) => {
   )
 })
 
-test('RivalDataLoader rival personality completeness', async (t) => {
+
+test.serial('RivalDataLoader rival personality completeness', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const allRivals = manager.getAllRivals()
 
   for (const rival of allRivals) {
     const { personality } = rival
 
-    // Check all personality messages are present and non-empty
     t.true(
       personality.greeting.length > 0,
       `${rival.personality.name} should have non-empty greeting`
@@ -294,7 +299,6 @@ test('RivalDataLoader rival personality completeness', async (t) => {
       `${rival.personality.name} should have non-empty bribe message`
     )
 
-    // Check messages are different (no copy-paste errors)
     const messages = [
       personality.greeting,
       personality.victory,
@@ -311,32 +315,29 @@ test('RivalDataLoader rival personality completeness', async (t) => {
   }
 })
 
-test('RivalDataLoader rival balance validation', async (t) => {
+test.serial('RivalDataLoader rival balance validation', (t) => {
+  resetSingletons()
   const loader = RivalDataLoader.getInstance()
   const manager = RivalAlchemistManager.getInstance()
 
-  await loader.loadRivals()
+  loader.loadRivals()
 
   const allRivals = manager.getAllRivals()
 
-  // Check that rivals have balanced stats (no rival should be overpowered in all areas)
   for (const rival of allRivals) {
     const totalStats = rival.strength + rival.cunning + rival.wealth
     const maxStat = Math.max(rival.strength, rival.cunning, rival.wealth)
 
-    // No rival should have maximum stats in all areas
     t.true(
       totalStats < 30,
       `${rival.personality.name} should not have maximum stats in all areas`
     )
 
-    // Each rival should have at least one strong area
     t.true(
       maxStat >= 6,
       `${rival.personality.name} should have at least one strong stat`
     )
 
-    // Reputation should be reasonable
     t.true(
       rival.reputation >= 0 && rival.reputation <= 100,
       `${rival.personality.name} reputation should be 0-100`

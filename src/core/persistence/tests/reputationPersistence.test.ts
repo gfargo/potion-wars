@@ -4,22 +4,26 @@ import { createGameState } from '../../state/tests/utils/testHelper.js'
 import { saveGame, loadGame } from '../saveLoad.js'
 import { SaveFileManager, SaveFileType } from '../utils.js'
 import {
-  isValidReputationState,
-  isValidReputationChange,
-  sanitizeReputationState,
-  createDefaultReputationState,
+    isValidReputationState,
+    isValidReputationChange,
+    sanitizeReputationState,
+    createDefaultReputationState,
 } from '../reputationValidation.js'
 
-// Helper to clean up test files
+// This file exclusively uses slot 3 to avoid cross-file filesystem contamination.
+// Other persistence test files use different slots:
+//   SaveFileManager → slot 1
+//   saveLoadSystemUpdates → slot 2
+//   reputationIntegration → slots 4, 5
+const SLOT = 3
+
 const cleanup = () => {
   const manager = SaveFileManager.getInstance()
-  for (let slot = 1; slot <= 5; slot++) {
-    try {
-      manager.clearSaveFile(slot, SaveFileType.GAME_SAVE)
-      manager.clearSaveFile(slot, SaveFileType.GAME_LOG)
-    } catch {
-      // Ignore cleanup errors
-    }
+  try {
+    manager.clearSaveFile(SLOT, SaveFileType.GAME_SAVE)
+    manager.clearSaveFile(SLOT, SaveFileType.GAME_LOG)
+  } catch {
+    // Ignore cleanup errors
   }
 }
 
@@ -187,7 +191,7 @@ test('createDefaultReputationState creates valid default state', (t) => {
 })
 
 // Save/Load Integration Tests
-test('saves and loads game state with reputation data', (t) => {
+test.serial('saves and loads game state with reputation data', (t) => {
   const gameState = createGameState({
     reputation: {
       global: 25,
@@ -202,8 +206,8 @@ test('saves and loads game state with reputation data', (t) => {
     },
   })
 
-  saveGame(gameState, 1)
-  const loadedState = loadGame(1)
+  saveGame(gameState, SLOT)
+  const loadedState = loadGame(SLOT)
 
   t.truthy(loadedState)
   t.is(loadedState!.reputation.global, 25)
@@ -213,7 +217,7 @@ test('saves and loads game state with reputation data', (t) => {
   t.is(loadedState!.reputation.npcRelationships['guard_captain'], -5)
 })
 
-test('sanitizes reputation data when saving', (t) => {
+test.serial('sanitizes reputation data when saving', (t) => {
   const gameState = createGameState({
     reputation: {
       global: 150, // Will be clamped to 100
@@ -226,8 +230,8 @@ test('sanitizes reputation data when saving', (t) => {
     },
   })
 
-  saveGame(gameState, 1)
-  const loadedState = loadGame(1)
+  saveGame(gameState, SLOT)
+  const loadedState = loadGame(SLOT)
 
   t.truthy(loadedState)
   t.is(loadedState!.reputation.global, 100)
@@ -235,7 +239,7 @@ test('sanitizes reputation data when saving', (t) => {
   t.is(loadedState!.reputation.npcRelationships['merchant_aldric'], 100)
 })
 
-test('migrates legacy save file without reputation data', (t) => {
+test.serial('migrates legacy save file without reputation data', (t) => {
   const manager = SaveFileManager.getInstance()
 
   // Create a legacy save file without reputation data
@@ -259,10 +263,10 @@ test('migrates legacy save file without reputation data', (t) => {
   }
 
   // Write the legacy state directly
-  manager.writeSaveFile(2, SaveFileType.GAME_SAVE, legacyState)
+  manager.writeSaveFile(SLOT, SaveFileType.GAME_SAVE, legacyState)
 
   // Load it - should trigger migration
-  const loadedState = loadGame(2)
+  const loadedState = loadGame(SLOT)
 
   t.truthy(loadedState)
   t.is(loadedState!.day, 5)
@@ -281,7 +285,7 @@ test('migrates legacy save file without reputation data', (t) => {
   t.deepEqual(loadedState!.tradeHistory, [])
 })
 
-test('migrates legacy save file with invalid reputation data', (t) => {
+test.serial('migrates legacy save file with invalid reputation data', (t) => {
   const manager = SaveFileManager.getInstance()
 
   // Create a save file with invalid reputation data
@@ -307,10 +311,10 @@ test('migrates legacy save file with invalid reputation data', (t) => {
   }
 
   // Write the invalid state directly
-  manager.writeSaveFile(3, SaveFileType.GAME_SAVE, invalidState)
+  manager.writeSaveFile(SLOT, SaveFileType.GAME_SAVE, invalidState)
 
   // Load it - should trigger migration
-  const loadedState = loadGame(3)
+  const loadedState = loadGame(SLOT)
 
   t.truthy(loadedState)
   t.is(loadedState!.day, 10)
@@ -326,7 +330,7 @@ test('migrates legacy save file with invalid reputation data', (t) => {
   t.deepEqual(loadedState!.tradeHistory, [])
 })
 
-test('preserves valid reputation data during migration', (t) => {
+test.serial('preserves valid reputation data during migration', (t) => {
   const manager = SaveFileManager.getInstance()
 
   // Create a save file with some valid reputation data but missing other fields
@@ -359,10 +363,10 @@ test('preserves valid reputation data during migration', (t) => {
   }
 
   // Write the partial state directly
-  manager.writeSaveFile(1, SaveFileType.GAME_SAVE, partialState)
+  manager.writeSaveFile(SLOT, SaveFileType.GAME_SAVE, partialState)
 
   // Load it - should trigger migration
-  const loadedState = loadGame(1)
+  const loadedState = loadGame(SLOT)
 
   t.truthy(loadedState)
 

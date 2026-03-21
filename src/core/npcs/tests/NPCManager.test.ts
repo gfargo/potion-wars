@@ -63,9 +63,11 @@ const mockGameState: GameState = {
   tradeHistory: [],
 }
 
-// Helper to clean up NPCs
+// Helper to clean up NPCs and caches
 const cleanup = () => {
-  NPCManager.getInstance().clearNPCs()
+  const manager = NPCManager.getInstance()
+  manager.clearNPCs()
+  manager.clearCaches()
 }
 
 test.beforeEach(cleanup)
