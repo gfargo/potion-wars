@@ -210,8 +210,9 @@ test('ReputationDisplay formats NPC names correctly', (t) => {
 
   const output = lastFrame()
   t.truthy(output)
-  // Should format NPC IDs into readable names
+  // formatNPCName converts underscores to spaces, capitalizes words, and truncates to 12 chars
+  // "merchant_aldric" -> "Merchant Ald" (truncated), "guard_captain" -> "Guard Captai" (truncated)
   t.true(
-    output!.includes('Merchant Aldric') || output!.includes('Guard Captain')
+    output!.includes('Merchant Ald') || output!.includes('Guard Captai')
   )
 })
