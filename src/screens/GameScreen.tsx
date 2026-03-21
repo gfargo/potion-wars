@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
 import Gradient from 'ink-gradient'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useStore } from '../store/appStore.js'
 import {
@@ -20,6 +20,7 @@ import {
     Weather,
 } from '../ui/components/game/index.js'
 import { NPCManager } from '../core/npcs/NPCManager.js'
+import { TutorialSystem, useTutorial } from '../ui/components/common/TutorialSystem.js'
 import MultiStepEventScreen from './MultiStepEventScreen.js'
 import NPCInteractionScreen from './NPCInteractionScreen.js'
 import TravelingScreen from './TravelingScreen.js'
@@ -34,62 +35,69 @@ export function GameScreen() {
   const locationName = useStore((state) => state.game.location.name)
   const currentNPCId = useStore((state) => state.npc.current?.npcId)
   const endNPCInteraction = useStore((state) => state.endNPCInteraction)
+  const day = useStore((state) => state.game.day)
 
   const [isTraveling, setIsTraveling] = useState(false)
   const [previousLocation, setPreviousLocation] = useState<string | undefined>(
     undefined
   )
 
+  // Tutorial system
+  const {
+    currentTutorialStep,
+    triggerTutorial,
+    completeTutorialStep,
+    skipTutorial,
+  } = useTutorial()
+  const hasTriggeredStart = useRef(false)
+  const hasTriggeredTravel = useRef(false)
+  const hasTriggeredNPC = useRef(false)
+  const hasTriggeredMarket = useRef(false)
+
+  // Trigger game_start tutorial on first render
+  useEffect(() => {
+    if (!hasTriggeredStart.current) {
+      hasTriggeredStart.current = true
+      triggerTutorial('game_start')
+    }
+  }, [])
+
+  // Trigger first_travel after first travel completes (day goes from 0 to 1+)
+  useEffect(() => {
+    if (day > 0 && !hasTriggeredTravel.current) {
+      hasTriggeredTravel.current = true
+      triggerTutorial('first_travel')
+    }
+  }, [day])
+
+  // Trigger first_npc when NPC interaction starts
+  useEffect(() => {
+    if (showNPC && currentNPCId && !hasTriggeredNPC.current) {
+      hasTriggeredNPC.current = true
+      triggerTutorial('first_npc')
+    }
+  }, [showNPC, currentNPCId])
+
+  // Trigger first_market_view after game_start tutorial is dismissed
+  const handleTutorialComplete = () => {
+    completeTutorialStep()
+    if (!hasTriggeredMarket.current && hasTriggeredStart.current) {
+      hasTriggeredMarket.current = true
+      // Small delay so the market tutorial doesn't stack immediately
+      setTimeout(() => {
+        triggerTutorial('first_market_view')
+      }, 100)
+    }
+  }
+
   // Track location changes for travel animation
   useEffect(() => {
     if (activeScreen === 'traveling' && !previousLocation) {
-      // When entering traveling screen, capture the current location as "from"
       setPreviousLocation(locationName)
     } else if (activeScreen === 'game' && previousLocation) {
-      // When returning to game screen, clear the previous location
       setPreviousLocation(undefined)
     }
   }, [activeScreen, locationName, previousLocation])
-
-  // Const handleSave = (slot: number) => {
-  //   handleAction('saveGame', { slot })
-  // }
-
-  // const handleTravel = (location: string) => {
-  //   setIsTraveling(true)
-  //   setTimeout(() => {
-  //     handleAction('travel', { location })
-  //     setIsTraveling(false)
-  //   }, 4000)
-  // }
-
-  // const actionMenuItems = [
-  //   ...potions.map((potion, index) => ({
-  //     label: `Brew ${potion.name}`,
-  //     value: `brew_${potion.name}`,
-  //     hotkey: `${index + 1}`,
-  //     indicator: '🧪',
-  //     disabled: gameState.cash < potion.minPrice
-  //   })),
-  //   ...potions.map((potion, index) => ({
-  //     label: `Sell ${potion.name}`,
-  //     value: `sell_${potion.name}`,
-  //     hotkey: `${index + 1 + potions.length}`,
-  //     indicator: '💰',
-  //     disabled: !gameState.inventory[potion.name] || gameState.inventory[potion.name] === 0
-  //   })),
-  //   ...locations.map((location, index) => ({
-  //     label: `Travel to ${location.name}`,
-  //     value: `travel_${location.name}`,
-  //     hotkey: `${String.fromCharCode(97 + index)}`,
-  //     indicator: '🏃‍♂️',
-  //     disabled: location.name === gameState.location.name
-  //   })),
-  //   { label: 'Repay Debt', value: 'repay_debt', hotkey: 'r', indicator: '💸', disabled: gameState.cash === 0 || gameState.debt === 0 },
-  //   { label: 'Save Game (Slot 1)', value: 'save_0', hotkey: 's', indicator: '💾' },
-  //   { label: 'Save Game (Slot 2)', value: 'save_1', hotkey: 'S', indicator: '💾' },
-  //   { label: 'Save Game (Slot 3)', value: 'save_2', hotkey: 'D', indicator: '💾' },
-  // ]
 
   // Show traveling screen when screen state is 'traveling'
   if (activeScreen === 'traveling' || isTraveling) {
@@ -140,6 +148,11 @@ export function GameScreen() {
 
   return (
     <Box flexDirection="column" height="100%">
+      <TutorialSystem
+        currentStep={currentTutorialStep}
+        onComplete={handleTutorialComplete}
+        onSkip={skipTutorial}
+      />
       <Box
         marginTop={1}
         alignItems="center"
