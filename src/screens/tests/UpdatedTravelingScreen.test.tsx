@@ -3,15 +3,29 @@ import React from 'react'
 import { render } from 'ink-testing-library'
 import { TravelingScreen } from '../TravelingScreen.js'
 import { TestWrapper } from '../../core/state/tests/utils/TestWrapper.js'
+import { useStore } from '../../store/appStore.js'
 
-test('Updated TravelingScreen shows travel animation', (t) => {
+/**
+ * Helper to pre-seed store and render TravelingScreen
+ */
+function renderTravelScreen(fromLocation?: string) {
   const onFinish = () => {}
 
-  const { lastFrame } = render(
-    <TestWrapper>
-      <TravelingScreen fromLocation="Market Square" onFinish={onFinish} />
+  // Pre-seed store before render
+  useStore.getState().resetGame()
+  useStore.setState((state) => {
+    state.ui.activeScreen = 'traveling'
+  })
+
+  return render(
+    <TestWrapper screen="traveling">
+      <TravelingScreen fromLocation={fromLocation} onFinish={onFinish} />
     </TestWrapper>
   )
+}
+
+test('Updated TravelingScreen shows travel animation', (t) => {
+  const { lastFrame } = renderTravelScreen('Market Square')
 
   const output = lastFrame()
   t.truthy(output)
@@ -20,13 +34,7 @@ test('Updated TravelingScreen shows travel animation', (t) => {
 })
 
 test('Updated TravelingScreen shows progress indicator', (t) => {
-  const onFinish = () => {}
-
-  const { lastFrame } = render(
-    <TestWrapper>
-      <TravelingScreen onFinish={onFinish} />
-    </TestWrapper>
-  )
+  const { lastFrame } = renderTravelScreen()
 
   const output = lastFrame()
   t.truthy(output)
@@ -37,13 +45,7 @@ test('Updated TravelingScreen shows progress indicator', (t) => {
 })
 
 test('Updated TravelingScreen shows flavor text', (t) => {
-  const onFinish = () => {}
-
-  const { lastFrame } = render(
-    <TestWrapper>
-      <TravelingScreen fromLocation="Market Square" onFinish={onFinish} />
-    </TestWrapper>
-  )
+  const { lastFrame } = renderTravelScreen('Market Square')
 
   const output = lastFrame()
   t.truthy(output)
@@ -52,13 +54,7 @@ test('Updated TravelingScreen shows flavor text', (t) => {
 })
 
 test('Updated TravelingScreen maintains skip functionality', (t) => {
-  const onFinish = () => {}
-
-  const { lastFrame } = render(
-    <TestWrapper>
-      <TravelingScreen onFinish={onFinish} />
-    </TestWrapper>
-  )
+  const { lastFrame } = renderTravelScreen()
 
   const output = lastFrame()
   t.truthy(output)
@@ -66,13 +62,7 @@ test('Updated TravelingScreen maintains skip functionality', (t) => {
 })
 
 test('Updated TravelingScreen shows day information', (t) => {
-  const onFinish = () => {}
-
-  const { lastFrame } = render(
-    <TestWrapper>
-      <TravelingScreen onFinish={onFinish} />
-    </TestWrapper>
-  )
+  const { lastFrame } = renderTravelScreen()
 
   const output = lastFrame()
   t.truthy(output)

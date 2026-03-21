@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useStore, type Message, type Screen } from '../../../../store/appStore.js'
 import { type GameState } from '../../../../types/game.types.js'
 
@@ -10,7 +10,10 @@ type TestWrapperProperties = {
 }
 
 /**
- * Wrapper component that initializes Zustand store for testing
+ * Wrapper component that initializes Zustand store for testing.
+ *
+ * State is set synchronously during render via useMemo so the
+ * first frame already has the correct state.
  */
 export function TestWrapper({
   children,
@@ -18,27 +21,32 @@ export function TestWrapper({
   messages = [],
   screen = 'game',
 }: TestWrapperProperties) {
-  const resetGame = useStore((state) => state.resetGame)
+  // Set state synchronously during render (not in useEffect)
+  React.useMemo(() => {
+    useStore.getState().resetGame()
 
-  useEffect(() => {
-    // Reset store to initial state
-    resetGame()
+    useStore.setState((state) => {
+      if (gameState) {
+        // Extract event-related fields and route them to events.*
+        const { currentEvent, currentStep, ...restGameState } = gameState
+        Object.assign(state.game, restGameState)
 
-    // Apply test-specific overrides
-    const store = useStore.getState()
+        if (currentEvent) {
+          state.events.current = currentEvent
+          state.events.phase = 'choice'
+          state.events.currentStep = currentStep ?? 0
+        }
+      }
 
-    if (gameState) {
-      store.game = { ...store.game, ...gameState }
-    }
+      if (messages.length > 0) {
+        state.messages = messages
+      }
 
-    if (messages.length > 0) {
-      store.messages = messages
-    }
-
-    if (screen) {
-      store.ui.activeScreen = screen
-    }
-  }, [gameState, messages, screen, resetGame])
+      if (screen) {
+        state.ui.activeScreen = screen
+      }
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return <>{children}</>
 }

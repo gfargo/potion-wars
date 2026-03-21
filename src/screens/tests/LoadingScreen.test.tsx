@@ -10,7 +10,6 @@ test('shows loading message', (t) => {
 
 test('shows skip confirmation text', (t) => {
   const rendered = renderWithContext(LoadingScreen)
-  // Check for loading spinner characters
   const frame = rendered.lastFrame()
   t.true(frame?.includes('Press Enter to skip'))
 })
@@ -20,20 +19,19 @@ test('shows different animation frames', async (t) => {
 
   const frames = new Set<string>()
 
-  // Capture frames for a short period
-  await Promise.all(
-    Array.from(
-      { length: 5 },
-      async (_, i) =>
-        new Promise<void>((resolve) => {
-          frames.add(rendered.lastFrame() ?? '')
-          setTimeout(resolve, 200 * i)
-        })
-    )
-  )
+  // Capture frames over time — animation runs at 280ms intervals
+  for (let i = 0; i < 6; i++) {
+    frames.add(rendered.lastFrame() ?? '')
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300)
+    })
+  }
 
-  // Should have captured different frames
-  t.true(frames.size > 1)
+  // Cleanup to prevent timer leaks
+  rendered.unmount()
+
+  // Should have captured at least 2 different frames
+  t.true(frames.size >= 2, `Expected >= 2 unique frames, got ${frames.size}`)
 })
 
 test('handles unmount during loading', (t) => {

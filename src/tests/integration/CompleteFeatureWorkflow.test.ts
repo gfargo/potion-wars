@@ -12,9 +12,9 @@ import { type NPC } from '../../types/npc.types.js'
 const createCompleteGameState = (): GameState => ({
   day: 10,
   location: {
-    name: 'Market Square',
-    description: 'A bustling marketplace',
-    dangerLevel: 2,
+    name: "Merchant's District",
+    description: 'A diverse area with a mix of wealthy traders and common folk.',
+    dangerLevel: 6,
   },
   weather: 'sunny',
   cash: 1000,
@@ -31,7 +31,7 @@ const createCompleteGameState = (): GameState => ({
   reputation: {
     global: 25,
     locations: {
-      'Market Square': 40,
+      "Merchant's District": 40,
       'Royal Castle': -10,
       'Enchanted Forest': 60,
     },
@@ -58,7 +58,7 @@ const createTestMerchantNPC = (): NPC => ({
     lowReputation: "I've heard troubling things about you...",
     highReputation: 'Ah, my most valued customer returns!',
   },
-  location: 'Market Square',
+  location: "Merchant's District",
   availability: {
     probability: 0.8,
     timeRestriction: [1, 30],
@@ -229,6 +229,10 @@ const createTestMerchantNPC = (): NPC => ({
                 value: 3,
                 item: 'Mana Potion',
               },
+              {
+                type: 'cash',
+                value: -150,
+              },
             ],
           },
           {
@@ -290,12 +294,12 @@ test('Complete NPC encounter workflow with dialogue and trading', async (t) => {
   t.true(isAvailable, 'NPC should be available based on game state')
 
   // Step 3: Get NPCs for location
-  const locationNPCs = npcManager.getNPCsForLocation('Market Square', gameState)
+  const locationNPCs = npcManager.getNPCsForLocation("Merchant's District", gameState)
   t.is(locationNPCs.length, 1)
   t.is(locationNPCs[0]?.id, 'merchant_aldric')
 
   // Step 4: Roll for encounter
-  const encounteredNPC = npcManager.rollForEncounter('Market Square', gameState)
+  const encounteredNPC = npcManager.rollForEncounter("Merchant's District", gameState)
   t.truthy(encounteredNPC, 'Should encounter an NPC with high probability')
 
   // Step 5: Start dialogue
@@ -309,20 +313,21 @@ test('Complete NPC encounter workflow with dialogue and trading', async (t) => {
   )
   t.truthy(tradeChoice, 'Should have trade option available')
 
-  // Step 7: Process trade choice
+  // Step 7: Process trade choice — use getNextNode to navigate dialogue tree
   let updatedState = DialogueEngine.handleChoice(
     tradeChoice!,
     gameState,
     npc.location
   )
-  const tradeNode = DialogueEngine.processDialogue(npc, updatedState)
-  t.is(tradeNode.id, 'trade')
+  const tradeNode = DialogueEngine.getNextNode(npc, tradeChoice!, updatedState)
+  t.truthy(tradeNode, 'Should navigate to trade node')
+  t.is(tradeNode!.id, 'trade')
 
   // Step 8: Check reputation-gated options
-  const rareTradeChoice = tradeNode.choices.find((choice: any) =>
+  const rareTradeChoice = tradeNode!.choices.find((choice: any) =>
     choice.text.includes('rare')
   )
-  if (updatedState.reputation.locations['Market Square']! >= 20) {
+  if (updatedState.reputation.locations["Merchant's District"]! >= 20) {
     t.truthy(
       rareTradeChoice,
       'Should have rare trade option with sufficient reputation'
@@ -330,7 +335,7 @@ test('Complete NPC encounter workflow with dialogue and trading', async (t) => {
   }
 
   // Step 9: Execute basic trade
-  const basicTradeChoice = tradeNode.choices.find((choice: any) =>
+  const basicTradeChoice = tradeNode!.choices.find((choice: any) =>
     choice.text.includes('basic')
   )
   t.truthy(basicTradeChoice, 'Should have basic trade option')
@@ -340,10 +345,11 @@ test('Complete NPC encounter workflow with dialogue and trading', async (t) => {
     updatedState,
     npc.location
   )
-  const basicTradeNode = DialogueEngine.processDialogue(npc, updatedState)
+  const basicTradeNode = DialogueEngine.getNextNode(npc, basicTradeChoice!, updatedState)
+  t.truthy(basicTradeNode, 'Should navigate to basic trade node')
 
   // Step 10: Complete purchase
-  const purchaseChoice = basicTradeNode.choices.find((choice: any) =>
+  const purchaseChoice = basicTradeNode!.choices.find((choice: any) =>
     choice.text.includes('Buy')
   )
   t.truthy(purchaseChoice, 'Should have purchase option')
@@ -385,15 +391,15 @@ test('Market dynamics integration with reputation and NPC trading', (t) => {
   const gameState = createCompleteGameState()
   const npc = createTestMerchantNPC()
 
-  // Step 1: Get initial market data
+  // Step 1: Get initial market data (use actual location and potion names)
   const initialMarketData =
-    gameState.marketData['Market Square']!['Healing Potion']!
+    gameState.marketData["Merchant's District"]!['Wisdom Draught']!
   const initialPrice = initialMarketData.currentPrice
 
   // Step 2: Calculate reputation-modified price
   const playerReputation = ReputationManager.getLocationReputation(
     gameState.reputation,
-    'Market Square'
+    "Merchant's District"
   )
   const reputationModifier =
     ReputationManager.calculatePriceModifier(playerReputation)
@@ -510,7 +516,7 @@ test('Save/load compatibility with all new features', (t) => {
   // Step 2: Modify state with reputation changes
   const reputationChange = {
     global: 5,
-    location: 'Market Square',
+    location: "Merchant's District",
     locationChange: 10,
     npc: npc.id,
     npcChange: 15,
@@ -551,7 +557,7 @@ test('Save/load compatibility with all new features', (t) => {
   // Step 7: Verify systems work with loaded state
   const loadedReputation = ReputationManager.getLocationReputation(
     deserializedState.reputation,
-    'Market Square'
+    "Merchant's District"
   )
   t.true(
     loadedReputation > 0,
@@ -559,7 +565,7 @@ test('Save/load compatibility with all new features', (t) => {
   )
 
   const availableNPCs = npcManager.getNPCsForLocation(
-    'Market Square',
+    "Merchant's District",
     deserializedState
   )
   t.is(availableNPCs.length, 1, 'NPC system should work with loaded state')
@@ -632,7 +638,7 @@ test('Error handling and edge cases across all systems', async (t) => {
   // Should not crash with extreme values
   const extremeLocationRep = ReputationManager.getLocationReputation(
     extremeGameState.reputation,
-    'Market Square'
+    "Merchant's District"
   )
   t.true(
     typeof extremeLocationRep === 'number',
@@ -661,14 +667,14 @@ test('Performance with complex multi-system interactions', async (t) => {
 
   for (let i = 0; i < 50; i++) {
     // NPC operations
-    // const npcs = npcManager.getNPCsForLocation('Market Square', gameState)
-    const encounter = npcManager.rollForEncounter('Market Square', gameState)
+    // const npcs = npcManager.getNPCsForLocation("Merchant's District", gameState)
+    const encounter = npcManager.rollForEncounter("Merchant's District", gameState)
 
     // Reputation calculations
     // const priceModifier = ReputationManager.calculatePriceModifier(locationRep)
 
     // Market calculations
-    // const marketData = gameState.marketData['Market Square']!['Healing Potion']!
+    // const marketData = gameState.marketData["Merchant's District"]!['Healing Potion']!
     // const dynamicPrice = EnhancedEconomyManager.calculateDynamicPrice(marketData, priceModifier)
 
     // Animation operations
@@ -701,8 +707,8 @@ test('Memory usage with extended gameplay simulation', async (t) => {
 
     // Daily NPC encounters
     for (let encounter = 0; encounter < 5; encounter++) {
-      npcManager.getNPCsForLocation('Market Square', currentState)
-      npcManager.rollForEncounter('Market Square', currentState)
+      npcManager.getNPCsForLocation("Merchant's District", currentState)
+      npcManager.rollForEncounter("Merchant's District", currentState)
     }
 
     // Daily market updates
@@ -711,7 +717,7 @@ test('Memory usage with extended gameplay simulation', async (t) => {
     // Daily reputation changes
     const repChange = {
       global: Math.floor(Math.random() * 3) - 1,
-      location: 'Market Square',
+      location: "Merchant's District",
       locationChange: Math.floor(Math.random() * 5) - 2,
     }
     currentState = ReputationManager.applyReputationChange(
@@ -732,7 +738,7 @@ test('Memory usage with extended gameplay simulation', async (t) => {
   )
 
   // Verify systems still work correctly after extended use
-  const finalNPCs = npcManager.getNPCsForLocation('Market Square', currentState)
+  const finalNPCs = npcManager.getNPCsForLocation("Merchant's District", currentState)
   t.true(
     finalNPCs.length >= 0,
     'NPC system should still work after extended simulation'
@@ -740,7 +746,7 @@ test('Memory usage with extended gameplay simulation', async (t) => {
 
   const finalReputation = ReputationManager.getLocationReputation(
     currentState.reputation,
-    'Market Square'
+    "Merchant's District"
   )
   t.true(
     typeof finalReputation === 'number',

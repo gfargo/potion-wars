@@ -39,9 +39,9 @@ const createLegacyGameState = (): any => ({
 const createModernGameState = (): GameState => ({
   day: 20,
   location: {
-    name: 'Market Square',
-    description: 'A bustling marketplace',
-    dangerLevel: 1,
+    name: "Merchant's District",
+    description: 'A diverse area with a mix of wealthy traders and common folk.',
+    dangerLevel: 6,
   },
   weather: 'rainy',
   cash: 2000,
@@ -59,7 +59,7 @@ const createModernGameState = (): GameState => ({
   reputation: {
     global: 35,
     locations: {
-      'Market Square': 50,
+      "Merchant's District": 50,
       'Royal Castle': 25,
       'Enchanted Forest': 60,
       'Peasant Village': 15,
@@ -89,7 +89,7 @@ const createTestNPC = (): NPC => ({
     lowReputation: 'Bad rep',
     highReputation: 'Good rep',
   },
-  location: 'Market Square',
+  location: "Merchant's District",
   availability: {
     probability: 0.7,
     timeRestriction: [1, 30],
@@ -258,8 +258,8 @@ test('NPC data persistence and restoration', (t) => {
 test('Market data persistence with price history', (t) => {
   const gameState = createModernGameState()
 
-  // Modify market data with transactions
-  const marketData = gameState.marketData['Market Square']!['Healing Potion']!
+  // Modify market data with transactions (use actual location name)
+  const marketData = gameState.marketData["Merchant's District"]!['Wisdom Draught']!
   const updatedMarketData = EnhancedEconomyManager.recordTransaction(
     marketData,
     10, // Large purchase
@@ -267,7 +267,7 @@ test('Market data persistence with price history', (t) => {
     true
   )
 
-  gameState.marketData['Market Square']!['Healing Potion'] = updatedMarketData
+  gameState.marketData["Merchant's District"]!['Wisdom Draught'] = updatedMarketData
 
   // Serialize and deserialize
   const serialized = JSON.stringify(gameState)
@@ -275,7 +275,7 @@ test('Market data persistence with price history', (t) => {
 
   // Verify market data is preserved
   const deserializedMarketData =
-    deserialized.marketData['Market Square']!['Healing Potion']!
+    deserialized.marketData["Merchant's District"]!['Wisdom Draught']!
   t.deepEqual(
     deserializedMarketData.history,
     updatedMarketData.history,
@@ -416,7 +416,7 @@ function validateGameState(state: any): boolean {
   try {
     // Check required properties
     if (typeof state.day !== 'number') return false
-    if (typeof state.location !== 'string') return false
+    if (typeof state.location !== 'object' || !state.location?.name) return false
     if (typeof state.cash !== 'number') return false
 
     // Check reputation structure
@@ -428,6 +428,11 @@ function validateGameState(state: any): boolean {
     // Check market data structure
     if (!state.marketData) return false
     if (typeof state.marketData !== 'object') return false
+
+    // Validate market data values are objects (not primitives)
+    for (const value of Object.values(state.marketData)) {
+      if (typeof value !== 'object' || value === null) return false
+    }
 
     return true
   } catch {
