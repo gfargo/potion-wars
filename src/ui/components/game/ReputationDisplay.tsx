@@ -2,8 +2,8 @@ import { Box, Text, useInput } from 'ink'
 import React, { useEffect } from 'react'
 import { ReputationManager } from '../../../core/reputation/ReputationManager.js'
 import {
-  ReputationLevel,
-  type ReputationState,
+    ReputationLevel,
+    type ReputationState,
 } from '../../../types/reputation.types.js'
 import { useContextualHelp, ContextualHelp } from '../common/index.js'
 
@@ -239,7 +239,7 @@ function getReputationColor(level: ReputationLevel): string {
 function formatNPCName(npcId: string): string {
   return npcId
     .replaceAll('_', ' ')
-    .replaceAll(/\b\w/g, (l) => l.toUpperCase())
+    .replaceAll(/\b\w/g, (l: string) => l.toUpperCase())
     .slice(0, 12) // Truncate long names
 }
 

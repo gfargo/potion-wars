@@ -14,7 +14,7 @@ export class PersistenceError extends Error {
     public readonly code: string,
     public readonly slot?: number,
     public readonly type?: SaveFileType,
-    public override readonly cause?: Error
+    public override readonly cause?: unknown
   ) {
     super(message)
     this.name = 'PersistenceError'

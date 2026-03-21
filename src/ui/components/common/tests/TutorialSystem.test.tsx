@@ -9,8 +9,8 @@ import {
     TUTORIAL_STEPS,
 } from '../TutorialSystem.js'
 
-// Helper to wait for React effects
-const tick = (ms = 50) => new Promise((resolve) => {
+// Helper to wait for React effects — React 19 batches more aggressively
+const tick = (ms = 150) => new Promise((resolve) => {
   setTimeout(resolve, ms)
 })
 
@@ -42,7 +42,7 @@ const TestTutorialComponent: React.FC<{ readonly triggerStep?: string }> = ({
   )
 }
 
-test('TutorialSystem renders welcome step correctly', async (t) => {
+test.serial('TutorialSystem renders welcome step correctly', async (t) => {
   const { lastFrame, unmount } = render(
     <TestTutorialComponent triggerStep="game_start" />
   )
@@ -56,7 +56,7 @@ test('TutorialSystem renders welcome step correctly', async (t) => {
   unmount()
 })
 
-test('TutorialSystem shows navigation instructions', async (t) => {
+test.serial('TutorialSystem shows navigation instructions', async (t) => {
   const { lastFrame, unmount } = render(
     <TestTutorialComponent triggerStep="first_travel" />
   )
@@ -70,7 +70,7 @@ test('TutorialSystem shows navigation instructions', async (t) => {
   unmount()
 })
 
-test('TutorialSystem handles Enter key to complete step', async (t) => {
+test.serial('TutorialSystem handles Enter key to complete step', async (t) => {
   const { lastFrame, stdin, unmount } = render(
     <TestTutorialComponent triggerStep="first_npc" />
   )
@@ -88,7 +88,7 @@ test('TutorialSystem handles Enter key to complete step', async (t) => {
   unmount()
 })
 
-test('TutorialSystem handles skip tutorial', async (t) => {
+test.serial('TutorialSystem handles skip tutorial', async (t) => {
   const { lastFrame, stdin, unmount } = render(
     <TestTutorialComponent triggerStep="first_market_view" />
   )
@@ -106,7 +106,7 @@ test('TutorialSystem handles skip tutorial', async (t) => {
   unmount()
 })
 
-test('TutorialSystem handles escape key', async (t) => {
+test.serial('TutorialSystem handles escape key', async (t) => {
   const { lastFrame, stdin, unmount } = render(
     <TestTutorialComponent triggerStep="game_start" />
   )
