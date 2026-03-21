@@ -116,6 +116,24 @@ export const HELP_HINTS: Record<string, HelpHint> = {
     trigger: 'first_time',
     context: 'travel_animation',
   },
+
+  combat_encounter: {
+    id: 'combat_encounter',
+    title: 'Combat',
+    content:
+      'Use [A]ttack to deal damage, [D]efend to reduce incoming hits, [P]otion to heal or buff, or [F]lee to escape. Defending boosts your agility for the round.',
+    trigger: 'first_time',
+    context: 'combat',
+  },
+
+  game_over: {
+    id: 'game_over',
+    title: 'Game Over',
+    content:
+      'Your journey has ended. Review your stats and try a different strategy next time. Press Enter to return to the main menu.',
+    trigger: 'always',
+    context: 'game_over',
+  },
 }
 
 // Hook for managing contextual help state

@@ -7,6 +7,7 @@ import {
     selectShouldShowEvent,
     selectShouldShowNPC,
     selectActiveScreen,
+    selectActiveCombat,
 } from '../store/selectors.js'
 import {
     ActionMenu,
@@ -24,6 +25,7 @@ import { TutorialSystem, useTutorial } from '../ui/components/common/TutorialSys
 import MultiStepEventScreen from './MultiStepEventScreen.js'
 import NPCInteractionScreen from './NPCInteractionScreen.js'
 import TravelingScreen from './TravelingScreen.js'
+import CombatScreen from './CombatScreen.js'
 
 export function GameScreen() {
   // Get state from Zustand store using selectors
@@ -32,6 +34,7 @@ export function GameScreen() {
   const activeScreen = useStore(selectActiveScreen)
   const showEvent = useStore(selectShouldShowEvent)
   const showNPC = useStore(selectShouldShowNPC)
+  const activeCombat = useStore(selectActiveCombat)
   const locationName = useStore((state) => state.game.location.name)
   const currentNPCId = useStore((state) => state.npc.current?.npcId)
   const endNPCInteraction = useStore((state) => state.endNPCInteraction)
@@ -110,6 +113,10 @@ export function GameScreen() {
         }}
       />
     )
+  }
+
+  if (activeCombat) {
+    return <CombatScreen />
   }
 
   if (showEvent) {

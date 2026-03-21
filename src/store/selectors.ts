@@ -248,6 +248,14 @@ export const selectCurrentNPCId = (state: AppState) => state.npc.current?.npcId
 export const selectCurrentNPCType = (state: AppState) => state.npc.current?.type
 
 // ==========================================
+// Combat State Selectors
+// ==========================================
+
+export const selectActiveCombat = (state: AppState) => state.combat.active
+export const selectIsInCombat = (state: AppState) =>
+  state.combat.active !== undefined && state.combat.active.phase !== 'resolved'
+
+// ==========================================
 // Message Selectors
 // ==========================================
 

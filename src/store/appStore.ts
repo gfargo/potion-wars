@@ -12,6 +12,11 @@ import {
     type LocationMarketState,
     type TradeTransaction,
 } from '../types/economy.types.js'
+import {
+    type ActiveCombat,
+    type CombatAction,
+    type Enemy,
+} from '../types/combat.types.js'
 import { potions, locations } from '../constants.js'
 
 // Message types
@@ -26,7 +31,9 @@ export type MessageType =
 import { generateDynamicPrices } from '../core/game/economy.js'
 import { EnhancedEconomyManager } from '../core/game/enhancedEconomy.js'
 import { triggerRandomEvent } from '../core/events/index.js'
-import { checkNPCEncounter, travelCombat } from '../core/game/travel.js'
+import { checkNPCEncounter } from '../core/game/travel.js'
+import { calculateDamage } from '../core/combat/actions.js'
+import { generateEnemy } from '../core/combat/enemies.js'
 import {
     saveGame as saveToDisk,
     loadGame as loadFromDisk,
@@ -122,6 +129,11 @@ export type AppState = {
     current: NPCInteractionState | undefined
   }
 
+  // === Combat State ===
+  combat: {
+    active: ActiveCombat | undefined
+  }
+
   // === Messages ===
   messages: Message[]
 }
@@ -160,6 +172,11 @@ export type AppStore = AppState & {
     interactionType: 'dialogue' | 'trade' | 'information'
   ) => void
   endNPCInteraction: () => void
+
+  // Combat actions
+  startCombat: (enemy: Enemy) => void
+  performCombatAction: (action: CombatAction, potionName?: string) => void
+  endCombat: () => void
 
   // Message actions
   addMessage: (type: MessageType, content: string) => void
@@ -225,6 +242,9 @@ const createInitialState = (): AppState => ({
   },
   npc: {
     current: undefined,
+  },
+  combat: {
+    active: undefined,
   },
   messages: [],
 })
@@ -412,12 +432,22 @@ export const useStore = create<AppStore>()(
           }
 
           // 4b. Check for combat encounter based on location danger
-          const [combatState, combatMessage] = travelCombat(state.game)
-          if (combatMessage) {
-            Object.assign(state.game, combatState)
+          if (Math.random() < state.game.location.dangerLevel / 20) {
+            const playerLevel = Math.floor(
+              (state.game.strength + state.game.agility + state.game.intelligence) / 3,
+            )
+            const enemy = generateEnemy(playerLevel)
+            state.combat.active = {
+              enemy,
+              enemyMaxHealth: enemy.health,
+              round: 1,
+              phase: 'player_turn',
+              log: [`You've encountered a ${enemy.name}!`],
+              defendingThisRound: false,
+            }
             state.messages.push({
               type: 'combat',
-              content: combatMessage,
+              content: `A ${enemy.name} blocks your path!`,
               timestamp: Date.now(),
             })
           }
@@ -750,6 +780,153 @@ export const useStore = create<AppStore>()(
         })
 
         // Auto-save after NPC interaction ends
+        const activeSlot = get().persistence.activeSlot
+        if (activeSlot > 0) {
+          get().saveGame(activeSlot)
+        }
+      },
+
+      // === Combat Actions ===
+
+      startCombat(enemy: Enemy) {
+        set((state) => {
+          state.combat.active = {
+            enemy: { ...enemy },
+            enemyMaxHealth: enemy.health,
+            round: 1,
+            phase: 'player_turn',
+            log: [`You've encountered a ${enemy.name}!`],
+            defendingThisRound: false,
+          }
+        })
+      },
+
+      performCombatAction(action: CombatAction, potionName?: string) {
+        set((state) => {
+          const combat = state.combat.active
+          if (!combat || combat.phase === 'resolved') return
+
+          const { enemy } = combat
+          const player = state.game
+
+          // Player turn
+          switch (action) {
+            case 'attack': {
+              const damage = calculateDamage(player, enemy)
+              enemy.health -= damage
+              combat.log.push(
+                damage > 0
+                  ? `Round ${combat.round}: You attack for ${damage} damage.`
+                  : `Round ${combat.round}: You swing and miss!`,
+              )
+              combat.defendingThisRound = false
+              break
+            }
+
+            case 'defend': {
+              combat.defendingThisRound = true
+              combat.log.push(
+                `Round ${combat.round}: You take a defensive stance.`,
+              )
+              break
+            }
+
+            case 'use_potion': {
+              if (potionName && player.inventory[potionName] && player.inventory[potionName] > 0) {
+                player.inventory[potionName] -= 1
+                if (potionName.toLowerCase().includes('health') || potionName.toLowerCase().includes('strength')) {
+                  const heal = 25
+                  player.health = Math.min(100, player.health + heal)
+                  combat.log.push(
+                    `Round ${combat.round}: You drink ${potionName} and restore ${heal} HP.`,
+                  )
+                } else {
+                  player.strength += 3
+                  combat.log.push(
+                    `Round ${combat.round}: You drink ${potionName} and feel empowered! (+3 STR)`,
+                  )
+                }
+              } else {
+                combat.log.push(
+                  `Round ${combat.round}: You fumble for a potion but find nothing useful!`,
+                )
+              }
+
+              combat.defendingThisRound = false
+              break
+            }
+
+            case 'flee': {
+              const fleeChance = 0.4 + player.agility * 0.02
+              if (Math.random() < fleeChance) {
+                combat.log.push(`Round ${combat.round}: You flee from the ${enemy.name}!`)
+                combat.phase = 'resolved'
+                return
+              }
+
+              combat.log.push(
+                `Round ${combat.round}: You try to flee but the ${enemy.name} blocks your escape!`,
+              )
+              combat.defendingThisRound = false
+              break
+            }
+          }
+
+          // Check if enemy is defeated
+          if (enemy.health <= 0) {
+            const goldGained = Math.floor(Math.random() * 100) + 50
+            player.cash += goldGained
+            combat.log.push(
+              `You defeated the ${enemy.name}! Gained ${goldGained} gold.`,
+            )
+            combat.phase = 'resolved'
+            return
+          }
+
+          // Enemy turn
+          const defendBonus = combat.defendingThisRound ? Math.floor(player.agility * 0.5) : 0
+          const effectiveAgility = player.agility + defendBonus
+          const enemyDamage = calculateDamage(enemy, { agility: effectiveAgility })
+          player.health -= enemyDamage
+          combat.log.push(
+            enemyDamage > 0
+              ? `${enemy.name} attacks for ${enemyDamage} damage${combat.defendingThisRound ? ' (reduced by defense)' : ''}.`
+              : `${enemy.name} attacks but misses!`,
+          )
+
+          // Check if player is defeated
+          if (player.health <= 0) {
+            const cashLost = Math.floor(player.cash * 0.2)
+            player.cash -= cashLost
+            for (const [potion, quantity] of Object.entries(player.inventory)) {
+              player.inventory[potion] = quantity - Math.floor(quantity * 0.3)
+            }
+
+            combat.log.push(
+              `You were defeated! Lost ${cashLost} gold and some potions.`,
+            )
+            combat.phase = 'resolved'
+            return
+          }
+
+          // Max 10 rounds
+          if (combat.round >= 10) {
+            combat.log.push('The battle drags on... you both withdraw.')
+            combat.phase = 'resolved'
+            return
+          }
+
+          combat.round += 1
+          combat.phase = 'player_turn'
+        })
+      },
+
+      endCombat() {
+        set((state) => {
+          state.combat.active = undefined
+        })
+
+        // Auto-save after combat
         const activeSlot = get().persistence.activeSlot
         if (activeSlot > 0) {
           get().saveGame(activeSlot)
