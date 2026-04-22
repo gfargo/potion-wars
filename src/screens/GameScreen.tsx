@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
 import Gradient from 'ink-gradient'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useStore } from '../store/appStore.js'
 import {
@@ -39,48 +39,41 @@ export function GameScreen() {
   const endNPCInteraction = useStore((state) => state.endNPCInteraction)
   const day = useStore((state) => state.game.day)
 
-  // Tutorial system
+  // Tutorial system. Gating lives in the Zustand store (`seenTutorials`) so
+  // it survives screen remounts during travel. Effects may fire multiple
+  // times here — TutorialSystem no-ops when the step is already seen.
   const {
     currentTutorialStep,
     triggerTutorial,
     completeTutorialStep,
     skipTutorial,
   } = useTutorial()
-  const hasTriggeredStart = useRef(false)
-  const hasTriggeredTravel = useRef(false)
-  const hasTriggeredNPC = useRef(false)
-  const hasTriggeredMarket = useRef(false)
 
-  // Trigger game_start tutorial on first render
+  // Welcome tutorial — fires on mount. Seen-gating means the second+ mount
+  // requests it again but the overlay stays hidden.
   useEffect(() => {
-    if (!hasTriggeredStart.current) {
-      hasTriggeredStart.current = true
-      triggerTutorial('game_start')
-    }
+    triggerTutorial('game_start')
   }, [])
 
-  // Trigger first_travel after first travel completes (day goes from 0 to 1+)
+  // First-travel tutorial — fires once day advances past 0.
   useEffect(() => {
-    if (day > 0 && !hasTriggeredTravel.current) {
-      hasTriggeredTravel.current = true
+    if (day > 0) {
       triggerTutorial('first_travel')
     }
   }, [day])
 
-  // Trigger first_npc when NPC interaction starts
+  // First-NPC tutorial — fires when an NPC interaction is active.
   useEffect(() => {
-    if (showNPC && currentNPCId && !hasTriggeredNPC.current) {
-      hasTriggeredNPC.current = true
+    if (showNPC && currentNPCId) {
       triggerTutorial('first_npc')
     }
   }, [showNPC, currentNPCId])
 
-  // Trigger first_market_view after game_start tutorial is dismissed
-  const handleTutorialComplete = () => {
+  const handleTutorialComplete = (completedStepId: string) => {
     completeTutorialStep()
-    if (!hasTriggeredMarket.current && hasTriggeredStart.current) {
-      hasTriggeredMarket.current = true
-      // Small delay so the market tutorial doesn't stack immediately
+    // Chain: after the welcome is dismissed, queue up the market-dynamics
+    // tutorial. Small delay prevents the two overlays from stacking.
+    if (completedStepId === 'welcome_enhanced') {
       setTimeout(() => {
         triggerTutorial('first_market_view')
       }, 100)

@@ -383,6 +383,12 @@ export const migrateLegacySaveFile = (state: any): GameState => {
       ? []
       : sanitizeTradeHistory(state.tradeHistory)
 
+  // Migrate: legacy saves don't carry a seenTutorials list.
+  state.seenTutorials =
+    Array.isArray(state.seenTutorials)
+      ? state.seenTutorials.filter((id: unknown) => typeof id === 'string')
+      : []
+
   // Remove invalid optional states
   if (
     state.currentNPCInteraction &&

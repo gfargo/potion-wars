@@ -8,10 +8,18 @@ import {
     QuickHelpOverlay,
     TUTORIAL_STEPS,
 } from '../TutorialSystem.js'
+import { useStore } from '../../../../store/appStore.js'
 
 // Helper to wait for React effects — React 19 batches more aggressively
 const tick = (ms = 150) => new Promise((resolve) => {
   setTimeout(resolve, ms)
+})
+
+// Reset before each test: tutorial "seen" state lives in the Zustand store
+// now, so prior tests (especially skip which marks everything) would leak
+// into later tests and suppress the overlay under test.
+test.beforeEach(() => {
+  useStore.getState().resetGame()
 })
 
 // Test component that uses the tutorial hook
@@ -187,17 +195,11 @@ test('Tutorial steps have appropriate content', (t) => {
 
 test('useTutorial hook manages state correctly', (t) => {
   const TestHookComponent: React.FC = () => {
-    const {
-      currentTutorialStep,
-      tutorialCompleted,
-      tutorialSkipped,
-    } = useTutorial()
+    const { currentTutorialStep } = useTutorial()
 
     return (
       <Box flexDirection="column">
         <Text>step:{currentTutorialStep || 'none'}</Text>
-        <Text>completed:{tutorialCompleted ? 'yes' : 'no'}</Text>
-        <Text>skipped:{tutorialSkipped ? 'yes' : 'no'}</Text>
       </Box>
     )
   }
@@ -207,8 +209,6 @@ test('useTutorial hook manages state correctly', (t) => {
   const output = lastFrame()
   t.truthy(output)
   t.true(output!.includes('step:none'))
-  t.true(output!.includes('completed:no'))
-  t.true(output!.includes('skipped:no'))
 })
 
 test('Tutorial step content mentions key features', (t) => {

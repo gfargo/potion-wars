@@ -1,5 +1,6 @@
 import { Box, Text, useInput } from 'ink'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useStore } from '../../../store/appStore.js'
 
 export type TutorialStep = {
   id: string
@@ -45,9 +46,11 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
 ]
 
+const ALL_TUTORIAL_IDS = TUTORIAL_STEPS.map((step) => step.id)
+
 type TutorialSystemProperties = {
   readonly currentStep?: string
-  readonly onComplete?: () => void
+  readonly onComplete?: (stepId: string) => void
   readonly onSkip?: () => void
 }
 
@@ -56,38 +59,51 @@ export function TutorialSystem({
   onComplete,
   onSkip,
 }: TutorialSystemProperties) {
-  const [activeStep, setActiveStep] = useState<TutorialStep | undefined>(undefined)
-  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set())
+  const seenTutorials = useStore((state) => state.game.seenTutorials)
+  const markTutorialSeen = useStore((state) => state.markTutorialSeen)
+  const markAllTutorialsSeen = useStore(
+    (state) => state.markAllTutorialsSeen
+  )
+
+  const [activeStep, setActiveStep] = useState<TutorialStep | undefined>(
+    undefined
+  )
   const [showTutorial, setShowTutorial] = useState(false)
 
-  // Find and show tutorial step
   useEffect(() => {
-    if (currentStep) {
-      const step = TUTORIAL_STEPS.find((s) => s.trigger === currentStep)
-      if (step && !completedSteps.has(step.id)) {
-        setActiveStep(step)
-        setShowTutorial(true)
-      }
+    if (!currentStep) {
+      setActiveStep(undefined)
+      setShowTutorial(false)
+      return
     }
-  }, [currentStep, completedSteps])
 
-  // Handle input
+    const step = TUTORIAL_STEPS.find((s) => s.trigger === currentStep)
+    if (step && !seenTutorials.includes(step.id)) {
+      setActiveStep(step)
+      setShowTutorial(true)
+    } else {
+      // Already seen — don't show anything.
+      setActiveStep(undefined)
+      setShowTutorial(false)
+    }
+  }, [currentStep, seenTutorials])
+
   useInput((input, key) => {
     if (!activeStep || !showTutorial) return
 
     if (key.return || input === ' ') {
-      // Complete current step
-      setCompletedSteps((previous) => new Set(previous).add(activeStep.id))
+      const completedId = activeStep.id
+      markTutorialSeen(completedId)
       setShowTutorial(false)
       setActiveStep(undefined)
-      onComplete?.()
+      onComplete?.(completedId)
     } else if (input === 's') {
-      // Skip tutorial
+      // Persistently suppress every tutorial.
+      markAllTutorialsSeen(ALL_TUTORIAL_IDS)
       setShowTutorial(false)
       setActiveStep(undefined)
       onSkip?.()
     } else if (key.escape) {
-      // Close current step
       setShowTutorial(false)
       setActiveStep(undefined)
     }
@@ -130,18 +146,18 @@ export function TutorialSystem({
   )
 }
 
-// Hook for managing tutorial state
+/**
+ * Lightweight hook for requesting tutorial steps. The persistent "seen"
+ * gating lives in the Zustand store, so this hook is effectively a thin
+ * pub-sub for the currently-requested trigger.
+ */
 export function useTutorial() {
   const [currentTutorialStep, setCurrentTutorialStep] = useState<
     string | undefined
   >(undefined)
-  const [tutorialCompleted, setTutorialCompleted] = useState(false)
-  const [tutorialSkipped, setTutorialSkipped] = useState(false)
 
   const triggerTutorial = (step: TutorialStep['trigger']) => {
-    if (!tutorialCompleted && !tutorialSkipped) {
-      setCurrentTutorialStep(step)
-    }
+    setCurrentTutorialStep(step)
   }
 
   const completeTutorialStep = () => {
@@ -149,24 +165,14 @@ export function useTutorial() {
   }
 
   const skipTutorial = () => {
-    setTutorialSkipped(true)
-    setCurrentTutorialStep(undefined)
-  }
-
-  const resetTutorial = () => {
-    setTutorialCompleted(false)
-    setTutorialSkipped(false)
     setCurrentTutorialStep(undefined)
   }
 
   return {
     currentTutorialStep,
-    tutorialCompleted,
-    tutorialSkipped,
     triggerTutorial,
     completeTutorialStep,
     skipTutorial,
-    resetTutorial,
   }
 }
 
