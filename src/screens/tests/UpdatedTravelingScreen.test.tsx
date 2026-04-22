@@ -2,71 +2,94 @@ import test from 'ava'
 import React from 'react'
 import { render } from 'ink-testing-library'
 import { TravelingScreen } from '../TravelingScreen.js'
-import { TestWrapper } from '../../core/state/tests/utils/TestWrapper.js'
 import { useStore } from '../../store/appStore.js'
 
 /**
- * Helper to pre-seed store and render TravelingScreen
+ * Seed the store with a travel-in-progress state and render TravelingScreen
+ * directly. We intentionally avoid TestWrapper here because it calls
+ * resetGame() during its own render pass, which would clobber the travel state
+ * we need to seed.
  */
-function renderTravelScreen(fromLocation?: string) {
-  const onFinish = () => {}
-
-  // Pre-seed store before render
+function renderTravelScreen({
+  origin,
+  destination,
+}: {
+  origin?: string
+  destination?: string
+} = {}) {
   useStore.getState().resetGame()
   useStore.setState((state) => {
     state.ui.activeScreen = 'traveling'
+    state.travel = {
+      phase: 'animating',
+      origin,
+      destination,
+      animationStartTime: Date.now(),
+    }
   })
 
-  return render(
-    <TestWrapper screen="traveling">
-      <TravelingScreen fromLocation={fromLocation} onFinish={onFinish} />
-    </TestWrapper>
-  )
+  return render(<TravelingScreen />)
 }
 
-test('Updated TravelingScreen shows travel animation', (t) => {
-  const { lastFrame, unmount } = renderTravelScreen('Market Square')
+test('TravelingScreen renders the animation scene', (t) => {
+  const { lastFrame, unmount } = renderTravelScreen({
+    origin: 'Peasant Village',
+    destination: 'Royal Castle',
+  })
 
   const output = lastFrame()
   t.truthy(output)
-  t.true(output!.includes('Traveling to'))
-  t.true(output!.includes('From Market Square'))
+  // The immersive scene is large — far more than a couple of header lines.
+  t.true((output?.length ?? 0) > 200)
   unmount()
 })
 
-test('Updated TravelingScreen shows progress indicator', (t) => {
-  const { lastFrame, unmount } = renderTravelScreen()
+test('TravelingScreen shows the route arrow when origin and destination are set', (t) => {
+  const { lastFrame, unmount } = renderTravelScreen({
+    origin: 'Peasant Village',
+    destination: 'Royal Castle',
+  })
 
   const output = lastFrame()
   t.truthy(output)
-  // Should show progress bar with blocks
-  t.true(
-    output!.includes('█') || output!.includes('░') || output!.includes('%')
-  )
+  t.true(output!.includes('Peasant Village'))
+  t.true(output!.includes('Royal Castle'))
+  t.true(output!.includes('→'))
   unmount()
 })
 
-test('Updated TravelingScreen shows flavor text', (t) => {
-  const { lastFrame, unmount } = renderTravelScreen('Market Square')
+test('TravelingScreen shows the percentage progress in the animation footer', (t) => {
+  const { lastFrame, unmount } = renderTravelScreen({
+    origin: 'Peasant Village',
+    destination: 'Royal Castle',
+  })
 
   const output = lastFrame()
   t.truthy(output)
-  // Should show some descriptive text about the journey
-  t.true(output!.length > 100) // Flavor text should make output longer
+  t.true(output!.includes('% complete'))
   unmount()
 })
 
-test('Updated TravelingScreen maintains skip functionality', (t) => {
-  const { lastFrame, unmount } = renderTravelScreen()
+test('TravelingScreen shows control hints', (t) => {
+  const { lastFrame, unmount } = renderTravelScreen({
+    origin: 'Peasant Village',
+    destination: 'Royal Castle',
+  })
 
   const output = lastFrame()
   t.truthy(output)
-  t.true(output!.includes('Press Enter to skip'))
+  t.true(output!.includes('Enter'))
+  t.true(output!.includes('skip'))
+  t.true(output!.includes('Space'))
+  t.true(output!.includes('speed'))
   unmount()
 })
 
-test('Updated TravelingScreen shows day information', (t) => {
-  const { lastFrame, unmount } = renderTravelScreen()
+test('TravelingScreen shows day information', (t) => {
+  const { lastFrame, unmount } = renderTravelScreen({
+    origin: 'Peasant Village',
+    destination: 'Royal Castle',
+  })
 
   const output = lastFrame()
   t.truthy(output)

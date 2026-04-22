@@ -28,6 +28,9 @@ export type AnimationLibrary = {
 
 export type AnimationState = 'idle' | 'playing' | 'paused' | 'completed'
 
+/** Coarse time-of-day slots used to tint travel scenes. */
+export type TimeOfDay = 'dawn' | 'day' | 'dusk' | 'night'
+
 export type AnimationConfig = {
   frames: AnimationFrame[]
   duration?: number

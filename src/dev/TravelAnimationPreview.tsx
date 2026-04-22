@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Text, render, useInput } from 'ink'
-import { AnimationManager } from '../core/animations/AnimationManager.js'
 import {
   AsciiAnimation,
   type AsciiAnimationControls,
 } from '../ui/components/common/AsciiAnimation.js'
-import {
-  createImmersiveTravelAnimation,
-  getLocationSpecificAnimation,
-} from '../ui/components/common/TravelAnimation.js'
+import { createImmersiveTravelAnimation } from '../ui/components/common/TravelAnimation.js'
 import type { TravelAnimation as TravelAnimationType } from '../types/animation.types.js'
 
 type PreviewOptions = {
@@ -85,54 +81,15 @@ function TravelAnimationPreviewApp({
   const isPausedReference = useRef<boolean>(isPaused)
 
   useEffect(() => {
-    let active = true
+    const immersive = createImmersiveTravelAnimation({
+      baseAnimation: fallbackBaseAnimation,
+      fromLocation,
+      toLocation,
+    })
 
-    const loadAnimation = async () => {
-      try {
-        setStatus('loading animations…')
-        const manager = AnimationManager.getInstance()
-        await manager.loadAnimations()
-
-        const locationSpecific =
-          getLocationSpecificAnimation(fromLocation, toLocation) ??
-          manager.getRandomTravelAnimation()
-
-        if (!active) {
-          return
-        }
-
-        const immersive = createImmersiveTravelAnimation({
-          baseAnimation: locationSpecific,
-          fromLocation,
-          toLocation,
-        })
-
-        setImmersiveAnimation(immersive)
-        setStatus('previewing')
-        setIterationCount(0)
-      } catch (error) {
-        console.warn('[preview] Failed to load travel animation library', error)
-        if (!active) {
-          return
-        }
-
-        const immersive = createImmersiveTravelAnimation({
-          baseAnimation: fallbackBaseAnimation,
-          fromLocation,
-          toLocation,
-        })
-
-        setImmersiveAnimation(immersive)
-        setStatus('using fallback animation')
-        setIterationCount(0)
-      }
-    }
-
-    void loadAnimation()
-
-    return () => {
-      active = false
-    }
+    setImmersiveAnimation(immersive)
+    setStatus('previewing')
+    setIterationCount(0)
   }, [fromLocation, toLocation, reloadIndex])
 
   useEffect(() => {

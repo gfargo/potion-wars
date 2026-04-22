@@ -1,190 +1,99 @@
 import test from 'ava'
 import React from 'react'
 import { render } from 'ink-testing-library'
-import {
-    TravelAnimation,
-    getLocationSpecificAnimation,
-} from '../TravelAnimation.js'
+import { TravelAnimation } from '../TravelAnimation.js'
 
-test('TravelAnimation renders with loading animation initially', (t) => {
+test('TravelAnimation renders immediately without a loading state', (t) => {
   const { lastFrame, unmount } = render(
     <TravelAnimation
-      fromLocation="Market Square"
-      toLocation="Alchemist Quarter"
       autoStart={false}
+      fromLocation="Peasant Village"
+      toLocation="Royal Castle"
       onComplete={() => {}}
     />
   )
 
-  // Should show loading animation immediately
-  const frame = lastFrame()
-  t.true(frame?.includes('Preparing') || frame?.includes('→') || false)
-  unmount()
-})
-
-test('TravelAnimation renders with location information', async (t) => {
-  const { lastFrame, unmount } = render(
-    <TravelAnimation
-      fromLocation="Market Square"
-      toLocation="Alchemist Quarter"
-      autoStart={false}
-      onComplete={() => {}}
-    />
-  )
-
-  // Wait for animation to load
-  await new Promise((resolve) => setTimeout(resolve, 100))
-
-  // Should render some content
   const frame = lastFrame()
   t.true((frame?.length ?? 0) > 0)
+  // The immersive scene always labels the destination in the footer/marker.
+  t.true(frame?.includes('Royal Castle') ?? false)
   unmount()
 })
 
-test('TravelAnimation calls onComplete callback', (t) => {
+test('TravelAnimation does not auto-complete when autoStart is false', (t) => {
   let completed = false
 
   const { unmount } = render(
     <TravelAnimation
-      fromLocation="Test Location A"
-      toLocation="Test Location B"
       autoStart={false}
+      fromLocation="Peasant Village"
+      toLocation="Royal Castle"
       onComplete={() => {
         completed = true
       }}
     />
   )
 
-  // The callback should be passed through (we can't easily test if it's called without starting the animation)
-  t.false(completed) // Should not be called yet since autoStart is false
+  t.false(completed)
   unmount()
 })
 
-test('TravelAnimation handles different location combinations', async (t) => {
+test('TravelAnimation handles different location combinations', (t) => {
   const { lastFrame: frame1, unmount: unmount1 } = render(
     <TravelAnimation
-      fromLocation="Location A"
-      toLocation="Location B"
       autoStart={false}
+      fromLocation="Enchanted Forest"
+      toLocation="Merchant's District"
       onComplete={() => {}}
     />
   )
 
   const { lastFrame: frame2, unmount: unmount2 } = render(
     <TravelAnimation
-      fromLocation="Different Place"
-      toLocation="Another Place"
       autoStart={false}
+      fromLocation="Alchemist's Quarter"
+      toLocation="Peasant Village"
       onComplete={() => {}}
     />
   )
 
-  // Wait for animations to load
-  await new Promise((resolve) => setTimeout(resolve, 100))
-
-  // Both should render content
   t.true((frame1()?.length ?? 0) > 0)
   t.true((frame2()?.length ?? 0) > 0)
   unmount1()
   unmount2()
 })
 
-test('TravelAnimation handles autoStart prop', async (t) => {
-  const { lastFrame: frame1, unmount: unmount1 } = render(
-    <TravelAnimation
-      autoStart
-      fromLocation="Start"
-      toLocation="End"
-      onComplete={() => {}}
-    />
-  )
-
-  const { lastFrame: frame2, unmount: unmount2 } = render(
-    <TravelAnimation
-      fromLocation="Start"
-      toLocation="End"
-      autoStart={false}
-      onComplete={() => {}}
-    />
-  )
-
-  // Both should render content
-  t.true((frame1()?.length ?? 0) > 0)
-  t.true((frame2()?.length ?? 0) > 0)
-  unmount1()
-  unmount2()
-})
-
-test('TravelAnimation gracefully handles animation loading errors', async (t) => {
-  // This should still work even if there are issues loading animations
+test('TravelAnimation honors a custom durationMs without errors', (t) => {
   const { lastFrame, unmount } = render(
     <TravelAnimation
-      fromLocation="Problematic Location With Very Long Name That Might Cause Issues"
-      toLocation="Another Problematic Location"
       autoStart={false}
+      fromLocation="Start"
+      toLocation="End"
+      durationMs={2500}
       onComplete={() => {}}
     />
   )
 
-  // Wait for fallback animation to load
-  await new Promise((resolve) => setTimeout(resolve, 150))
-
-  // Should still render something (fallback animation)
-  const frame = lastFrame()
-  t.true((frame?.length ?? 0) > 0)
+  t.true((lastFrame()?.length ?? 0) > 0)
   unmount()
 })
 
-test('getLocationSpecificAnimation returns specific animation for known pairs', (t) => {
-  const animation = getLocationSpecificAnimation(
-    'Market Square',
-    'Alchemist Quarter'
-  )
-
-  if (animation) {
-    t.is(typeof animation.name, 'string')
-    t.is(typeof animation.description, 'string')
-    t.is(typeof animation.duration, 'number')
-    t.true(Array.isArray(animation.frames))
-    t.true(animation.frames.length > 0)
-  } else {
-    // It's okay if no specific animation exists for this pair
-    t.pass()
-  }
-})
-
-test('getLocationSpecificAnimation returns null for unknown pairs', (t) => {
-  const animation = getLocationSpecificAnimation(
-    'Unknown Location A',
-    'Unknown Location B'
-  )
-
-  // Should return null for unknown location pairs
-  t.is(animation, undefined)
-})
-
-test('TravelAnimation shows travel progression', async (t) => {
+test('TravelAnimation renders a traveler glyph in the scene', (t) => {
   const { lastFrame, unmount } = render(
     <TravelAnimation
+      autoStart={false}
       fromLocation="Start Point"
       toLocation="End Point"
-      autoStart={false}
       onComplete={() => {}}
     />
   )
 
-  // Wait for animation to load
-  await new Promise((resolve) => setTimeout(resolve, 100))
-
   const frame = lastFrame()
-
-  // Should contain travel-related content
+  // Either the traveler's head or the route label should appear in frame 0.
   t.true(
-    frame?.includes('Start Point') ||
-      frame?.includes('End Point') ||
-      frame?.includes('Travel') ||
-      frame?.includes('→') ||
-      frame?.includes('o') || // Character representation
+    frame?.includes('End Point') ||
+      frame?.includes('Start') ||
+      frame?.includes('O') ||
       false
   )
   unmount()

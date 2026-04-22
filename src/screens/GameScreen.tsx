@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink'
 import Gradient from 'ink-gradient'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { HELP_TEXT, locations, potions } from '../constants.js'
 import { useStore } from '../store/appStore.js'
 import {
@@ -35,15 +35,9 @@ export function GameScreen() {
   const showEvent = useStore(selectShouldShowEvent)
   const showNPC = useStore(selectShouldShowNPC)
   const activeCombat = useStore(selectActiveCombat)
-  const locationName = useStore((state) => state.game.location.name)
   const currentNPCId = useStore((state) => state.npc.current?.npcId)
   const endNPCInteraction = useStore((state) => state.endNPCInteraction)
   const day = useStore((state) => state.game.day)
-
-  const [isTraveling, setIsTraveling] = useState(false)
-  const [previousLocation, setPreviousLocation] = useState<string | undefined>(
-    undefined
-  )
 
   // Tutorial system
   const {
@@ -93,26 +87,9 @@ export function GameScreen() {
     }
   }
 
-  // Track location changes for travel animation
-  useEffect(() => {
-    if (activeScreen === 'traveling' && !previousLocation) {
-      setPreviousLocation(locationName)
-    } else if (activeScreen === 'game' && previousLocation) {
-      setPreviousLocation(undefined)
-    }
-  }, [activeScreen, locationName, previousLocation])
-
   // Show traveling screen when screen state is 'traveling'
-  if (activeScreen === 'traveling' || isTraveling) {
-    return (
-      <TravelingScreen
-        fromLocation={previousLocation}
-        onFinish={() => {
-          setIsTraveling(false)
-          // Note: Screen transition back to 'game' is handled by the travel action
-        }}
-      />
-    )
+  if (activeScreen === 'traveling') {
+    return <TravelingScreen />
   }
 
   if (activeCombat) {
