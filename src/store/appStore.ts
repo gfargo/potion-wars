@@ -34,6 +34,8 @@ import { triggerRandomEvent } from '../core/events/index.js'
 import { checkNPCEncounter } from '../core/game/travel.js'
 import { calculateDamage } from '../core/combat/actions.js'
 import { generateEnemy } from '../core/combat/enemies.js'
+import { DialogueEngine } from '../core/dialogue/DialogueEngine.js'
+import { type DialogueChoice } from '../types/npc.types.js'
 import {
     saveGame as saveToDisk,
     loadGame as loadFromDisk,
@@ -172,6 +174,7 @@ export type AppStore = AppState & {
     interactionType: 'dialogue' | 'trade' | 'information'
   ) => void
   endNPCInteraction: () => void
+  applyDialogueChoice: (choice: DialogueChoice, npcLocation: string) => void
 
   // Combat actions
   startCombat: (enemy: Enemy) => void
@@ -367,6 +370,12 @@ export const useStore = create<AppStore>()(
             timestamp: Date.now(),
           })
         })
+
+        // Auto-save after repaying debt
+        const activeSlot = get().persistence.activeSlot
+        if (activeSlot > 0) {
+          get().saveGame(activeSlot)
+        }
       },
 
       startTravel(destination: string) {
@@ -474,9 +483,10 @@ export const useStore = create<AppStore>()(
             state.game.weather = weatherOptions[Math.floor(Math.random() * weatherOptions.length)]!
           }
 
-          // 5. Complete travel
+          // 5. Complete travel (reset to idle so future startTravel calls
+          // aren't gated by a stale 'complete' phase).
           state.travel = {
-            phase: 'complete',
+            phase: 'idle',
             destination: undefined,
             origin: undefined,
             animationStartTime: undefined,
@@ -530,6 +540,8 @@ export const useStore = create<AppStore>()(
       },
 
       advanceDay(triggerEvent = false, triggerDebt = false) {
+        let queuedEvent: MultiStepEvent | Event | undefined
+
         set((state) => {
           state.game.day += 1
 
@@ -546,10 +558,16 @@ export const useStore = create<AppStore>()(
           if (triggerEvent) {
             const eventResult = triggerRandomEvent(state.game)
             if (eventResult.currentEvent) {
-              get().triggerEvent(eventResult.currentEvent, 1)
+              queuedEvent = eventResult.currentEvent
             }
           }
         })
+
+        // Dispatch the follow-up action AFTER the set() commits to avoid
+        // nesting another set() inside an Immer producer.
+        if (queuedEvent) {
+          get().triggerEvent(queuedEvent, 1)
+        }
       },
 
       updateWeather(weather: Weather) {
@@ -614,11 +632,6 @@ export const useStore = create<AppStore>()(
       },
 
       chooseEvent(choiceIndex: number) {
-        // CRITICAL: This get() call MUST happen before set() to ensure proper state
-        // synchronization through the subscribeWithSelector + devtools + immer middleware stack.
-        // Without it, set() followed by get() can return stale state.
-        get().events.phase
-
         set((state) => {
           const { current, currentStep } = state.events
 
@@ -784,6 +797,17 @@ export const useStore = create<AppStore>()(
         if (activeSlot > 0) {
           get().saveGame(activeSlot)
         }
+      },
+
+      applyDialogueChoice(choice: DialogueChoice, npcLocation: string) {
+        set((state) => {
+          const newGameState = DialogueEngine.handleChoice(
+            choice,
+            state.game,
+            npcLocation,
+          )
+          Object.assign(state.game, newGameState)
+        })
       },
 
       // === Combat Actions ===
@@ -1098,10 +1122,20 @@ export const useStore = create<AppStore>()(
           state.game.prices = generateDynamicPrices(state.game)
 
           // Clear any active events/interactions
+          state.events.queue = []
           state.events.current = undefined
           state.events.phase = 'choice'
           state.events.currentStep = 0
           state.npc.current = undefined
+
+          // Reset transient travel/combat state so loading mid-action is clean
+          state.travel = {
+            phase: 'idle',
+            destination: undefined,
+            origin: undefined,
+            animationStartTime: undefined,
+          }
+          state.combat.active = undefined
 
           // Set screen to game
           state.ui.activeScreen = 'game'

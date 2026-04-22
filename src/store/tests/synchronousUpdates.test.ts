@@ -137,7 +137,7 @@ test('travel completion: all state updates are synchronous', (t) => {
   t.is(currentState.game.location.name, 'Royal Castle')
   t.not(currentState.game.location.name, initialLocation)
   t.is(currentState.game.day, initialDay + 1)
-  t.is(currentState.travel.phase, 'complete')
+  t.is(currentState.travel.phase, 'idle')
   t.true(currentState.messages.some((m) => m.content.includes('Traveled from')))
 })
 
@@ -262,7 +262,7 @@ test('complex sequence: travel -> event -> choice all synchronous', (t) => {
 
   // Travel completed
   t.is(state.game.location.name, 'Royal Castle')
-  t.is(state.travel.phase, 'complete')
+  t.is(state.travel.phase, 'idle')
 
   // Event is active
   t.not(state.events.current, undefined)
