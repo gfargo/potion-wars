@@ -1,76 +1,159 @@
 import { Box, Text, useInput } from 'ink'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { locations } from '../constants.js'
 import { useStore } from '../store/appStore.js'
+import type { TimeOfDay } from '../types/animation.types.js'
+import { type AsciiAnimationControls } from '../ui/components/common/AsciiAnimation.js'
 import { TravelAnimation } from '../ui/components/common/TravelAnimation.js'
 
 type TravelingScreenProperties = {
-  readonly onFinish: () => void
-  readonly fromLocation?: string
+  readonly onFinish?: () => void
 }
 
-export function TravelingScreen({
-  onFinish,
-  fromLocation,
-}: TravelingScreenProperties) {
-  const [timeLeft, setTimeLeft] = useState(4)
-  const [showAnimation, setShowAnimation] = useState(true)
-  const [flavorText, setFlavorText] = useState('')
-  const [hasCompleted, setHasCompleted] = useState(false)
+// Scale travel duration by the destination's danger level. Safe villages feel
+// like a quick stroll; dangerous quarters feel like a longer, tenser trek.
+const TRAVEL_BASE_DURATION_MS = 2000
+const TRAVEL_MS_PER_DANGER = 400
+const TRAVEL_MIN_DURATION_MS = 1800
+const TRAVEL_MAX_DURATION_MS = 6000
+// Hard ceiling so travel can never get stuck if the animation fails to emit
+// onComplete for any reason (e.g. unmount race).
+const TRAVEL_SAFETY_CUSHION_MS = 2000
 
-  // Get state and actions from Zustand store
+const SPEED_STEP = 0.25
+const SPEED_MIN = 0.5
+const SPEED_MAX = 3
+
+const TIME_OF_DAY_CYCLE: TimeOfDay[] = ['dawn', 'day', 'dusk', 'night']
+
+function resolveDestinationDanger(destinationName: string | undefined): number {
+  if (!destinationName) {
+    return 3
+  }
+
+  const destination = locations.find(
+    (location) => location.name === destinationName
+  )
+  return destination?.dangerLevel ?? 3
+}
+
+function computeTravelDurationMs(dangerLevel: number): number {
+  const raw = TRAVEL_BASE_DURATION_MS + dangerLevel * TRAVEL_MS_PER_DANGER
+  return Math.max(
+    TRAVEL_MIN_DURATION_MS,
+    Math.min(TRAVEL_MAX_DURATION_MS, raw)
+  )
+}
+
+function computeTimeOfDay(day: number): TimeOfDay {
+  const index = ((day % TIME_OF_DAY_CYCLE.length) + TIME_OF_DAY_CYCLE.length) %
+    TIME_OF_DAY_CYCLE.length
+  return TIME_OF_DAY_CYCLE[index] ?? 'day'
+}
+
+export function TravelingScreen({ onFinish }: TravelingScreenProperties) {
   const day = useStore((state) => state.game.day)
-  const locationName = useStore((state) => state.game.location.name)
+  const origin = useStore((state) => state.travel.origin)
+  const destination = useStore((state) => state.travel.destination)
+  const weather = useStore((state) => state.game.weather)
   const completeTravel = useStore((state) => state.completeTravel)
 
-  // Initialize flavor text on mount
-  useEffect(() => {
-    setFlavorText(getTravelFlavorText(locationName))
-  }, [locationName])
+  const [hasCompleted, setHasCompleted] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [speedMultiplier, setSpeedMultiplier] = useState(1)
+  const completionTriggered = useRef(false)
+  const animationControls = useRef<AsciiAnimationControls | null>(null)
 
-  // Update flavor text every 2 seconds to make it more interesting
+  const dangerLevel = useMemo(
+    () => resolveDestinationDanger(destination),
+    [destination]
+  )
+  const durationMs = useMemo(
+    () => computeTravelDurationMs(dangerLevel),
+    [dangerLevel]
+  )
+  const timeOfDay = useMemo(() => computeTimeOfDay(day), [day])
+
+  const finishTravel = () => {
+    if (completionTriggered.current) {
+      return
+    }
+
+    completionTriggered.current = true
+    setHasCompleted(true)
+    completeTravel()
+    onFinish?.()
+  }
+
+  // Safety net: if the animation never emits onComplete (unmount race,
+  // terminal quirk, etc.) force completion after duration + cushion.
   useEffect(() => {
-    const flavorTimer = setInterval(() => {
-      setFlavorText(getTravelFlavorText(locationName))
-    }, 2000)
+    // When paused or running slow, stretch the safety timeout so it doesn't
+    // fire while the user is deliberately lingering on the scene.
+    const stretchFactor = isPaused ? 0 : 1 / Math.max(0.25, speedMultiplier)
+    if (stretchFactor === 0) {
+      return
+    }
+
+    const timeoutId = setTimeout(
+      finishTravel,
+      durationMs * stretchFactor + TRAVEL_SAFETY_CUSHION_MS
+    )
 
     return () => {
-      clearInterval(flavorTimer)
+      clearTimeout(timeoutId)
     }
-  }, [locationName])
+  }, [durationMs, isPaused, speedMultiplier])
 
+  // Apply pause state via imperative controls so we can resume without
+  // restarting the animation from frame 0.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((previous) => previous - 1)
-    }, 1000)
-
-    return () => {
-      clearInterval(timer)
+    const controls = animationControls.current
+    if (!controls) {
+      return
     }
-  }, [])
 
-  useEffect(() => {
-    if (timeLeft === 0 && !hasCompleted) {
-      setHasCompleted(true)
-      // Complete travel using store action (synchronous!)
-      completeTravel()
-      // Call parent callback
-      onFinish()
+    if (isPaused) {
+      controls.pause()
+    } else {
+      controls.start()
     }
-  }, [timeLeft, onFinish, completeTravel, hasCompleted])
+  }, [isPaused])
 
-  useInput((input) => {
-    if (input === '\r' && !hasCompleted) {
-      setHasCompleted(true)
-      // Complete travel using store action (synchronous!)
-      completeTravel()
-      // Call parent callback
-      onFinish()
+  useInput((input, key) => {
+    if (hasCompleted) {
+      return
+    }
+
+    if (input === '\r' || key.return) {
+      finishTravel()
+      return
+    }
+
+    if (input === ' ') {
+      setIsPaused((previous) => !previous)
+      return
+    }
+
+    if (input === '+' || input === '=') {
+      setSpeedMultiplier((previous) =>
+        Math.min(SPEED_MAX, Number((previous + SPEED_STEP).toFixed(2)))
+      )
+      return
+    }
+
+    if (input === '-' || input === '_') {
+      setSpeedMultiplier((previous) =>
+        Math.max(SPEED_MIN, Number((previous - SPEED_STEP).toFixed(2)))
+      )
     }
   })
 
-  const handleAnimationComplete = () => {
-    setShowAnimation(false)
-  }
+  const controlsLine = useMemo(() => {
+    const speedLabel = `×${speedMultiplier.toFixed(2).replace(/\.?0+$/, '')}`
+    const pauseLabel = isPaused ? 'paused' : 'running'
+    return `Enter skip · Space ${pauseLabel} · +/- speed ${speedLabel}`
+  }, [isPaused, speedMultiplier])
 
   return (
     <Box
@@ -79,83 +162,34 @@ export function TravelingScreen({
       justifyContent="center"
       height="100%"
     >
-      <Box flexDirection="column" alignItems="center" marginBottom={2}>
+      <Box flexDirection="column" alignItems="center" marginBottom={1}>
         <Text bold color="cyan">
           Day {day}
         </Text>
-        <Text>Traveling to {locationName}</Text>
-        {fromLocation && <Text dimColor>From {fromLocation}</Text>}
+        {origin && destination && (
+          <Text dimColor>
+            {origin} → {destination}
+          </Text>
+        )}
       </Box>
 
-      {/* Travel Animation */}
-      {showAnimation && (
-        <Box flexDirection="column" alignItems="center" marginBottom={2}>
-          <TravelAnimation
-            fromLocation={fromLocation || 'Unknown'}
-            toLocation={locationName}
-            onComplete={handleAnimationComplete}
-          />
-        </Box>
-      )}
+      <TravelAnimation
+        ref={animationControls}
+        fromLocation={origin ?? 'Unknown'}
+        toLocation={destination ?? 'Unknown'}
+        durationMs={durationMs}
+        dangerLevel={dangerLevel}
+        weather={weather}
+        timeOfDay={timeOfDay}
+        speedMultiplier={speedMultiplier}
+        onComplete={finishTravel}
+      />
 
-      {/* Progress indicator */}
-      <Box flexDirection="column" alignItems="center">
-        <Text>
-          {'█'.repeat(4 - timeLeft)}
-          {'░'.repeat(timeLeft)} {Math.round(((4 - timeLeft) / 4) * 100)}%
-        </Text>
-        <Text dimColor>Press Enter to skip ({timeLeft}s)</Text>
-      </Box>
-
-      {/* Travel tips or flavor text */}
-      <Box marginTop={2} width="60%" justifyContent="center">
-        <Text dimColor wrap="wrap">
-          {flavorText}
-        </Text>
+      <Box marginTop={1}>
+        <Text dimColor>{controlsLine}</Text>
       </Box>
     </Box>
   )
-}
-
-/**
- * Get flavor text for traveling to different locations
- */
-function getTravelFlavorText(locationName: string): string {
-  const flavorTexts: Record<string, string[]> = {
-    "Alchemist's Quarter": [
-      'The scent of brewing potions fills the air as you approach the quarter.',
-      'Smoke rises from countless chimneys, each hiding alchemical secrets.',
-      'You hear the bubbling of cauldrons and the clink of glass vials.',
-    ],
-    'Royal Castle': [
-      'The imposing towers of the castle loom ahead, guards watching your approach.',
-      'Banners flutter in the wind as you make your way to the royal grounds.',
-      'The sound of marching guards echoes through the stone corridors.',
-    ],
-    "Merchant's District": [
-      'The bustling sounds of commerce grow louder as you enter the district.',
-      'Merchants call out their wares while coins change hands rapidly.',
-      'The aroma of exotic spices and goods from distant lands fills the air.',
-    ],
-    'Enchanted Forest': [
-      'Ancient trees whisper secrets as you venture into the mystical woods.',
-      'Magical creatures dart between the shadows of towering oaks.',
-      'The very air seems to shimmer with arcane energy.',
-    ],
-    'Peasant Village': [
-      'Simple folk go about their daily tasks as you enter the humble village.',
-      'Chickens scatter as you walk down the dirt path between modest homes.',
-      'The smell of fresh bread and honest work welcomes you.',
-    ],
-  }
-
-  const texts = flavorTexts[locationName] || [
-    'You make your way through unfamiliar territory.',
-    'The journey continues as new sights unfold before you.',
-    'Each step brings you closer to your destination.',
-  ]
-
-  return texts[Math.floor(Math.random() * texts.length)] || texts[0]!
 }
 
 export default TravelingScreen

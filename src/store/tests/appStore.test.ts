@@ -482,8 +482,11 @@ test('completeTravel: updates location and advances day', (t) => {
   // Verify day advanced
   t.is(after.game.day, initialDay + 1)
 
-  // Verify travel completed
-  t.is(after.travel.phase, 'complete')
+  // Verify travel completed (phase resets to 'idle' so subsequent startTravel
+  // calls aren't gated by a stale 'complete' marker).
+  t.is(after.travel.phase, 'idle')
+  t.is(after.travel.destination, undefined)
+  t.is(after.travel.origin, undefined)
 })
 
 // ==========================================

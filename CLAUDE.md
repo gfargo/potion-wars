@@ -116,7 +116,7 @@ brewPotion('Wisdom Draught', 5)
 - A known timing issue requires calling `get()` before `set()` to "warm up" the store in certain actions
 - See `src/store/appStore.ts:574-580` for detailed comments and TODO markers
 - This ensures `getState()` returns current values immediately after `set()` completes
-- Documented in `prompts/roadmap.md` under "Pre-Release Cleanup"
+- Documented in the store source comments
 
 ### Directory Structure
 
@@ -131,8 +131,8 @@ src/
 │   ├── common/                # Generic components (animations, inputs)
 │   └── game/                  # Game-specific components (status, prices, etc)
 ├── core/                      # Game logic (no UI)
-│   ├── state/                 # Legacy state utilities (selectors still used)
-│   ├── game/                  # Core mechanics (economy, travel, brewing)
+│   ├── state/                 # Message selectors and test utilities
+│   ├── game/                  # Core mechanics (economy, travel)
 │   ├── combat/                # Combat system
 │   ├── events/                # Random event system
 │   ├── npcs/                  # NPC management and interactions
@@ -147,7 +147,7 @@ src/
 
 ### Key Systems
 
-**State Management**: All state is managed in the Zustand store at `src/store/appStore.ts`. State updates are synchronous and happen via direct method calls (e.g., `brewPotion()`, `chooseEvent()`, `completeTravel()`). Components access state via `useStore()` with selector functions to prevent unnecessary re-renders. Legacy selectors from `src/core/state/selectors/` are still used for derived state calculations.
+**State Management**: All state is managed in the Zustand store at `src/store/appStore.ts`. State updates are synchronous and happen via direct method calls (e.g., `brewPotion()`, `chooseEvent()`, `completeTravel()`). Components access state via `useStore()` with selector functions to prevent unnecessary re-renders. Message selectors in `src/core/state/selectors/messageSelectors.ts` are used for derived message display calculations.
 
 **Game Actions**: The Zustand store provides direct action methods: `brewPotion()`, `sellPotion()`, `startTravel()`, `completeTravel()`, `triggerEvent()`, `chooseEvent()`, `acknowledgeEvent()`, `startNPCInteraction()`, `updateReputation()`, and more. All actions update state synchronously using Immer middleware for immutable updates.
 
@@ -194,7 +194,7 @@ Screen rendering is determined by state in the Zustand store (`ui.activeScreen`,
 
 ## Code Style
 
-- **Runtime**: Node.js 16+ with ES Modules
+- **Runtime**: Node.js 20+ with ES Modules
 - **Formatting**: Prettier (2-space indent, no semicolons, single quotes, LF line endings)
 - **Linting**: XO with React config
 - **Naming**: PascalCase for components, camelCase for functions/hooks/files, UPPER_CASE for constants
@@ -212,7 +212,7 @@ Screen rendering is determined by state in the Zustand store (`ui.activeScreen`,
 - **Snapshots**: Review diffs carefully, use `yarn test:fix` to update
 - **Test Utilities**: Use TestWrapper, renderWithContext, screenInteractions helpers
 
-See `prompts/testing.md` for detailed testing scenarios.
+See `docs/testing.md` for detailed testing scenarios.
 
 ## Important Development Patterns
 
@@ -259,7 +259,7 @@ When adding new actions to the Zustand store:
 
 **Constants**: Game data like potions and locations lives in `src/constants.ts`. This includes potion definitions (name, min/max price) and location data (name, description, danger level).
 
-**Build Output**: Entry point is `dist/cli.js` as executable binary. Module system is ES Modules with Node16 resolution, targeting ES2020 for Node.js 14+ compatibility.
+**Build Output**: Entry point is `dist/cli.js` as executable binary. Module system is ES Modules with Node16 resolution, targeting ES2022 for Node.js 20+ compatibility.
 
 **Weather System**: Impacts events and prices. Defined in `src/types/weather.types.ts`.
 
@@ -325,10 +325,9 @@ cat ~/.config/potion-wars/slot_N_save.json | jq '.day, .cash, .debt, .location.n
 
 ### Debug Logging
 
-The game includes console.log statements in key areas:
+Debug logging was cleaned up from production code. Key areas for adding temporary debug logging when investigating issues:
 
-- Event triggers (`src/contexts/GameContext.tsx`)
-- State transitions (`src/core/state/reducers/gameReducer.ts`)
+- Store actions (`src/store/appStore.ts`)
 - Save/load operations (`src/core/persistence/saveLoad.ts`)
 
 Run the game in a terminal to see these logs in real-time:
@@ -358,7 +357,6 @@ Project documentation is organized across several locations:
 - `docs/primer.md` - Game mechanics, system design, and architecture evolution (Zustand migration)
 - `docs/persistence.md` - Save system design (5 slots), migration strategies, and best practices
 - `docs/testing.md` - Testing scenarios and patterns with AVA + ink-testing-library
-- `docs/roadmap.md` - Feature roadmap and pre-release cleanup tasks
 - `AGENTS.md` - Repository structure and coding guidelines for contributors
 
 ### Steering Documents (.kiro/steering/)

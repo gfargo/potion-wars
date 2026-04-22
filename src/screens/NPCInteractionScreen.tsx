@@ -19,8 +19,8 @@ export function NPCInteractionScreen({
   npc,
   onComplete,
 }: NPCInteractionScreenProperties) {
-  const gameState = useStore((state) => state.game)
   const addMessage = useStore((state) => state.addMessage)
+  const applyDialogueChoice = useStore((state) => state.applyDialogueChoice)
 
   const [currentNode, setCurrentNode] = useState<DialogueNode | undefined>(undefined)
   const [conversationHistory, setConversationHistory] = useState<string[]>([])
@@ -39,10 +39,12 @@ export function NPCInteractionScreen({
     }
   })
 
-  // Initialize dialogue
+  // Initialize dialogue once per NPC (reading latest gameState via getState to
+  // avoid re-running whenever cash/day/inventory changes mid-conversation).
   useEffect(() => {
     try {
-      const initialNode = DialogueEngine.processDialogue(npc, gameState)
+      const gameSnapshot = useStore.getState().game
+      const initialNode = DialogueEngine.processDialogue(npc, gameSnapshot)
       setCurrentNode(initialNode)
       setAnimationType('talking')
       setIsLoading(false)
@@ -79,7 +81,7 @@ export function NPCInteractionScreen({
       addMessage('error', 'Failed to start conversation')
       onComplete()
     }
-  }, [npc, gameState, addMessage, onComplete, showHint])
+  }, [npc.id])
 
   const handleChoiceSelection = useCallback(
     ({ value }: { value: string }) => {
@@ -98,25 +100,17 @@ export function NPCInteractionScreen({
         `You: ${selectedChoice.text}`,
       ])
 
-      // Apply choice effects to game state
+      // Apply choice effects to the store, then read the updated state for
+      // next-node condition evaluation.
       try {
-        const newGameState = DialogueEngine.handleChoice(
-          selectedChoice,
-          gameState,
-          npc.location
-        )
-
-        // Update game state if there were changes
-        if (newGameState !== gameState) {
-          // Note: In a real implementation, we'd need to update the game state through the context
-          // For now, we'll just apply the changes
-        }
+        applyDialogueChoice(selectedChoice, npc.location)
+        const updatedGameState = useStore.getState().game
 
         // Get next dialogue node
         const nextNode = DialogueEngine.getNextNode(
           npc,
           selectedChoice,
-          newGameState
+          updatedGameState
         )
 
         if (!nextNode) {
@@ -169,7 +163,7 @@ export function NPCInteractionScreen({
         onComplete()
       }
     },
-    [currentNode, gameState, npc, addMessage, onComplete]
+    [currentNode, npc, addMessage, onComplete, applyDialogueChoice]
   )
 
   if (isLoading) {

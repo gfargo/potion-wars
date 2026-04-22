@@ -1,6 +1,17 @@
-import { Text } from 'ink'
+import { Box, Text } from 'ink'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { AnimationFrame } from '../../../types/animation.types.js'
+
+/**
+ * When provided, the animation renders each row as its own Text node so
+ * callers can colorize rows independently (useful for cinematic scenes like
+ * the travel animation).
+ */
+export type RowColorResolver = (
+  rowIndex: number,
+  rowContent: string,
+  frameIndex: number
+) => string | undefined
 
 type AsciiAnimationProperties = {
   readonly frames:
@@ -15,6 +26,7 @@ type AsciiAnimationProperties = {
   readonly externalState?: any
   readonly autoStart?: boolean
   readonly validateFrames?: boolean
+  readonly colorByRow?: RowColorResolver
 }
 
 const AsciiAnimationComponent = React.forwardRef<
@@ -32,6 +44,7 @@ const AsciiAnimationComponent = React.forwardRef<
       externalState,
       autoStart = true,
       validateFrames = true,
+      colorByRow,
     },
     reference
   ) => {
@@ -174,6 +187,19 @@ const AsciiAnimationComponent = React.forwardRef<
       }),
       [start, pause, stop, reset, isPlaying, isCompleted, frameIndex, iteration]
     )
+
+    if (colorByRow) {
+      const rows = getCurrentFrame().split('\n')
+      return (
+        <Box flexDirection="column">
+          {rows.map((row, index) => (
+            <Text key={index} color={colorByRow(index, row, frameIndex)}>
+              {row}
+            </Text>
+          ))}
+        </Box>
+      )
+    }
 
     return <Text>{getCurrentFrame()}</Text>
   }
