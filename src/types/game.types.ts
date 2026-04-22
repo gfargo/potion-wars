@@ -48,6 +48,9 @@ export type GameState = {
   // New interaction states
   currentNPCInteraction?: NPCInteractionState
   currentAnimation?: AnimationState
+  // IDs of tutorial steps the player has dismissed. Persisted so tutorials
+  // don't re-fire when screens remount (e.g. during travel transitions).
+  seenTutorials?: string[]
 }
 export type Location = {
   name: string

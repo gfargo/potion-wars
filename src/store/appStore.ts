@@ -95,6 +95,7 @@ export type AppState = {
     tradeHistory: TradeTransaction[]
     playerName?: string
     lastSave?: string
+    seenTutorials: string[]
   }
 
   // === UI State ===
@@ -191,6 +192,10 @@ export type AppStore = AppState & {
   // Market actions
   recordTransaction: (transaction: Omit<TradeTransaction, 'day'>) => void
 
+  // Tutorial actions
+  markTutorialSeen: (id: string) => void
+  markAllTutorialsSeen: (ids: string[]) => void
+
   // Persistence actions
   initializeGame: (playerName?: string, slot?: number) => void
   resetGame: () => void
@@ -221,6 +226,7 @@ const createInitialState = (): AppState => ({
     tradeHistory: [],
     playerName: undefined,
     lastSave: undefined,
+    seenTutorials: [],
   },
   ui: {
     activeScreen: 'title',
@@ -1018,6 +1024,36 @@ export const useStore = create<AppStore>()(
         })
       },
 
+      // === Tutorial Actions ===
+
+      markTutorialSeen(id: string) {
+        set((state) => {
+          if (!state.game.seenTutorials.includes(id)) {
+            state.game.seenTutorials.push(id)
+          }
+        })
+
+        const activeSlot = get().persistence.activeSlot
+        if (activeSlot > 0) {
+          get().saveGame(activeSlot)
+        }
+      },
+
+      markAllTutorialsSeen(ids: string[]) {
+        set((state) => {
+          for (const id of ids) {
+            if (!state.game.seenTutorials.includes(id)) {
+              state.game.seenTutorials.push(id)
+            }
+          }
+        })
+
+        const activeSlot = get().persistence.activeSlot
+        if (activeSlot > 0) {
+          get().saveGame(activeSlot)
+        }
+      },
+
       // === Persistence Actions ===
 
       initializeGame(playerName?: string, slot?: number) {
@@ -1112,6 +1148,12 @@ export const useStore = create<AppStore>()(
           state.game = {
             ...state.game,
             ...loadedState,
+          }
+
+          // Defensive: older saves may not have this array. Treat as empty so
+          // later `markTutorialSeen` pushes don't blow up.
+          if (!Array.isArray(state.game.seenTutorials)) {
+            state.game.seenTutorials = []
           }
 
           // Set active slot in both store and disk

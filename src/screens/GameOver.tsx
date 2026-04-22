@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink'
 import React, { useMemo } from 'react'
 import { ReputationManager } from '../core/reputation/ReputationManager.js'
 import { useStore } from '../store/appStore.js'
+import { BurningCastle } from '../ui/components/common/BurningCastle.js'
 import { ContextualHelp, useContextualHelp } from '../ui/components/common/ContextualHelp.js'
 
 type GameOverProperties = {
@@ -89,6 +90,10 @@ export function GameOver({ finalScore }: GameOverProperties) {
       {currentHint && (
         <ContextualHelp hint={currentHint} onDismiss={dismissHint} />
       )}
+      <Box justifyContent="center" marginBottom={1}>
+        <BurningCastle />
+      </Box>
+
       <Box justifyContent="center" marginBottom={1}>
         <Text bold color="red">
           ══════ GAME OVER ══════
