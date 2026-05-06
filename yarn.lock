@@ -2608,6 +2608,14 @@ ini@^1.3.4, ini@~1.3.0:
   resolved "https://registry.npmjs.org/ini/-/ini-1.3.8.tgz"
   integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
 
+ink-enhanced-select-input@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ink-enhanced-select-input/-/ink-enhanced-select-input-1.0.0.tgz#ea580f82e2b6bc31e43c6f9ae7f24934b9e584a5"
+  integrity sha512-eVdv47quL91kkzOjBbUzp+2/AWFvoUa+rY8hoaBhuXpNF3IO7i7GR5DOrwvGLh6oTI06QE8mz2JuG/naZ4G+YQ==
+  dependencies:
+    ink "^6.0.0"
+    react "^19.0.0"
+
 ink-gradient@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/ink-gradient/-/ink-gradient-4.0.0.tgz#2ef42524bb627c4edbe455a7ee9c0d5b793e203a"
@@ -2630,7 +2638,7 @@ ink-testing-library@^4.0.0:
   resolved "https://registry.npmjs.org/ink-testing-library/-/ink-testing-library-4.0.0.tgz"
   integrity sha512-yF92kj3pmBvk7oKbSq5vEALO//o7Z9Ck/OaLNlkzXNeYdwfpxMQkSowGTFUCS5MSu9bWfSZMewGpp7bFc66D7Q==
 
-ink@^6.8.0:
+ink@^6.0.0, ink@^6.8.0:
   version "6.8.0"
   resolved "https://registry.yarnpkg.com/ink/-/ink-6.8.0.tgz#c1258c21d10d0e46798a96f336ea44f8aaf935a0"
   integrity sha512-sbl1RdLOgkO9isK42WCZlJCFN9hb++sX9dsklOvfd1YQ3bQ2AiFu12Q6tFlr0HvEUvzraJntQCCpfEoUe9DSzA==
