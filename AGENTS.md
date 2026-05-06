@@ -2,9 +2,9 @@
 
 ## Project Structure & Module Organization
 
-Potion Wars is a TypeScript + Ink CLI. Source lives in `src/`: entry `cli.tsx`, UI `ui/`, screen flows `screens/`, and Zustand store in `store/appStore.ts`. Core mechanics live in `core/` (combat, events, game, persistence, reputation, npcs, rivals, dialogue) with shared definitions in `types/`. Tests sit in `src/tests` (unit, integration, snapshots); mirror that layout. Compiled output goes to `dist/`—keep it generated-only.
+Potion Wars is a TypeScript + Ink CLI. Source lives in `src/`: entry `cli.tsx`, UI `ui/`, screen flows `screens/`, and Zustand store in `store/appStore.ts`. Core mechanics live in `core/` (combat, events, game, persistence, reputation, npcs, rivals, dialogue, animations) with shared definitions in `types/`. Static data lives in `data/` (e.g., `defaultNPCs.ts`). Tests sit in `src/tests` (unit, integration, snapshots) and co-located `tests/` subdirectories within each module; mirror that layout. Compiled output goes to `dist/`—keep it generated-only.
 
-**Documentation**: Project docs live in `docs/` (primer, persistence, testing) and `.kiro/steering/` (product, structure, tech). See `CLAUDE.md` for architecture details and `docs/primer.md` for system design. Historical architecture decisions archived in `docs/archive/`.
+**Documentation**: Project docs live in `docs/` (primer, persistence, testing) and `.kiro/steering/` (product, structure, tech). See `CLAUDE.md` for architecture details and `docs/primer.md` for system design.
 
 ## Build, Test, and Development Commands
 
@@ -40,4 +40,4 @@ Ship via `yarn release` (release-it). Select semantic version bumps that match p
 - `tech.md` - Technology stack and tooling configuration
 
 **Archive**:
-- `docs/archive/` - Historical architecture decisions and completed refactors
+- Historical architecture decisions have been cleaned up from the repository

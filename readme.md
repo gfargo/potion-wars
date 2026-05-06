@@ -11,17 +11,27 @@ Potion Wars is an RPG text adventure game that puts you in the shoes of a mediev
 - **Terminal-based Gameplay**: Enjoy Potion Wars directly in your terminal.
 - **Strategic Trading**: Brew and sell various potions to maximize profits.
 - **Location-based Events**: Travel between different areas of the kingdom, each with unique opportunities and risks.
+- **Animated Travel**: Watch your journey unfold with ASCII art animations, adjustable speed, and pause controls.
 - **Combat System**: Engage in turn-based encounters with rival alchemists and royal guards.
+- **NPC Interactions**: Meet NPCs with full dialogue trees, trading, and market intelligence.
+- **Reputation System**: Build your reputation globally, per-location, and with individual NPCs to unlock better prices and dialogue options.
+- **Rival Alchemists**: Compete against AI-driven rival peddlers across the kingdom.
+- **Tutorial & Help**: Contextual onboarding tutorials and in-game help guide new players.
 - **Debt Management**: Balance your finances and repay your debts to stay in the game.
 - **Health System**: Manage your health while navigating dangerous situations.
+- **Save/Load**: Multiple save slots with persistent game state.
 
 ## Game Mechanics 🎮
 
 - **Brewing Potions**: Use your gold to brew different types of potions.
 - **Selling Potions**: Sell your brewed potions for profit in various locations.
-- **Traveling**: Move between different areas of the kingdom, each with its own market prices and danger levels.
+- **Traveling**: Move between different areas of the kingdom with animated travel sequences, each with its own market prices and danger levels.
+- **NPC System**: Encounter NPCs who offer dialogue, trading, and market intelligence. Build relationships that affect prices and available options.
+- **Combat**: Fight rival alchemists and guards in turn-based encounters using strength, agility, and intelligence stats.
+- **Reputation**: Your actions build a reputation that follows you — globally, per location, and with individual NPCs.
 - **Managing Finances**: Keep an eye on your gold and debt levels.
 - **Avoiding Dangers**: Watch out for royal guards and rival alchemists who might try to steal your potions or gold.
+- **Weather**: Dynamic weather system impacts events and market prices.
 
 ## Quick Start 🚀
 

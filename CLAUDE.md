@@ -61,13 +61,15 @@ The game uses **Zustand** for centralized state management with synchronous upda
 {
   game: {
     day, cash, debt, health, location, inventory,
-    prices, reputation, marketData, tradeHistory, ...
+    prices, reputation, marketData, tradeHistory,
+    strength, agility, intelligence, weather,
+    playerName, lastSave, seenTutorials, ...
   },
   ui: {
-    activeScreen, showHelp, quitConfirmation
+    activeScreen, showHelp, quitConfirmation, combatResult
   },
   events: {
-    queue: QueuedEvent[],    // NEW: Multiple events can queue
+    queue: QueuedEvent[],    // Multiple events can queue
     current: Event | null,
     phase: 'choice' | 'outcome' | 'acknowledged',
     currentStep: number
@@ -77,8 +79,13 @@ The game uses **Zustand** for centralized state management with synchronous upda
     destination, origin, animationStartTime
   },
   npc: {
-    current: NPC | null,
-    dialogueState: NPCDialogueState | null
+    current: NPCInteractionState | null
+  },
+  combat: {
+    active: ActiveCombat | null
+  },
+  persistence: {
+    activeSlot: number       // 0 = no active slot, 1-5 = slot number
   },
   messages: Message[]
 }
@@ -124,32 +131,58 @@ brewPotion('Wisdom Draught', 5)
 src/
 ├── cli.tsx                    # Entry point
 ├── app.tsx                    # Root component (no providers needed with Zustand!)
+├── constants.ts               # Game data (potions, locations, etc)
 ├── store/                     # Zustand store
-│   └── appStore.ts            # Unified state management (game, ui, events, travel, npc, messages)
-├── screens/                   # Screen components (Title, Game, GameOver, etc)
+│   ├── appStore.ts            # Unified state management (game, ui, events, travel, npc, combat, messages)
+│   └── selectors.ts           # Derived state selectors (screen, inventory, economy, reputation, combat)
+├── screens/                   # Screen components
+│   ├── GameScreen.tsx         # Main gameplay loop (integrates TutorialSystem)
+│   ├── TravelingScreen.tsx    # Animated travel with speed/pause controls
+│   ├── CombatScreen.tsx       # Turn-based combat UI
+│   ├── NPCInteractionScreen   # NPC dialogue and trading
+│   ├── MultiStepEventScreen   # Multi-step events with player choices
+│   ├── GameOver.tsx           # Game over with BurningCastle animation and stats
+│   ├── TitleScreen/           # Title screen subcomponents
+│   └── LoadingScreen.tsx      # Brief transition screen
 ├── ui/components/             # Reusable UI components
-│   ├── common/                # Generic components (animations, inputs)
-│   └── game/                  # Game-specific components (status, prices, etc)
+│   ├── common/                # Generic: AsciiAnimation, TravelAnimation, BurningCastle,
+│   │                          #   TutorialSystem, ContextualHelp, NPCPortrait, EnhancedSelectInput
+│   └── game/                  # Game-specific: ActionMenu, PriceList, PlayerStatus, Weather,
+│                              #   EnhancedMarketDisplay, ReputationDisplay, InventoryDisplay, etc.
 ├── core/                      # Game logic (no UI)
 │   ├── state/                 # Message selectors and test utilities
-│   ├── game/                  # Core mechanics (economy, travel)
-│   ├── combat/                # Combat system
-│   ├── events/                # Random event system
-│   ├── npcs/                  # NPC management and interactions
+│   ├── game/                  # Core mechanics (economy, enhancedEconomy, travel)
+│   ├── combat/                # Combat system (actions, enemies)
+│   ├── events/                # Random event system with typed handlers
+│   ├── npcs/                  # NPC management, encounters, trading, market intelligence
 │   ├── rivals/                # Rival alchemist system
-│   ├── reputation/            # Reputation tracking
-│   ├── dialogue/              # NPC dialogue system
-│   ├── animations/            # Animation state management
-│   └── persistence/           # Save/load system
-├── types/                     # TypeScript type definitions
-└── constants.ts               # Game data (potions, locations, etc)
+│   ├── reputation/            # Reputation tracking (global, location, NPC relationships)
+│   ├── dialogue/              # NPC dialogue engine, tree manager, trading dialogues
+│   ├── animations/            # Animation state management (AnimationManager)
+│   └── persistence/           # Save/load system, data validation, slot management
+├── data/                      # Static game data
+│   └── defaultNPCs.ts         # Default NPC definitions
+├── dev/                       # Development utilities
+│   └── TravelAnimationPreview # Standalone animation preview tool
+├── types/                     # TypeScript type definitions (game, npc, combat, economy, etc.)
+└── tests/                     # Integration and snapshot tests
+    ├── integration/           # Cross-system integration tests
+    └── snapshots/             # UI snapshot tests
 ```
 
 ### Key Systems
 
-**State Management**: All state is managed in the Zustand store at `src/store/appStore.ts`. State updates are synchronous and happen via direct method calls (e.g., `brewPotion()`, `chooseEvent()`, `completeTravel()`). Components access state via `useStore()` with selector functions to prevent unnecessary re-renders. Message selectors in `src/core/state/selectors/messageSelectors.ts` are used for derived message display calculations.
+**State Management**: All state is managed in the Zustand store at `src/store/appStore.ts`. State updates are synchronous and happen via direct method calls (e.g., `brewPotion()`, `chooseEvent()`, `completeTravel()`). Components access state via `useStore()` with selector functions to prevent unnecessary re-renders. Derived selectors live in `src/store/selectors.ts` covering screen state, inventory, economy, reputation, combat, and composite views. Message selectors in `src/core/state/selectors/messageSelectors.ts` are used for derived message display calculations.
 
-**Game Actions**: The Zustand store provides direct action methods: `brewPotion()`, `sellPotion()`, `startTravel()`, `completeTravel()`, `triggerEvent()`, `chooseEvent()`, `acknowledgeEvent()`, `startNPCInteraction()`, `updateReputation()`, and more. All actions update state synchronously using Immer middleware for immutable updates.
+**Game Actions**: The Zustand store provides direct action methods: `brewPotion()`, `sellPotion()`, `startTravel()`, `completeTravel()`, `triggerEvent()`, `chooseEvent()`, `acknowledgeEvent()`, `startNPCInteraction()`, `updateReputation()`, `startCombat()`, `performCombatAction()`, `endCombat()`, `markTutorialSeen()`, `saveGame()`, `loadGame()`, and more. All actions update state synchronously using Immer middleware for immutable updates.
+
+**Combat System**: Turn-based combat in `src/core/combat/` with `actions.ts` (damage calculation) and `enemies.ts` (enemy generation). Combat state tracked in `store.combat.active` with `CombatScreen.tsx` rendering the UI. Store actions: `startCombat()`, `performCombatAction()`, `endCombat()`.
+
+**Tutorial System**: `TutorialSystem` component in `src/ui/components/common/TutorialSystem.tsx` provides step-by-step onboarding overlays. Tutorial progress is tracked in `game.seenTutorials` (persisted across saves). `GameScreen` triggers tutorials for game start, first travel, first NPC encounter, and market dynamics.
+
+**Contextual Help**: `ContextualHelp` component in `src/ui/components/common/ContextualHelp.tsx` provides context-sensitive hints. Used in `GameOver` screen and available for other screens.
+
+**Animation System**: `AnimationManager` in `src/core/animations/` manages frame-based animations. `TravelAnimation` renders animated travel sequences with speed/pause controls. `BurningCastle` provides the game over screen animation. `AsciiAnimation` is the base component for frame rendering.
 
 **Economy System**: Dynamic pricing system with two layers:
 
@@ -182,15 +215,16 @@ TitleScreen (start new/load game)
     ↓
 LoadingScreen (brief transition)
     ↓
-GameScreen (main gameplay loop)
-    ├─ TravelingScreen (when traveling)
-    ├─ NPCInteractionScreen (when interacting with NPCs)
-    └─ MultiStepEventScreen (during events)
+GameScreen (main gameplay loop, tutorial overlays)
+    ├─ TravelingScreen (animated travel with speed/pause controls)
+    ├─ CombatScreen (turn-based combat encounters)
+    ├─ NPCInteractionScreen (dialogue, trading, information)
+    └─ MultiStepEventScreen (during events with player choices)
     ↓
-GameOverScreen (when health=0 or debt too high)
+GameOverScreen (BurningCastle animation, stats summary, contextual help)
 ```
 
-Screen rendering is determined by state in the Zustand store (`ui.activeScreen`, `events.current`, `npc.current`, `travel.phase`). GameScreen uses these values to conditionally render the appropriate sub-screen.
+Screen rendering is determined by state in the Zustand store (`ui.activeScreen`, `events.current`, `npc.current`, `travel.phase`, `combat.active`). GameScreen uses these values to conditionally render the appropriate sub-screen.
 
 ## Code Style
 
@@ -367,6 +401,6 @@ Project documentation is organized across several locations:
 
 ### Archive
 
-- `docs/archive/ARCHITECTURE_REFACTOR_COMPLETED.md` - Historical record of Context + Reducer → Zustand migration (2825 lines of planning, analysis, and implementation details)
+Historical architecture decisions (e.g., Context + Reducer → Zustand migration) have been cleaned up from the repository.
 
 **Recommended Reading Order**: Start with `CLAUDE.md` (this file) for current architecture, then `docs/primer.md` for system details, then steering docs for high-level context.
